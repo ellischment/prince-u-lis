@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Принц и Лис · Панель управления</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Forum&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#182A4A; --navy-deep:#101E39; --cream:#EDCA9D; --fox:#D96E30;
+  --bg:#F3F0E9; --panel:#FFFFFF; --line:#E3DDCF; --ink:#1A2233; --muted:#5A6478;
+  --ok-bg:#E4F3EB; --ok:#177A50; --warn-bg:#FBE7DD; --warn:#B4491F; --info-bg:#E3E7FA; --info:#2C3E9E;
+  --rs:12px; --r:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55}
+button{font-family:inherit;cursor:pointer;border:none}
+input,select,textarea{font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;color:var(--ink);width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(24,42,74,.25)}
+.disp{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+h2{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:.06em;font-size:24px;margin-bottom:4px}
+.hint{font-size:12.5px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--navy);color:#fff;font-weight:600;font-size:13px;padding:10px 18px;border-radius:100px;text-decoration:none;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+.btn.cream{background:var(--cream);color:var(--navy-deep)}
+.btn.warn{background:var(--warn)}
+.btn.sm{padding:7px 13px;font-size:12px}
+.badge{font-size:11px;font-weight:700;padding:4px 11px;border-radius:100px;white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)} .badge.info{background:var(--info-bg);color:var(--info)} .badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.owner{background:var(--cream);color:var(--navy-deep)}
+
+/* layout */
+.app{display:none;min-height:100vh}
+.app.on{display:grid;grid-template-columns:236px 1fr}
+aside{background:var(--navy-deep);color:#CFD8EA;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 10px 18px;border-bottom:1px solid rgba(237,202,157,.18);margin-bottom:12px}
+.brand .dot{width:38px;height:38px;border-radius:50%;background:var(--fox);display:grid;place-items:center;font-size:18px}
+.brand b{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:.1em;color:var(--cream);font-size:15px;line-height:1.2}
+aside nav{display:flex;flex-direction:column;gap:3px;flex:1}
+aside nav button{display:flex;align-items:center;gap:10px;background:transparent;color:#AFBDD6;padding:10px 12px;border-radius:10px;font-size:13.5px;text-align:left;width:100%}
+aside nav button:hover{background:rgba(237,202,157,.08);color:#fff}
+aside nav button.on{background:var(--cream);color:var(--navy-deep);font-weight:700}
+aside nav button .n{margin-left:auto;background:var(--fox);color:#fff;font-size:10px;font-weight:700;border-radius:100px;padding:2px 7px}
+aside nav .sep{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#5F6F8F;padding:14px 12px 5px}
+.who{border-top:1px solid rgba(237,202,157,.18);padding-top:14px;font-size:12px;display:flex;flex-direction:column;gap:8px}
+.who .row{display:flex;align-items:center;gap:8px;justify-content:space-between}
+main{padding:26px 30px 60px;max-width:1080px}
+.pagehead{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.pagehead .grow{flex:1;min-width:220px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+
+/* cards & tables */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--rs);overflow:hidden;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #EFEAE0;vertical-align:top}
+th{background:#EFEAE0;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td small{color:var(--muted)}
+.status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;white-space:nowrap}
+.status.new{background:var(--info-bg);color:var(--info)} .status.done{background:var(--ok-bg);color:var(--ok)} .status.cancel{background:var(--warn-bg);color:var(--warn)}
+.icon-btn{background:transparent;font-size:15px;padding:3px 5px}
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.form .full{grid-column:1/-1}
+.form label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.chipset{display:flex;gap:12px;flex-wrap:wrap;font-size:13px}
+.chipset label{display:flex;gap:6px;align-items:center;font-weight:500;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi b{font-family:'Forum',serif;font-size:26px;letter-spacing:.02em;display:block}
+.kpi span{font-size:11.5px;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:100px;padding:7px 15px;font-size:12px;color:var(--muted);font-weight:600}
+.filters button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.tilegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.tile{aspect-ratio:1;border-radius:12px;position:relative;display:grid;place-items:end start;padding:9px;font-size:10.5px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5);border:1px solid var(--line)}
+.tile button{position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);border-radius:8px;font-size:12px;padding:2px 6px}
+.tile.add{background:#fff;border:1.5px dashed var(--line);display:grid;place-items:center;color:var(--muted);cursor:pointer;text-shadow:none;font-size:12px;text-align:center}
+.code{font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.08em;background:#EFEAE0;padding:3px 9px;border-radius:8px}
+.logline{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #EFEAE0;font-size:13px}
+.logline time{color:var(--muted);white-space:nowrap;font-size:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy-deep);color:var(--cream);padding:12px 24px;border-radius:100px;font-size:13.5px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;max-width:88vw;text-align:center}
+.toast.show{opacity:1}
+.helpbox{background:#FFF9EE;border:1px solid #EFDDBB;border-radius:var(--rs);padding:12px 14px;font-size:12.5px;color:#6b5b3a;margin-bottom:14px}
+
+/* login */
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(170deg,var(--navy),var(--navy-deep))}
+.login-box{background:#fff;border-radius:24px;padding:34px;width:min(400px,92vw);box-shadow:0 24px 60px rgba(6,12,26,.5)}
+.login-box h1{font-family:'Forum',serif;font-weight:400;text-transform:uppercase;letter-spacing:.08em;font-size:22px;margin:12px 0 4px}
+.login-box .field{margin:12px 0}
+.quick{display:flex;gap:8px;margin-top:14px}
+.quick button{flex:1}
+
+@media (max-width:860px){
+  .app.on{grid-template-columns:1fr}
+  aside{position:static;height:auto}
+  aside nav{flex-direction:row;flex-wrap:wrap}
+  aside nav .sep{display:none}
+  main{padding:18px 14px 60px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .form{grid-template-columns:1fr}
+  .tilegrid{grid-template-columns:repeat(2,1fr)}
+  table{display:block;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ЭКРАН ВХОДА -->
+<div class="login" id="login">
+  <div class="login-box">
+    <span class="badge owner">Принц и Лис · панель управления</span>
+    <h1>Вход для команды</h1>
+    <p class="hint">В продакшене: логин, пароль и защита от подбора. В демо нажмите одну из кнопок.</p>
+    <div class="field"><label class="hint">Электронная почта</label><input placeholder="liza@princ-lis.ru" value="liza@princ-lis.ru"></div>
+    <div class="field"><label class="hint">Пароль</label><input type="password" placeholder="••••••••" value="demo-demo"></div>
+    <div class="quick">
+      <button class="btn ghost" onclick="login('admin')">Как администратор</button>
+      <button class="btn" onclick="login('owner')">Как владелец</button>
+    </div>
+  </div>
+</div>
+
+<!-- ПРИЛОЖЕНИЕ -->
+<div class="app" id="app">
+  <aside>
+    <div class="brand"><div class="dot">🦊</div><b>Принц и Лис<br><span style="font-size:10px;color:#AFBDD6;letter-spacing:.2em">панель управления</span></b></div>
+    <nav id="nav"></nav>
+    <div class="who">
+      <div class="row"><span id="whoName">·</span><span class="badge" id="whoRole">·</span></div>
+      <div class="row">
+        <button class="btn sm ghost" style="color:#CFD8EA;border-color:#3A4A6B" onclick="switchRole()">Сменить роль</button>
+        <button class="btn sm ghost" style="color:#CFD8EA;border-color:#3A4A6B" onclick="logout()">Выйти</button>
+      </div>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= ДЕМО-ДАННЫЕ (в продакшене: API + PostgreSQL) ================= */
+function dISO(n){const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const fmtD = iso => iso.split('-').reverse().join('.');
+const fmtP = n => (+n).toLocaleString('ru-RU') + ' ₽';
+
+let cats = [
+  {id:'wheel', name:'Гончарный круг'},{id:'hand', name:'Лепка и декор'},
+  {id:'paint', name:'Живопись'},{id:'kids', name:'Детям'},{id:'course', name:'Курсы'}
+];
+let services = [
+  {id:1, tags:['wheel'], name:'Мастер-класс за гончарным кругом', price:3500, unit:'в группе', dur:120, cap:6, level:'с нуля', active:true, desc:'От кусочка глины до готовой кружки за одно занятие.', longDesc:'Самое популярное занятие студии: вы сядете за настоящий круг и уйдёте со своей формой.', program:['Центровка на круге','Вытягиваем стенки','Декор и подпись','Сушка и обжиг'], includes:['Глина и инструменты','Фартук','Обжиг','Чай и сушки'], forWhom:'Взрослым и детям от 7 лет.'},
+  {id:2, tags:['hand'], name:'Мастер-класс по ручной лепке', price:3500, unit:'в группе', dur:120, cap:8, level:'с нуля', active:true, desc:'Любая форма: посуда, скульптура, подсвечник.', longDesc:'Лепка руками свободнее круга: здесь можно всё.', program:['Идея и глина','Жгут, пласт, отминка','Сборка и декор'], includes:['Глина и инструменты','Обжиг','Чай'], forWhom:'Всем от 5 лет.'},
+  {id:3, tags:['hand','paint'], name:'Роспись майолика', price:4500, unit:'индивидуально', dur:120, cap:1, level:'с нуля', active:true, desc:'Роспись эмалью и пигментами, изделием можно пользоваться.', longDesc:'Древняя техника росписи по сырой эмали.', program:['Эскиз','Роспись пигментами','Обжиг'], includes:['Изделие','Эмаль и пигменты','Обжиг'], forWhom:'Взрослым и детям от 8 лет, формат один на один.'},
+  {id:6, tags:['wheel','course'], name:'Экспресс-курс «Чайная пара»', price:8500, unit:'3 занятия', dur:120, cap:6, level:'с нуля', active:true, desc:'Чашка и блюдце, которые вы сделали сами.', longDesc:'Три встречи: от эскиза до глазурованной пары.', program:['Чашка на круге','Блюдце и ручка','Глазуровка'], includes:['Материалы и обжиги'], forWhom:'Взрослым.'},
+  {id:7, tags:['wheel','course'], name:'Курс гончарного дела', price:24000, unit:'10 занятий', dur:120, cap:6, level:'с нуля и выше', active:true, desc:'10 занятий, все основные техники.', longDesc:'Полный цикл работы гончара за десять встреч.', program:['Центровка','Формы','Подрезка','Глазури','Финальный сервиз'], includes:['Материалы, обжиги, хранение работ'], forWhom:'Взрослым, группа до 6.'},
+  {id:10, tags:['paint'], name:'Наброски с натуры', price:1500, unit:'занятие', dur:90, cap:10, level:'любой', active:true, desc:'Каждый четверг в 19:00, живая натура.', longDesc:'Короткие и длинные позы, разные материалы.', program:['Позы 1-2 мин','Позы 5-10 мин','Длинная постановка'], includes:['Бумага, уголь, мольберт'], forWhom:'Любой уровень.'},
+  {id:13, tags:['kids','hand'], name:'Детский кружок по лепке', price:16000, unit:'8 занятий', dur:90, cap:8, level:'дети 5+', active:true, desc:'Дважды в неделю, с 5 лет.', longDesc:'Моторика, усидчивость, фантазия и выставка для родителей раз в месяц.', program:['Формы и звери','Посуда','Композиция','Глазурь'], includes:['Всё для лепки','Сок и печенье'], forWhom:'Детям с 5 лет.'}
+];
+let bookings = [
+  {id:1, svc:1, date:dISO(1), time:'19:00', name:'Анна', phone:'+7 916 000-11-22', channel:'tg', tgnick:'@anna_k', status:'new'},
+  {id:2, svc:1, date:dISO(1), time:'19:00', name:'Мария', phone:'+7 916 000-33-44', channel:'wa', status:'new'},
+  {id:3, svc:1, date:dISO(1), time:'19:00', name:'Олег', phone:'+7 916 000-55-66', channel:'tg', tgnick:'@oleg', status:'new'},
+  {id:4, svc:3, date:dISO(2), time:'15:00', name:'Пётр', phone:'+7 903 555-77-88', channel:'call', status:'new'},
+  {id:5, svc:10, date:dISO(2), time:'19:00', name:'Света', phone:'+7 903 111-22-33', channel:'tg', tgnick:'@sveta', status:'new'},
+  {id:6, svc:2, date:dISO(0), time:'13:00', name:'Ирина', phone:'+7 926 444-55-66', channel:'sms', status:'done'},
+  {id:7, svc:6, date:dISO(-1), time:'17:00', name:'Костя', phone:'+7 915 222-33-44', channel:'wa', status:'cancel'}
+];
+let promos = [
+  {id:1, type:'promo', title:'Каждое 7-е занятие бесплатно', text:'На все регулярные занятия.', till:''},
+  {id:2, type:'event', title:'Счастливый день', text:'Суббота открытых дверей, каждые 2 часа новое направление.', till:dISO(20)}
+];
+let codes = [
+  {id:1, code:'LISA10', kind:'percent', value:10, scope:'all', limit:50, used:14, active:true, till:dISO(30), note:'Для соцсетей'},
+  {id:2, code:'DENROZH', kind:'fixed', value:500, scope:'all', limit:0, used:6, active:true, till:'', note:'Именинникам'}
+];
+let autoDisc = [
+  {id:1, title:'Пенсионерам 15%', kind:'percent', value:15, note:'Будни до 17:00', active:true}
+];
+let rules = [
+  {id:1, day:'Пн', time:'18:00', title:'Пишем цветы маслом'},
+  {id:2, day:'Вт', time:'18:00', title:'Лепка и гончарный круг'},
+  {id:3, day:'Вт', time:'19:00', title:'Живопись, все уровни'},
+  {id:4, day:'Ср', time:'19:00', title:'Наброски'},
+  {id:5, day:'Чт', time:'19:00', title:'Рисунок с натуры'},
+  {id:6, day:'Пт', time:'19:00', title:'Занятия по копии'},
+  {id:7, day:'Вс', time:'12:00', title:'Детский кружок по лепке'}
+];
+let media = {
+  works:[['#B85722','ваза Ани'],['#4F7A54','сервиз'],['#31435F','журавли']],
+  studio:[['#7A5B3A','руки в глине'],['#3E5779','мастерская'],['#152720','чай и сушки']]
+};
+let siteText = [
+  {k:'hero_title', label:'Заголовок на главной', v:'Слепите, распишите и заберите домой свою вещь'},
+  {k:'hero_sub', label:'Подзаголовок', v:'Тёплое место в самом центре Москвы, где глина, краски и чай с сушками.'},
+  {k:'quote', label:'Цитата Лизы', v:'У нас есть всё, чтобы вы провели время с пользой и удовольствием.'},
+  {k:'phone', label:'Телефон студии', v:'+7 919-969-05-85'}
+];
+let staff = [
+  {id:1, name:'Лиза Якубович', email:'liza@princ-lis.ru', role:'owner'},
+  {id:2, name:'Настя', email:'nastya@princ-lis.ru', role:'admin'}
+];
+let integrations = {sheets:true, sheetsUrl:'docs.google.com/spreadsheets/d/…', tg:true, wa:false, sms:true};
+let log = [
+  {t:'вчера 18:42', who:'Настя (админ)', msg:'Изменила цену «Наброски с натуры»: 1400 → 1500 ₽'},
+  {t:'вчера 12:10', who:'Лиза (владелец)', msg:'Создала промокод LISA10 (−10%, лимит 50)'}
+];
+const chN={tg:'Telegram',wa:'WhatsApp',sms:'SMS',call:'позвонить'};
+const catName = id => (cats.find(c=>c.id===id)||{name:id}).name;
+const now = ()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+
+/* ================= КАРКАС, РОЛИ ================= */
+let role=null, view='book', editSvcId=null;
+const NAV = [
+  {id:'book', icon:'🗓', label:'Записи', roles:['admin','owner'], n:()=>bookings.filter(b=>b.status==='new').length},
+  {id:'sched', icon:'⏰', label:'Расписание недели', roles:['admin','owner']},
+  {id:'svc', icon:'🏺', label:'Услуги и наполнение', roles:['admin','owner']},
+  {id:'promo', icon:'✦', label:'Акции и события', roles:['admin','owner']},
+  {id:'disc', icon:'％', label:'Скидки и промокоды', roles:['admin','owner']},
+  {id:'content', icon:'🖼', label:'Контент и фото', roles:['admin','owner']},
+  {sep:'Только владелец'},
+  {id:'cats', icon:'📚', label:'Разделы каталога', roles:['owner']},
+  {id:'settings', icon:'⚙️', label:'Настройки и команда', roles:['owner']},
+  {id:'log', icon:'📜', label:'Журнал действий', roles:['owner']}
+];
+function login(r){ role=r; document.getElementById('login').style.display='none';
+  document.getElementById('app').classList.add('on'); view='book'; render(); }
+function logout(){ role=null; document.getElementById('app').classList.remove('on'); document.getElementById('login').style.display='grid'; }
+function switchRole(){ role = role==='owner'?'admin':'owner';
+  if(!NAV.find(n=>n.id===view && n.roles && n.roles.includes(role))) view='book';
+  render(); toast('Теперь вы смотрите панель глазами: '+(role==='owner'?'владельца':'администратора')); }
+function addLog(msg){ log.unshift({t:'сегодня '+now(), who:(role==='owner'?'Лиза (владелец)':'Настя (админ)'), msg}); }
+function render(){
+  document.getElementById('whoName').textContent = role==='owner'?'Лиза Якубович':'Настя';
+  const wr=document.getElementById('whoRole'); wr.textContent = role==='owner'?'владелец':'администратор';
+  wr.className='badge '+(role==='owner'?'owner':'info');
+  document.getElementById('nav').innerHTML = NAV.map(n=>{
+    if(n.sep) return role==='owner'?`<div class="sep">${n.sep}</div>`:'';
+    if(!n.roles.includes(role)) return '';
+    const num = n.n ? n.n() : 0;
+    return `<button class="${view===n.id?'on':''}" onclick="view='${n.id}';editSvcId=null;render()">${n.icon} ${n.label}${num?`<span class="n">${num}</span>`:''}</button>`;
+  }).join('');
+  document.getElementById('main').innerHTML = ({book,sched,svc,cats:catsView,disc,promo,content,settings,log:logV})[view]();
+}
+
+/* ================= ЗАПИСИ ================= */
+let bkFilter='upcoming';
+function book(){
+  const today=dISO(0);
+  let list=bookings.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  if(bkFilter==='today') list=list.filter(b=>b.date===today);
+  if(bkFilter==='upcoming') list=list.filter(b=>b.date>=today && b.status==='new');
+  if(bkFilter==='call') list=list.filter(b=>b.channel==='call' && b.status==='new');
+  const st={new:'новая',done:'завершена',cancel:'отменена'};
+  const cnt=(s,d,t)=>bookings.filter(b=>b.svc===s&&b.date===d&&b.time===t&&b.status!=='cancel').length;
+  return `<div class="pagehead"><div class="grow"><h2>Записи</h2>
+    <p class="hint">Клиенты записываются сами, записи появляются здесь и в Google Таблице. Отмена автоматически освобождает место на сайте.</p></div>
+    <span class="badge ok">✓ Google Таблица: синхронизирована</span>
+    <button class="btn ghost sm" onclick="exportCSV()">⬇ CSV / Excel</button></div>
+  <div class="kpis">
+    <div class="kpi"><b>${bookings.filter(b=>b.status==='new').length}</b><span>активных записей</span></div>
+    <div class="kpi"><b>${bookings.filter(b=>b.date===today&&b.status!=='cancel').length}</b><span>сегодня в студии</span></div>
+    <div class="kpi"><b>${bookings.filter(b=>b.channel==='call'&&b.status==='new').length}</b><span>просили перезвонить</span></div>
+    <div class="kpi"><b>${bookings.filter(b=>b.status==='cancel').length}</b><span>отмен за период</span></div>
+  </div>
+  <div class="toolbar filters">
+    <button class="${bkFilter==='upcoming'?'on':''}" onclick="bkFilter='upcoming';render()">Предстоящие</button>
+    <button class="${bkFilter==='today'?'on':''}" onclick="bkFilter='today';render()">Сегодня</button>
+    <button class="${bkFilter==='call'?'on':''}" onclick="bkFilter='call';render()">📞 Перезвонить</button>
+    <button class="${bkFilter==='all'?'on':''}" onclick="bkFilter='all';render()">Все</button>
+  </div>
+  <table><tr><th>Когда</th><th>Занятие</th><th>Заполнено</th><th>Клиент</th><th>Связь</th><th>Статус</th><th></th></tr>
+  ${list.map(b=>{const s=services.find(x=>x.id===b.svc)||{name:'(удалена)',cap:0};
+    return `<tr><td><b>${fmtD(b.date)}</b> ${b.time}</td><td>${s.name}</td>
+    <td><small>${cnt(b.svc,b.date,b.time)} / ${s.cap}</small></td>
+    <td>${b.name}<br><small>${b.phone}${b.tgnick?' · '+b.tgnick:''}</small></td>
+    <td>${b.channel==='call'?'<span class="badge warn">📞 позвонить</span>':chN[b.channel]}</td>
+    <td><span class="status ${b.status}">${st[b.status]}</span></td>
+    <td>${b.status==='new'?`<button class="icon-btn" title="Пришёл, завершить" onclick="setB(${b.id},'done')">✅</button>
+    <button class="icon-btn" title="Отменить и освободить место" onclick="setB(${b.id},'cancel')">✖️</button>`:''}</td></tr>`;}).join('')||'<tr><td colspan="7" class="hint">Пока пусто</td></tr>'}
+  </table>`;
+}
+function setB(id,s){ const b=bookings.find(x=>x.id===id); b.status=s;
+  addLog((s==='done'?'Завершила запись: ':'Отменила запись: ')+b.name+' на '+fmtD(b.date)); render();
+  toast(s==='cancel'?'Запись отменена, место снова свободно на сайте':'Запись завершена, визит засчитан клиенту'); }
+function exportCSV(){
+  const rows=[['Дата','Время','Занятие','Имя','Телефон','TG','Канал','Статус']];
+  bookings.forEach(b=>{const s=services.find(x=>x.id===b.svc)||{name:''};
+    rows.push([fmtD(b.date),b.time,s.name,b.name,b.phone,b.tgnick||'',chN[b.channel],b.status]);});
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='princ-lis-zapisi.csv'; a.click(); toast('CSV скачан, откроется в Excel');
+}
+
+/* ================= РАСПИСАНИЕ ================= */
+const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+function sched(){
+  return `<div class="pagehead"><div class="grow"><h2>Расписание недели</h2>
+  <p class="hint">Это регулярные занятия, которые видны на сайте в блоке «Неделя в студии». Слоты для записи генерируются из них автоматически на 30 дней вперёд.</p></div></div>
+  <div class="panel"><div class="form">
+    <div><label>День</label><select id="rDay">${DAYS.map(d=>`<option>${d}</option>`).join('')}</select></div>
+    <div><label>Время</label><input id="rTime" placeholder="19:00" value="19:00"></div>
+    <div class="full"><label>Название занятия</label><input id="rTitle" placeholder="Например: Лепка с кинопросмотром"></div>
+    <div class="full"><button class="btn sm" onclick="addRule()">＋ Добавить в расписание</button></div>
+  </div></div>
+  <table><tr><th>День</th><th>Время</th><th>Занятие</th><th></th></tr>
+  ${DAYS.map(d=>rules.filter(r=>r.day===d).sort((a,b)=>a.time.localeCompare(b.time)).map(r=>
+    `<tr><td><b>${r.day}</b></td><td>${r.time}</td><td>${r.title}</td>
+    <td><button class="icon-btn" onclick="delRule(${r.id})">🗑</button></td></tr>`).join('')).join('')}
+  </table>`;
+}
+function addRule(){
+  const t=document.getElementById('rTitle').value.trim(), tm=document.getElementById('rTime').value.trim();
+  if(!t||!tm) return toast('Заполните время и название');
+  rules.push({id:Date.now(), day:document.getElementById('rDay').value, time:tm, title:t});
+  addLog('Добавила занятие в расписание: '+t); render(); toast('Добавлено: на сайте уже видно, слоты сгенерируются');
+}
+function delRule(id){ const r=rules.find(x=>x.id===id); rules=rules.filter(x=>x.id!==id);
+  addLog('Убрала из расписания: '+r.title); render(); toast('Убрано из расписания'); }
+
+/* ================= УСЛУГИ И НАПОЛНЕНИЕ ================= */
+function svcEditor(s){
+  const v = s || {name:'',tags:[],price:'',unit:'в группе',dur:120,cap:6,level:'с нуля',desc:'',longDesc:'',program:[],includes:[],forWhom:''};
+  return `<div class="panel"><div class="form">
+    <div class="full"><b>${s?'Редактирование: '+s.name:'Новая услуга'}</b> <span class="hint">· после «Сохранить» карточка и страница занятия на сайте обновляются сразу</span></div>
+    <div><label>Название</label><input id="eName" value="${v.name}"></div>
+    <div><label>Цена, руб</label><input id="ePrice" type="number" value="${v.price}"></div>
+    <div class="full"><label>Разделы (можно несколько: курс по кругу будет виден и в «Круге», и в «Курсах»)</label>
+      <div class="chipset">${cats.map(c=>`<label><input type="checkbox" class="eTag" value="${c.id}" ${v.tags.includes(c.id)?'checked':''}>${c.name}</label>`).join('')}</div></div>
+    <div><label>Единица</label><input id="eUnit" value="${v.unit}"></div>
+    <div><label>Длительность, мин</label><input id="eDur" type="number" value="${v.dur}"></div>
+    <div><label>Мест в группе (вместимость слота)</label><input id="eCap" type="number" min="1" value="${v.cap}"></div>
+    <div><label>Уровень</label><input id="eLevel" value="${v.level}"></div>
+    <div class="full"><label>Короткое описание (карточка)</label><textarea id="eDesc" rows="2">${v.desc}</textarea></div>
+    <div class="full"><label>Подробное описание (страница занятия)</label><textarea id="eLong" rows="3">${v.longDesc||''}</textarea></div>
+    <div class="full"><label>Программа занятия · каждый пункт с новой строки</label><textarea id="eProg" rows="4">${(v.program||[]).join('\n')}</textarea></div>
+    <div class="full"><label>Что включено · каждый пункт с новой строки</label><textarea id="eInc" rows="3">${(v.includes||[]).join('\n')}</textarea></div>
+    <div class="full"><label>Для кого</label><input id="eForWhom" value="${v.forWhom||''}"></div>
+    <div class="full" style="display:flex;gap:8px">
+      <button class="btn sm" onclick="saveSvc(${s?s.id:'null'})">${s?'Сохранить изменения':'＋ Добавить услугу'}</button>
+      ${s?'<button class="btn ghost sm" onclick="editSvcId=null;render()">Отмена</button>':''}
+    </div>
+  </div></div>`;
+}
+function svc(){
+  const editing = editSvcId ? services.find(x=>x.id===editSvcId) : null;
+  return `<div class="pagehead"><div class="grow"><h2>Услуги и наполнение</h2>
+  <p class="hint">Цена и количество мест правятся прямо в таблице. Карандаш открывает всё наполнение страницы занятия. «Скрыт» убирает занятие с сайта, не удаляя его.</p></div></div>
+  ${svcEditor(editing)}
+  <table><tr><th>Услуга</th><th>Цена</th><th>Мест</th><th>Показ на сайте</th><th></th></tr>
+  ${services.map(s=>`<tr>
+    <td><b>${s.name}</b><br><small>${s.tags.map(catName).join(', ')} · ${s.dur} мин · ${s.level}</small></td>
+    <td><input type="number" value="${s.price}" style="width:92px" onchange="services.find(x=>x.id===${s.id}).price=+this.value;addLog('Изменила цену «${s.name}»');toast('Цена обновлена, на сайте уже новая')"></td>
+    <td><input type="number" min="1" value="${s.cap}" style="width:64px" onchange="services.find(x=>x.id===${s.id}).cap=Math.max(1,+this.value);addLog('Изменила вместимость «${s.name}»');toast('Свободные места на сайте пересчитаны')"></td>
+    <td><button class="btn sm ${s.active?'':'ghost'}" onclick="toggleSvc(${s.id})">${s.active?'виден':'скрыт'}</button></td>
+    <td><button class="icon-btn" title="Наполнение страницы" onclick="editSvcId=${s.id};render();scrollTo({top:0})">✎</button>
+        <button class="icon-btn" title="Удалить" onclick="delSvc(${s.id})">🗑</button></td></tr>`).join('')}
+  </table>`;
+}
+function saveSvc(id){
+  const g=x=>document.getElementById(x).value;
+  const tags=[...document.querySelectorAll('.eTag:checked')].map(i=>i.value);
+  if(!g('eName')||!g('ePrice')) return toast('Заполните название и цену');
+  if(!tags.length) return toast('Отметьте хотя бы один раздел');
+  const data={name:g('eName'), tags, price:+g('ePrice'), unit:g('eUnit')||'занятие', dur:+g('eDur')||120,
+    cap:Math.max(1,+g('eCap')||6), level:g('eLevel')||'с нуля', desc:g('eDesc'), longDesc:g('eLong'), forWhom:g('eForWhom'),
+    program:g('eProg').split('\n').map(x=>x.trim()).filter(Boolean),
+    includes:g('eInc').split('\n').map(x=>x.trim()).filter(Boolean)};
+  if(id){ Object.assign(services.find(x=>x.id===id), data); addLog('Обновила наполнение «'+data.name+'»'); toast('Сохранено: карточка и страница занятия обновлены'); }
+  else { services.push({id:Date.now(), active:true, ...data}); addLog('Добавила услугу «'+data.name+'»'); toast('Услуга добавлена и уже видна на сайте'); }
+  editSvcId=null; render();
+}
+function toggleSvc(id){ const s=services.find(x=>x.id===id); s.active=!s.active;
+  addLog((s.active?'Показала':'Скрыла')+' услугу «'+s.name+'»'); render(); }
+function delSvc(id){ const s=services.find(x=>x.id===id); services=services.filter(x=>x.id!==id);
+  addLog('Удалила услугу «'+s.name+'»'); render(); toast('Удалено'); }
+
+/* ================= РАЗДЕЛЫ (owner) ================= */
+function catsView(){
+  return `<div class="pagehead"><div class="grow"><h2>Разделы каталога</h2>
+  <p class="hint">Это вкладки каталога на сайте. Раздел с занятиями удалить нельзя: сначала уберите его галочку у занятий.</p></div></div>
+  <div class="panel"><div class="form">
+    <div class="full"><label>Новый раздел</label><input id="nCatName" placeholder="Например: Свечи и декор"></div>
+    <div class="full"><button class="btn sm" onclick="addCat()">＋ Добавить раздел</button></div>
+  </div></div>
+  <table><tr><th>Раздел</th><th>Занятий в нём</th><th></th></tr>
+  ${cats.map(c=>{const used=services.filter(s=>s.tags.includes(c.id)).length;
+    return `<tr><td><input value="${c.name}" style="width:min(260px,100%)" onchange="cats.find(x=>x.id==='${c.id}').name=this.value;addLog('Переименовала раздел в «'+this.value+'»');toast('Раздел переименован, на сайте обновилось')"></td>
+    <td>${used}</td><td><button class="icon-btn" onclick="delCat('${c.id}')">🗑</button></td></tr>`;}).join('')}
+  </table>`;
+}
+function addCat(){ const n=document.getElementById('nCatName').value.trim();
+  if(!n) return toast('Введите название');
+  cats.push({id:'c'+Date.now(), name:n}); addLog('Создала раздел «'+n+'»'); render();
+  toast('Раздел добавлен: отметьте его галочкой у нужных занятий'); }
+function delCat(id){ const used=services.filter(s=>s.tags.includes(id)).length;
+  if(used) return toast('В разделе ещё '+used+' занятий, сначала уберите их');
+  const c=cats.find(x=>x.id===id); cats=cats.filter(x=>x.id!==id);
+  addLog('Удалила раздел «'+c.name+'»'); render(); toast('Раздел удалён'); }
+
+/* ================= СКИДКИ И ПРОМОКОДЫ ================= */
+function disc(){
+  return `<div class="pagehead"><div class="grow"><h2>Скидки и промокоды</h2>
+  <p class="hint">Промокод клиент вводит на последнем шаге записи, цена пересчитывается сразу. Автоскидки применяются сами. Правило: скидки не суммируются, действует одна, самая выгодная клиенту.</p></div></div>
+  <div class="panel"><div class="form">
+    <div><label>Код</label><div style="display:flex;gap:8px"><input id="cCode" placeholder="LETO26" style="text-transform:uppercase"><button class="btn ghost sm" onclick="genCode()" title="Сгенерировать">🎲</button></div></div>
+    <div><label>Скидка</label><div style="display:flex;gap:8px"><input id="cVal" type="number" placeholder="10" style="width:90px"><select id="cKind" style="width:110px"><option value="percent">%</option><option value="fixed">руб</option></select></div></div>
+    <div><label>Лимит использований (0 = без лимита)</label><input id="cLim" type="number" value="50"></div>
+    <div><label>Действует до (пусто = бессрочно)</label><input id="cTill" type="date"></div>
+    <div class="full"><label>Заметка для себя</label><input id="cNote" placeholder="Например: для рассылки VK"></div>
+    <div class="full"><button class="btn sm" onclick="addCode()">＋ Создать промокод</button></div>
+  </div></div>
+  <table><tr><th>Код</th><th>Скидка</th><th>Использован</th><th>Срок</th><th>Статус</th><th></th></tr>
+  ${codes.map(c=>`<tr>
+    <td><span class="code">${c.code}</span> <button class="icon-btn" title="Скопировать" onclick="copyCode('${c.code}')">📋</button><br><small>${c.note||''}</small></td>
+    <td>${c.kind==='percent'?'−'+c.value+'%':'−'+fmtP(c.value)}</td>
+    <td>${c.used} ${c.limit?'/ '+c.limit:''}</td>
+    <td>${c.till?('до '+fmtD(c.till)):'бессрочно'}</td>
+    <td><button class="btn sm ${c.active?'':'ghost'}" onclick="c=codes.find(x=>x.id===${c.id});c.active=!c.active;addLog((c.active?'Включила':'Выключила')+' код '+c.code);render()">${c.active?'активен':'выключен'}</button></td>
+    <td><button class="icon-btn" onclick="codes=codes.filter(x=>x.id!==${c.id});addLog('Удалила промокод');render();toast('Код удалён')">🗑</button></td></tr>`).join('')}
+  </table>
+  <div style="height:18px"></div>
+  <div class="panel"><b>Автоматические скидки</b> <span class="hint">· применяются без кода</span>
+  <table style="margin-top:10px"><tr><th>Правило</th><th>Скидка</th><th>Условие</th><th>Статус</th></tr>
+  ${autoDisc.map(a=>`<tr><td><b>${a.title}</b></td><td>−${a.value}${a.kind==='percent'?'%':' ₽'}</td><td>${a.note}</td>
+  <td><button class="btn sm ${a.active?'':'ghost'}" onclick="a=autoDisc.find(x=>x.id===${a.id});a.active=!a.active;addLog('Переключила автоскидку «'+a.title+'»');render()">${a.active?'активна':'выключена'}</button></td></tr>`).join('')}
+  </table></div>`;
+}
+function genCode(){ const A='ABCDEFGHKMNPRSTUVWXYZ23456789'; let c='';
+  for(let i=0;i<6;i++) c+=A[Math.floor(Math.random()*A.length)];
+  document.getElementById('cCode').value=c; }
+function addCode(){
+  const code=document.getElementById('cCode').value.trim().toUpperCase();
+  const val=+document.getElementById('cVal').value;
+  if(!code||!val) return toast('Нужны код и размер скидки');
+  if(codes.some(c=>c.code===code)) return toast('Такой код уже есть');
+  codes.unshift({id:Date.now(), code, kind:document.getElementById('cKind').value, value:val, scope:'all',
+    limit:+document.getElementById('cLim').value||0, used:0, active:true,
+    till:document.getElementById('cTill').value||'', note:document.getElementById('cNote').value});
+  addLog('Создала промокод '+code); render(); toast('Промокод создан: можно публиковать в соцсетях');
+}
+function copyCode(c){ try{navigator.clipboard.writeText(c);}catch(e){} toast('Код '+c+' скопирован'); }
+
+/* ================= АКЦИИ ================= */
+function promo(){
+  return `<div class="pagehead"><div class="grow"><h2>Акции и события</h2>
+  <p class="hint">Публикуются в блок «Сейчас в студии». Если задан срок, акция снимется с сайта сама в полночь после даты окончания.</p></div></div>
+  <div class="panel"><div class="form">
+    <div class="full"><label>Заголовок</label><input id="pTitle" placeholder="Например: −20% на будние утро"></div>
+    <div><label>Тип</label><select id="pType"><option value="promo">Акция</option><option value="event">Событие</option></select></div>
+    <div><label>Действует до (необязательно)</label><input id="pTill" type="date"></div>
+    <div class="full"><label>Текст для клиентов</label><textarea id="pText" rows="2"></textarea></div>
+    <div class="full"><button class="btn sm" onclick="addPromo()">＋ Опубликовать на сайт</button></div>
+  </div></div>
+  <table><tr><th>Тип</th><th>Заголовок</th><th>Текст</th><th>До</th><th></th></tr>
+  ${promos.map(p=>`<tr><td>${p.type==='event'?'Событие':'Акция'}</td><td><b>${p.title}</b></td><td>${p.text}</td>
+  <td>${p.till?fmtD(p.till):'бессрочно'}</td>
+  <td><button class="icon-btn" onclick="promos=promos.filter(x=>x.id!==${p.id});addLog('Сняла с публикации акцию');render();toast('Снято с сайта')">🗑</button></td></tr>`).join('')}</table>`;
+}
+function addPromo(){
+  const t=document.getElementById('pTitle').value.trim();
+  if(!t) return toast('Нужен заголовок');
+  promos.unshift({id:Date.now(), type:document.getElementById('pType').value, title:t,
+    text:document.getElementById('pText').value, till:document.getElementById('pTill').value||''});
+  addLog('Опубликовала «'+t+'»'); render(); toast('Уже на сайте в блоке «Сейчас в студии»');
+}
+
+/* ================= КОНТЕНТ ================= */
+const PALETTE=['#B85722','#4F7A54','#31435F','#7A5B3A','#3E5779','#152720','#8A5A83'];
+function content(){
+  const grid=(key,title,note)=>`<div class="panel"><b>${title}</b> <span class="hint">· ${note}</span>
+    <div class="tilegrid" style="margin-top:12px">
+    ${media[key].map((t,i)=>`<div class="tile" style="background:linear-gradient(150deg,${t[0]},${t[0]}99)"><span>${t[1]}</span>
+      <button title="Убрать" onclick="media['${key}'].splice(${i},1);addLog('Убрала фото из галереи');render()">✕</button></div>`).join('')}
+    <div class="tile add" onclick="addPhoto('${key}')">＋ Загрузить фото<br><small class="hint">перетащите или выберите файл</small></div>
+    </div></div>`;
+  return `<div class="pagehead"><div class="grow"><h2>Контент и фото</h2>
+  <p class="hint">В продакшене фото загружаются перетаскиванием, сжимаются сами и требуют короткую подпись (важно для поиска). Здесь загрузка сымитирована.</p></div></div>
+  ${grid('works','Галерея «Работы гостей»','видна в одноимённом блоке сайта')}
+  ${grid('studio','Галерея «Атмосфера»','плитки-фото на главной, одна может быть тихим видео')}
+  <div class="panel"><b>Тексты сайта</b> <span class="hint">· меняйте слова на главной без разработчика</span>
+    <div style="margin-top:12px;display:grid;gap:11px">
+    ${siteText.map((t,i)=>`<div><label style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">${t.label}</label>
+      <input value="${t.v}" onchange="siteText[${i}].v=this.value;addLog('Изменила текст: ${t.label}');toast('Текст на сайте обновлён')"></div>`).join('')}
+    </div></div>`;
+}
+function addPhoto(key){
+  const alt=prompt('Подпись к фото (3-5 слов, помогает поиску):','новое фото');
+  if(alt===null) return;
+  media[key].push([PALETTE[Math.floor(Math.random()*PALETTE.length)], alt||'фото']);
+  addLog('Загрузила фото в галерею'); render(); toast('Фото добавлено и уже на сайте');
+}
+
+/* ================= НАСТРОЙКИ (owner) ================= */
+function settings(){
+  return `<div class="pagehead"><div class="grow"><h2>Настройки и команда</h2>
+  <p class="hint">Доступно только владельцу: сотрудники, интеграции и реквизиты студии.</p></div></div>
+  <div class="panel"><b>Команда</b>
+  <table style="margin-top:10px"><tr><th>Имя</th><th>Почта</th><th>Роль</th><th></th></tr>
+  ${staff.map(s=>`<tr><td>${s.name}</td><td>${s.email}</td>
+    <td>${s.role==='owner'?'<span class="badge owner">владелец</span>':`<select style="width:150px" onchange="staff.find(x=>x.id===${s.id}).role=this.value;addLog('Сменила роль сотрудника');toast('Роль обновлена')"><option value="admin" ${s.role==='admin'?'selected':''}>администратор</option><option value="owner">владелец</option></select>`}</td>
+    <td>${s.role==='owner'?'':`<button class="icon-btn" onclick="staff=staff.filter(x=>x.id!==${s.id});addLog('Удалила сотрудника');render()">🗑</button>`}</td></tr>`).join('')}
+  </table>
+  <div class="form" style="margin-top:12px">
+    <div><label>Имя</label><input id="stName" placeholder="Имя администратора"></div>
+    <div><label>Почта</label><input id="stMail" placeholder="имя@princ-lis.ru"></div>
+    <div class="full"><button class="btn sm" onclick="addStaff()">＋ Пригласить администратора</button></div>
+  </div></div>
+  <div class="panel"><b>Интеграции</b>
+    <div style="display:grid;gap:10px;margin-top:12px">
+      <div class="toolbar" style="margin:0"><span class="badge ${integrations.sheets?'ok':'warn'}">${integrations.sheets?'✓ подключена':'выключена'}</span> Google Таблица записей <small class="hint">${integrations.sheetsUrl}</small>
+        <button class="btn ghost sm" onclick="integrations.sheets=!integrations.sheets;addLog('Переключила синхронизацию Google Таблицы');render()">переключить</button></div>
+      <div class="toolbar" style="margin:0"><span class="badge ${integrations.tg?'ok':'warn'}">${integrations.tg?'✓ включён':'выключен'}</span> Telegram-бот: подтверждения клиентам и чат команды
+        <button class="btn ghost sm" onclick="integrations.tg=!integrations.tg;addLog('Переключила Telegram-уведомления');render()">переключить</button></div>
+      <div class="toolbar" style="margin:0"><span class="badge ${integrations.wa?'ok':'warn'}">${integrations.wa?'✓ включён':'выключен'}</span> WhatsApp (через провайдера, платно)
+        <button class="btn ghost sm" onclick="integrations.wa=!integrations.wa;addLog('Переключила WhatsApp-канал');render()">переключить</button></div>
+      <div class="toolbar" style="margin:0"><span class="badge ${integrations.sms?'ok':'warn'}">${integrations.sms?'✓ включён':'выключен'}</span> SMS (запасной канал)
+        <button class="btn ghost sm" onclick="integrations.sms=!integrations.sms;addLog('Переключила SMS-канал');render()">переключить</button></div>
+    </div></div>
+  <div class="panel"><b>Персональные данные (152-ФЗ)</b>
+    <p class="hint" style="margin:8px 0 12px">По запросу клиента его данные обезличиваются: имя и телефон заменяются на хэш, история визитов сохраняется без личности.</p>
+    <div class="toolbar" style="margin:0"><input id="anonPhone" placeholder="Телефон клиента для анонимизации" style="max-width:280px">
+    <button class="btn warn sm" onclick="addLog('Анонимизировала клиента по запросу');toast('Клиент обезличен, готово для ответа на запрос')">Анонимизировать</button></div>
+  </div>`;
+}
+function addStaff(){
+  const n=document.getElementById('stName').value.trim(), m=document.getElementById('stMail').value.trim();
+  if(!n||!m) return toast('Заполните имя и почту');
+  staff.push({id:Date.now(), name:n, email:m, role:'admin'});
+  addLog('Пригласила администратора '+n); render(); toast('Приглашение отправлено на почту (в демо: добавлен сразу)');
+}
+
+/* ================= ЖУРНАЛ (owner) ================= */
+function logV(){
+  return `<div class="pagehead"><div class="grow"><h2>Журнал действий</h2>
+  <p class="hint">Каждое изменение в панели записывается: кто, что и когда. Спокойствие для владельца и защита для команды.</p></div></div>
+  <div class="panel">${log.map(l=>`<div class="logline"><time>${l.t}</time><b style="white-space:nowrap">${l.who}</b><span>${l.msg}</span></div>`).join('')}</div>`;
+}
+
+/* ================= UTIL ================= */
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200); }
+</script>
+</body>
+</html>

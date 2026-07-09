@@ -1,0 +1,207 @@
+// Prisma Schema — «Принц и Лис»
+// Строго по моделям из CLAUDE.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// КАТАЛОГ
+// ─────────────────────────────────────────────
+
+model Category {
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  name     String
+  order    Int       @default(0)
+  services Service[] @relation("ServiceCategories")
+
+  @@map("categories")
+}
+
+model Service {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name       String
+  desc       String
+  longDesc   String?
+  price      Int        // в рублях
+  unit       String     @default("занятие") // «в группе», «3 занятия», ...
+  duration   Int        @default(120) // минут
+  capacity   Int        @default(6)
+  level      String     @default("с нуля")
+  glaze      String     @default("#EDCA9D") // hex-цвет «пятна» на карточке
+  active     Boolean    @default(true)
+  program    String[]
+  includes   String[]
+  forWhom    String?
+  order      Int        @default(0)
+  categories Category[] @relation("ServiceCategories")
+  bookings   Booking[]
+  slots      Slot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("services")
+}
+
+// ─────────────────────────────────────────────
+// РАСПИСАНИЕ И СЛОТЫ
+// ─────────────────────────────────────────────
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+model ScheduleRule {
+  id    String    @id @default(cuid())
+  day   DayOfWeek
+  time  String    // HH:MM
+  title String
+
+  @@map("schedule_rules")
+}
+
+model Slot {
+  id        String    @id @default(cuid())
+  serviceId String
+  service   Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  date      String    // YYYY-MM-DD
+  time      String    // HH:MM
+  capacity  Int
+  bookings  Booking[]
+
+  @@unique([serviceId, date, time])
+  @@map("slots")
+}
+
+// ─────────────────────────────────────────────
+// ЗАПИСИ
+// ─────────────────────────────────────────────
+
+enum ContactChannel {
+  TG
+  WA
+  SMS
+  CALL
+}
+
+enum BookingStatus {
+  NEW
+  DONE
+  CANCEL
+}
+
+model Booking {
+  id             String         @id @default(cuid())
+  slotId         String
+  slot           Slot           @relation(fields: [slotId], references: [id])
+  serviceId      String
+  service        Service        @relation(fields: [serviceId], references: [id])
+  date           String         // YYYY-MM-DD (денормализовано для удобства)
+  time           String         // HH:MM
+  name           String
+  phone          String
+  channel        ContactChannel
+  tgNick         String?
+  status         BookingStatus  @default(NEW)
+  promoCode      String?
+  discountAmount Int?
+  createdAt      DateTime       @default(now())
+
+  @@map("bookings")
+}
+
+// ─────────────────────────────────────────────
+// ПРОМО
+// ─────────────────────────────────────────────
+
+enum PromoType {
+  PROMO
+  EVENT
+}
+
+model Promo {
+  id     String    @id @default(cuid())
+  type   PromoType @default(PROMO)
+  title  String
+  text   String
+  endsAt DateTime?
+  active Boolean   @default(true)
+
+  @@map("promos")
+}
+
+enum PromoCodeKind {
+  PERCENT
+  FIXED
+}
+
+model PromoCode {
+  id        String        @id @default(cuid())
+  code      String        @unique
+  kind      PromoCodeKind
+  value     Int           // процентов или рублей
+  limit     Int?          // null = без лимита
+  used      Int           @default(0)
+  active    Boolean       @default(true)
+  expiresAt DateTime?
+  note      String?
+
+  @@map("promo_codes")
+}
+
+// ─────────────────────────────────────────────
+// ПОЛЬЗОВАТЕЛИ (NextAuth)
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  OWNER
+  ADMIN
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  role         UserRole   @default(ADMIN)
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  logs         ActionLog[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// КОНТЕНТ И ЖУРНАЛ
+// ─────────────────────────────────────────────
+
+model ContentText {
+  key   String @id
+  label String
+  value String
+
+  @@map("content_texts")
+}
+
+model ActionLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  createdAt DateTime @default(now())
+
+  @@map("action_logs")
+}

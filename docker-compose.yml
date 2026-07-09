@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: princ-lis-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: princlis
+      POSTGRES_PASSWORD: princlis_dev
+      POSTGRES_DB: princlis
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
