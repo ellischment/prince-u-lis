@@ -72,9 +72,13 @@ src/
   lib/
     db.ts             ← Prisma client (singleton)
     auth.ts           ← NextAuth config
-    slots.ts          ← генерация временных слотов
+    domain/
+      slots.ts        ← generateSlots (rule→slot)
+      bookings.ts     ← bookSlot, cancelBooking, remaining, everySeventhFree
   types/
     index.ts
+docs/
+  db.md               ← ER-диаграмма (Mermaid)
 prisma/
   schema.prisma
   seed.ts
@@ -188,47 +192,84 @@ docker-compose.yml
 
 ---
 
-## Модели данных (Prisma)
+## Модели данных (Prisma) — актуально с этапа 1
+
+Полная схема в `prisma/schema.prisma`. ER-диаграмма в `docs/db.md`.
 
 ### Category
 
-`id`, `slug`, `name`, `order`, `services[]`
+`id`, `slug` (unique), `name`, `sortOrder` — разделы: wheel, hand, paint, kids, course
 
 ### Service
 
-`id`, `slug`, `categoryIds[]`, `name`, `desc`, `longDesc`, `price`, `unit`, `duration`, `capacity`, `level`, `glaze` (hex-цвет), `active`, `program[]`, `includes[]`, `forWhom`, `bookings[]`
+`id`, `slug` (unique), `name`, `desc`, `longDesc?`, `level`, `forWhom?`, `priceRub` (Int), `unit`, `durationMin` (Int), `capacity` (default 6), `glazeColor` (hex), `active`, `sortOrder`
+
+### ServiceCategory (M2M)
+
+`serviceId`, `categoryId` — один курс может быть в нескольких разделах
+
+### ServiceProgramItem
+
+`id`, `serviceId`, `text`, `sortOrder` — пункты программы занятия
+
+### ServiceIncludeItem
+
+`id`, `serviceId`, `text`, `sortOrder` — что входит в стоимость
 
 ### ScheduleRule
 
-`id`, `day` (enum: MON–SUN), `time` (HH:MM), `title`
+`id`, `weekday` (0=Вс, 1=Пн … 6=Сб), `startTime` (HH:MM), `title`, `serviceId?`
 
-### Slot (генерируется из ScheduleRule на 30 дней вперёд)
+### Slot
 
-`id`, `serviceId`, `date`, `time`, `capacity`, `bookings[]`
+`id`, `serviceId`, `startsAt` (DateTime), `capacity`, `source` (rule | manual)
+Генерируется функцией `generateSlots` на 30 дней вперёд. Уникальность: `(serviceId, startsAt)`.
+
+### Client
+
+`id`, `name`, `phone` (unique), `visitsCount` (default 0), `createdAt`, `anonymizedAt?`
+Создаётся или находится по телефону при каждой записи.
+
+### Consent
+
+`id`, `clientId`, `docVersion`, `acceptedAt`, `ip` — запись о согласии 152-ФЗ при каждом бронировании
 
 ### Booking
 
-`id`, `slotId`, `serviceId`, `date`, `time`, `name`, `phone`, `channel` (enum: TG/WA/SMS/CALL), `tgNick?`, `status` (NEW/DONE/CANCEL), `createdAt`, `promoCode?`, `discountAmount?`
+`id`, `slotId`, `clientId`, `status` (new | confirmed | done | cancelled | no_show), `contactChannel` (tg | wa | sms | call), `tgUsername?`, `comment?`, `createdAt`
 
 ### Promo
 
-`id`, `type` (PROMO/EVENT), `title`, `text`, `endsAt?`, `active`
+`id`, `type` (promo | event), `title`, `text`, `activeFrom?`, `activeTo?`, `active`
 
-### PromoCode
+### PromoCode (этап 5)
 
-`id`, `code`, `kind` (PERCENT/FIXED), `value`, `limit?`, `used`, `active`, `expiresAt?`, `note?`
+`id`, `code` (unique), `kind` (percent | fixed), `value`, `limit?`, `used`, `active`, `expiresAt?`, `note?`
 
 ### User (NextAuth)
 
-`id`, `email`, `name`, `role` (OWNER/ADMIN), `passwordHash`
+`id`, `email` (unique), `passwordHash`, `role` (owner | admin), `name`
 
 ### ContentText
 
-`key`, `label`, `value`
+`key` (PK), `label`, `value`
 
-### ActionLog
+### AuditLog
 
-`id`, `userId`, `action`, `createdAt`
+`id`, `actorId` (userId), `action`, `entity`, `entityId`, `payload` (Json), `at`
+
+---
+
+## Связи (явные, из схемы)
+
+- `Client` 1–N `Booking`
+- `Slot` 1–N `Booking`
+- `Service` 1–N `Slot`
+- `Service` N–M `Category` (через `ServiceCategory`)
+- `Service` 1–N `ServiceProgramItem`
+- `Service` 1–N `ServiceIncludeItem`
+- `Booking` N–1 `PromoCode` (этап 5, nullable)
+- `MediaAsset` N–M `Gallery` (этап 6)
 
 ---
 
@@ -283,6 +324,22 @@ docker-compose.yml
 - **`src/lib/db.ts`**: singleton Prisma Client (паттерн для Next.js dev hot reload)
 - Импорт шрифтов: `next/font/google` в `app/layout.tsx`, переменные CSS `--font-forum` и `--font-manrope`
 - SVG лиса хранится в `src/components/site/FoxScene.tsx` как inline SVG с CSS-анимациями
+
+### Этап 1 (доменный слой)
+
+**Принятые решения:**
+
+- `Slot.startsAt` — DateTime вместо отдельных полей date/time: проще сравнивать, нативный ORDER BY
+- `Client` выделен в отдельную таблицу с `phone unique`: один клиент = один телефон, visitsCount копится автоматически
+- `Consent` пишется при каждом `bookSlot` (не только при первой записи): законодательство требует фиксировать версию документа
+- `ServiceProgramItem` и `ServiceIncludeItem` — отдельные таблицы вместо массива строк: упрощает редактирование в админке без пересохранения всей услуги
+- `Booking.status` расширен: `confirmed` (мастер подтвердил), `no_show` (не пришли) — нужно для статистики
+- `AuditLog.payload` — Json: хранит старые значения при изменении записи; `entity`+`entityId` позволяют фильтровать по объекту
+- `ScheduleRule.weekday` — Int (0=Вс, 1=Пн … 6=Сб), совпадает с `Date.getDay()` JavaScript, не нужно маппить
+- `generateSlots` не трогает существующие слоты (upsert): идемпотентна, можно запускать хоть по cron
+- `bookSlot` использует `$transaction` + `SELECT FOR UPDATE` эмуляцию через Prisma raw: защита от двух одновременных записей на последнее место
+- `everySeventhFree` считает только статусы `done` (реально прошедшие занятия), не `new`/`confirmed`
+- Unit-тесты доменных функций — без БД, на in-memory моках: быстро, не требуют Docker
 
 ---
 

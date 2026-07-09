@@ -1,14 +1,20 @@
-// Seed — первоначальные данные для разработки
-import { PrismaClient, DayOfWeek } from '@prisma/client'
+/**
+ * Seed — «Принц и Лис», этап 1
+ *
+ * Запуск: npm run db:seed
+ * Данные из reference/princ-i-lis-site.html
+ */
+import { PrismaClient } from '@prisma/client'
 import { hash } from 'bcryptjs'
 
 const db = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Seeding database…')
+  console.log('🌱 Seed запущен…')
 
-  // ── Пользователи ───────────────────────────────────────────────
-  const ownerPassword = await hash(process.env.SEED_OWNER_PASSWORD ?? 'dev-password-123', 12)
+  // ── Пользователи ──────────────────────────────────────────────────────────
+  const ownerHash = await hash(process.env.SEED_OWNER_PASSWORD ?? 'dev-owner-123', 12)
+  const adminHash = await hash('dev-admin-123', 12)
 
   await db.user.upsert({
     where: { email: 'liza@princ-lis.ru' },
@@ -16,227 +22,443 @@ async function main() {
     create: {
       email: 'liza@princ-lis.ru',
       name: 'Лиза Якубович',
-      role: 'OWNER',
-      passwordHash: ownerPassword,
+      role: 'owner',
+      passwordHash: ownerHash,
     },
   })
-
   await db.user.upsert({
     where: { email: 'nastya@princ-lis.ru' },
     update: {},
-    create: {
-      email: 'nastya@princ-lis.ru',
-      name: 'Настя',
-      role: 'ADMIN',
-      passwordHash: await hash('admin-dev-123', 12),
-    },
+    create: { email: 'nastya@princ-lis.ru', name: 'Настя', role: 'admin', passwordHash: adminHash },
   })
 
-  // ── Категории ──────────────────────────────────────────────────
-  const cats = [
-    { slug: 'wheel', name: 'Гончарный круг', order: 1 },
-    { slug: 'hand', name: 'Лепка и декор', order: 2 },
-    { slug: 'paint', name: 'Живопись', order: 3 },
-    { slug: 'kids', name: 'Детям', order: 4 },
-    { slug: 'course', name: 'Курсы', order: 5 },
+  // ── Категории ────────────────────────────────────────────────────────────
+  const catDefs = [
+    { slug: 'wheel', name: 'Гончарный круг', sortOrder: 1 },
+    { slug: 'hand', name: 'Лепка и декор', sortOrder: 2 },
+    { slug: 'paint', name: 'Живопись', sortOrder: 3 },
+    { slug: 'kids', name: 'Детям', sortOrder: 4 },
+    { slug: 'course', name: 'Курсы', sortOrder: 5 },
   ]
-
-  for (const cat of cats) {
-    await db.category.upsert({
-      where: { slug: cat.slug },
-      update: { name: cat.name, order: cat.order },
-      create: cat,
-    })
+  for (const c of catDefs) {
+    await db.category.upsert({ where: { slug: c.slug }, update: c, create: c })
   }
+  const catMap = Object.fromEntries((await db.category.findMany()).map((c) => [c.slug, c.id]))
 
-  // ── Услуги ─────────────────────────────────────────────────────
-  const wheel = await db.category.findUniqueOrThrow({ where: { slug: 'wheel' } })
-  const hand = await db.category.findUniqueOrThrow({ where: { slug: 'hand' } })
-  const paint = await db.category.findUniqueOrThrow({ where: { slug: 'paint' } })
-  const kids = await db.category.findUniqueOrThrow({ where: { slug: 'kids' } })
-  const course = await db.category.findUniqueOrThrow({ where: { slug: 'course' } })
-
-  const services = [
+  // ── Услуги (все 14 из прототипа) ─────────────────────────────────────────
+  const serviceDefs = [
     {
       slug: 'goncharny-krug',
       name: 'Мастер-класс за гончарным кругом',
       desc: 'От кусочка глины до готовой кружки, чашки или вазы за одно занятие.',
       longDesc:
-        'Самое популярное занятие студии. Вы сядете за настоящий гончарный круг, почувствуете, как глина оживает под руками, и уйдёте с формой, которую придумали сами.',
-      price: 3500,
+        'Самое популярное занятие студии. Вы сядете за настоящий гончарный круг, почувствуете, как глина оживает под руками, и уйдёте с формой, которую придумали сами. Мастер рядом на каждом шагу: помогает, но не делает за вас.',
+      priceRub: 3500,
       unit: 'в группе',
-      duration: 120,
+      durationMin: 120,
       capacity: 6,
       level: 'с нуля',
-      glaze: '#E8895B',
+      glazeColor: '#E8895B',
+      sortOrder: 1,
+      cats: ['wheel'],
       program: [
-        'Центровка на круге',
-        'Вытягиваем стенки',
-        'Декор и подпись',
-        'Обжиг через 10-14 дней',
+        'Знакомство с глиной, посадка и центровка на круге',
+        'Вытягиваем стенки и формируем изделие',
+        'Декор: фактуры, ангобы, подпись автора',
+        'Изделие уходит на сушку и обжиг, через 10-14 дней забираете готовое',
       ],
-      includes: ['Глина и инструменты', 'Фартук', 'Обжиг и глазуровка', 'Чай и сушки'],
-      forWhom: 'Взрослым и детям от 7 лет. Никакого опыта не нужно.',
-      order: 1,
-      categories: { connect: [{ id: wheel.id }] },
+      includes: ['Глина и все инструменты', 'Фартук', 'Обжиг и глазуровка', 'Чай и сушки'],
+      forWhom: 'Взрослым и детям от 7 лет. Никакого опыта не нужно: руки поставим за одно занятие.',
     },
     {
       slug: 'ruchnaya-lepka',
       name: 'Мастер-класс по ручной лепке',
       desc: 'Любая форма: посуда, скульптура, подсвечник или элемент декора.',
-      price: 3500,
+      longDesc:
+        'Лепка руками свободнее круга: здесь можно всё. Тарелка с фактурой листа, скульптура кота, подсвечник-домик. Приходите со своей идеей или выберите из наших эскизов.',
+      priceRub: 3500,
       unit: 'в группе',
-      duration: 120,
+      durationMin: 120,
       capacity: 8,
       level: 'с нуля',
-      glaze: '#EDCA9D',
-      program: ['Идея и глина', 'Жгут, пласт, отминка', 'Сборка и декор', 'Обжиг'],
+      glazeColor: '#EDCA9D',
+      sortOrder: 2,
+      cats: ['hand'],
+      program: [
+        'Выбираем идею и разминаем глину',
+        'Основные приёмы: жгут, пласт, отминка',
+        'Собираем и декорируем изделие',
+        'Сушка и обжиг, готово через 10-14 дней',
+      ],
       includes: ['Глина и инструменты', 'Фартук', 'Обжиг', 'Чай и сушки'],
-      forWhom: 'Всем от 5 лет.',
-      order: 2,
-      categories: { connect: [{ id: hand.id }] },
+      forWhom:
+        'Всем от 5 лет. Идеально для первого знакомства с керамикой и для встреч с друзьями.',
     },
     {
       slug: 'rospis-majolika',
       name: 'Роспись майолика',
       desc: 'Яркая роспись эмалью и пигментами, после обжига изделием можно пользоваться.',
-      price: 4500,
+      longDesc:
+        'Древняя техника росписи по сырой эмали: цвет впитывается мгновенно, и в этом её магия. Под руководством мастера вы распишете изделие пигментными порошками, а после обжига им можно пользоваться каждый день.',
+      priceRub: 4500,
       unit: 'индивидуально',
-      duration: 120,
+      durationMin: 120,
       capacity: 1,
       level: 'с нуля',
-      glaze: '#7FA0CE',
-      program: ['Выбор изделия и эскиз', 'Роспись по сырой эмали', 'Обжиг'],
-      includes: ['Изделие под роспись', 'Эмаль и пигменты', 'Обжиг', 'Чай'],
-      forWhom: 'Взрослым и детям от 8 лет, формат один на один.',
-      order: 3,
-      categories: { connect: [{ id: hand.id }, { id: paint.id }] },
+      glazeColor: '#7FA0CE',
+      sortOrder: 3,
+      cats: ['hand', 'paint'],
+      program: [
+        'Выбор изделия и эскиз росписи',
+        'Работа по сырой эмали пигментами',
+        'Обжиг, готово через 10-14 дней',
+      ],
+      includes: ['Изделие под роспись', 'Эмаль и пигменты', 'Обжиг', 'Чай и сушки'],
+      forWhom:
+        'Индивидуальный формат: мастер только с вами. Подходит и взрослым, и детям от 8 лет.',
+    },
+    {
+      slug: 'zhuravli',
+      name: 'Мастер-класс «Журавли»',
+      desc: 'Тёмная глина и роспись в стиле японских гравюр под руководством мастера.',
+      longDesc:
+        'Особое занятие для любителей эстетики. Из тёмной глины на круге рождается стакан, пиала или тарелка, а затем вы наносите роспись глиняными красками в духе японских гравюр: журавли, ветви, волны.',
+      priceRub: 5200,
+      unit: 'в группе',
+      durationMin: 150,
+      capacity: 6,
+      level: 'с нуля',
+      glazeColor: '#31435F',
+      sortOrder: 4,
+      cats: ['wheel', 'paint'],
+      program: [
+        'Создаём форму на гончарном круге',
+        'Готовим изделие под роспись',
+        'Роспись глиняными красками в стиле укиё-э',
+        'Обжиг, готово через 10-14 дней',
+      ],
+      includes: ['Тёмная глина, краски, инструменты', 'Фартук', 'Обжиг', 'Чай и сушки'],
+      forWhom: 'Взрослым и подросткам. Красиво получается даже у тех, кто «не умеет рисовать».',
+    },
+    {
+      slug: 'svechi',
+      name: 'Двойной мастер-класс: свечи',
+      desc: 'Два занятия: форма и декор, затем аромат, парафин и фитиль.',
+      longDesc:
+        'Свеча в подсвечнике, который вы слепили сами. На первой встрече создаёте и декорируете форму, на второй подбираете аромат, заливаете парафин и ставите фитиль.',
+      priceRub: 5000,
+      unit: '2 занятия',
+      durationMin: 120,
+      capacity: 8,
+      level: 'с нуля',
+      glazeColor: '#B9C9A9',
+      sortOrder: 5,
+      cats: ['hand'],
+      program: [
+        'Занятие 1: лепим и декорируем форму свечи',
+        'Обжиг формы между занятиями',
+        'Занятие 2: аромат, заливка парафина, фитиль',
+      ],
+      includes: ['Глина, парафин, ароматы, фитили', 'Обжиг', 'Чай и сушки'],
+      forWhom: 'Взрослым и детям от 8 лет. Отличный подарок себе или паре: приходите вдвоём.',
     },
     {
       slug: 'chainaya-para',
       name: 'Экспресс-курс «Чайная пара»',
       desc: 'Три занятия. Чашка и блюдце, которые вы придумали и сделали сами.',
-      price: 8500,
+      longDesc:
+        'Представьте: в вашем доме чайная пара, которую вы придумали и сделали от и до. Три встречи, чтобы пройти путь от эскиза до глазурованной чашки с блюдцем.',
+      priceRub: 8500,
       unit: '3 занятия',
-      duration: 120,
+      durationMin: 120,
       capacity: 6,
       level: 'с нуля',
-      glaze: '#E8895B',
-      program: ['Форма чашки на круге', 'Блюдце и ручка', 'Глазуровка и декор'],
+      glazeColor: '#E8895B',
+      sortOrder: 6,
+      cats: ['wheel', 'course'],
+      program: [
+        'Занятие 1: эскиз и форма чашки на круге',
+        'Занятие 2: блюдце и подрезка, ручка',
+        'Занятие 3: глазуровка и декор',
+        'Обжиг, пара готова через 2 недели',
+      ],
       includes: ['Все материалы и обжиги', 'Фартук', 'Чай и сушки'],
-      forWhom: 'Взрослым.',
-      order: 4,
-      categories: { connect: [{ id: wheel.id }, { id: course.id }] },
+      forWhom: 'Взрослым. Подходит как первый курс после разового мастер-класса.',
     },
     {
       slug: 'kurs-goncharstvo',
       name: 'Курс гончарного дела',
       desc: '10 занятий, все основные техники. Дважды в неделю по 2 часа.',
-      price: 24000,
+      longDesc:
+        'Основательный вход в профессию и хобби на годы. За десять занятий вы освоите центровку, вытягивание, подрезку, ручки, глазури и обжиг: весь цикл работы гончара.',
+      priceRub: 24000,
       unit: '10 занятий',
-      duration: 120,
+      durationMin: 120,
       capacity: 6,
       level: 'с нуля и выше',
-      glaze: '#EDCA9D',
+      glazeColor: '#EDCA9D',
+      sortOrder: 7,
+      cats: ['wheel', 'course'],
       program: [
         'Центровка и базовые формы',
         'Цилиндр, пиала, тарелка',
         'Подрезка и доработка',
-        'Глазури и декор',
-        'Финальный проект',
+        'Ручки и сложные формы',
+        'Глазури, ангобы, декор',
+        'Финальный проект: сервиз из 2-3 предметов',
       ],
       includes: ['Все материалы и обжиги', 'Место для хранения работ', 'Чай и сушки'],
-      forWhom: 'Взрослым. Группа до 6 человек.',
-      order: 5,
-      categories: { connect: [{ id: wheel.id }, { id: course.id }] },
+      forWhom: 'Взрослым. Группа до 6 человек, дважды в неделю по 2 часа.',
+    },
+    {
+      slug: 'intensiv-keramika',
+      name: 'Интенсив по керамике',
+      desc: '5 занятий каждый день. Быстрый и плотный вход в азы гончарного искусства.',
+      longDesc:
+        'Пять дней подряд, чтобы быстро и цельно разобраться в азах: круг, лепка, декор, глазурь. Формат для тех, кто хочет погрузиться, а не растягивать.',
+      priceRub: 16500,
+      unit: '5 занятий',
+      durationMin: 120,
+      capacity: 6,
+      level: 'с нуля',
+      glazeColor: '#7FA0CE',
+      sortOrder: 8,
+      cats: ['wheel', 'hand', 'course'],
+      program: [
+        'День 1: глина и круг, первые формы',
+        'День 2: лепка руками',
+        'День 3: подрезка и доработка',
+        'День 4: декор и глазури',
+        'День 5: финальное изделие',
+      ],
+      includes: ['Все материалы и обжиги', 'Фартук', 'Чай и сушки'],
+      forWhom: 'Взрослым, в том числе в отпуске или между проектами.',
+    },
+    {
+      slug: 'kopii',
+      name: 'Занятия по копии',
+      desc: 'Копируем картины великих мастеров и учимся их технике.',
+      longDesc:
+        'Копирование: старейший способ учиться у великих. Разбираем, как построена картина, и повторяем её технику под руководством преподавателя.',
+      priceRub: 2700,
+      unit: 'урок',
+      durationMin: 120,
+      capacity: 8,
+      level: 'любой',
+      glazeColor: '#B9C9A9',
+      sortOrder: 9,
+      cats: ['paint'],
+      program: ['Выбор работы и разбор композиции', 'Подмалёвок', 'Проработка и лессировки'],
+      includes: ['Холст, краски, кисти', 'Мольберт', 'Чай и сушки'],
+      forWhom: 'Любой уровень: преподаватель подберёт работу по силам.',
     },
     {
       slug: 'nabroski',
       name: 'Наброски с натуры',
       desc: 'Каждый четверг в 19:00. Живая натура, скорость мышления, глазомер.',
-      price: 1500,
+      longDesc:
+        'Быстрый рисунок с живой модели: короткие и длинные позы, разные материалы. Лучшая тренировка глазомера, композиции и смелости руки.',
+      priceRub: 1500,
       unit: 'занятие',
-      duration: 90,
+      durationMin: 90,
       capacity: 10,
       level: 'любой',
-      glaze: '#31435F',
-      program: ['Позы 1-2 мин', 'Позы 5-10 мин', 'Длинная постановка'],
+      glazeColor: '#31435F',
+      sortOrder: 10,
+      cats: ['paint'],
+      program: ['Разогрев: позы по 1-2 минуты', 'Средние позы по 5-10 минут', 'Длинная постановка'],
       includes: ['Бумага, уголь, сангина', 'Мольберт', 'Чай'],
-      forWhom: 'Любой уровень.',
-      order: 6,
-      categories: { connect: [{ id: paint.id }] },
+      forWhom: 'Любой уровень, приходите регулярно: прогресс виден через месяц.',
     },
     {
-      slug: 'detsky-kruzhok',
+      slug: 'pleneryi',
+      name: 'Пленэры по воскресеньям',
+      desc: 'Выходим рисовать на воздух: композиция, тон и цвет в пленэре.',
+      longDesc:
+        'Выходим в город и парки писать с натуры. Учимся видеть тон и цвет в живом свете, ловить состояние и не бояться зрителей за спиной.',
+      priceRub: 3700,
+      unit: 'выход',
+      durationMin: 180,
+      capacity: 8,
+      level: 'любой',
+      glazeColor: '#E8895B',
+      sortOrder: 11,
+      cats: ['paint'],
+      program: [
+        'Выбор мотива и композиция',
+        'Этюд: большие отношения',
+        'Проработка и разбор работ',
+      ],
+      includes: ['Складной стул и планшет', 'Материалы', 'Маршрут и место встречи в чате'],
+      forWhom: 'Любой уровень. Летний сезон: по воскресеньям.',
+    },
+    {
+      slug: 'kurs-zhivopis',
+      name: 'Курс по живописи и рисунку',
+      desc: '10 занятий для любого уровня, дважды в неделю.',
+      longDesc:
+        'Системный курс изобразительного искусства: рисунок, тон, цвет, композиция. Программа подстраивается под ваш уровень: кто-то ставит руку, кто-то готовит портфолио.',
+      priceRub: 23500,
+      unit: '10 занятий',
+      durationMin: 120,
+      capacity: 8,
+      level: 'любой',
+      glazeColor: '#EDCA9D',
+      sortOrder: 12,
+      cats: ['paint', 'course'],
+      program: [
+        'Рисунок: линия, тон, форма',
+        'Композиция и перспектива',
+        'Живопись: цветовые отношения',
+        'Свободная тема: ваша картина',
+      ],
+      includes: ['Все материалы', 'Мольберт и место', 'Чай и сушки'],
+      forWhom: 'Взрослым и подросткам, любой уровень.',
+    },
+    {
+      slug: 'detsky-lepka',
       name: 'Детский кружок по лепке',
-      desc: 'Дважды в неделю, с 5 лет.',
-      price: 16000,
+      desc: 'Дважды в неделю, с 5 лет. Развиваем моторику и фантазию.',
+      longDesc:
+        'Регулярный кружок, где ребёнок лепит зверей, домики и посуду, а заодно развивает моторику, усидчивость и фантазию. Каждый месяц: маленькая выставка работ для родителей.',
+      priceRub: 16000,
       unit: '8 занятий',
-      duration: 90,
+      durationMin: 90,
       capacity: 8,
       level: 'дети 5+',
-      glaze: '#B9C9A9',
-      program: ['Формы и звери', 'Посуда', 'Композиция', 'Глазурь'],
-      includes: ['Всё для лепки', 'Сок и печенье'],
-      forWhom: 'Детям с 5 лет.',
-      order: 7,
-      categories: { connect: [{ id: kids.id }, { id: hand.id }] },
+      glazeColor: '#E8895B',
+      sortOrder: 13,
+      cats: ['kids', 'hand'],
+      program: [
+        'Простые формы и звери',
+        'Посуда для дома',
+        'Сюжетная композиция',
+        'Роспись и глазурь',
+      ],
+      includes: ['Глина, краски, фартук', 'Обжиг', 'Сок и печенье'],
+      forWhom: 'Детям с 5 лет. Группы до 8 человек, дважды в неделю по 90 минут.',
+    },
+    {
+      slug: 'detsky-risovanie',
+      name: 'Детский кружок по рисованию',
+      desc: 'Дважды в неделю, с 6 лет.',
+      longDesc:
+        'Кружок, где рисование остаётся радостью, а не обязанностью. Гуашь, акварель, пастель: пробуем разные материалы и собираем детское портфолио.',
+      priceRub: 12000,
+      unit: 'месяц',
+      durationMin: 90,
+      capacity: 8,
+      level: 'дети 6+',
+      glazeColor: '#7FA0CE',
+      sortOrder: 14,
+      cats: ['kids', 'paint'],
+      program: [
+        'Основы: линия, пятно, цвет',
+        'Животные и природа',
+        'Человек и сказочные сюжеты',
+        'Свободные темы',
+      ],
+      includes: ['Все материалы', 'Папка для работ', 'Сок и печенье'],
+      forWhom: 'Детям с 6 лет, дважды в неделю по 90 минут.',
     },
   ]
 
-  for (const svc of services) {
-    const { categories: cats, ...data } = svc
-    await db.service.upsert({
+  for (const svc of serviceDefs) {
+    const { cats, program, includes, ...data } = svc
+
+    const service = await db.service.upsert({
       where: { slug: data.slug },
-      update: { ...data, categories: cats },
-      create: { ...data, categories: cats },
+      update: { ...data },
+      create: { ...data },
     })
+
+    // Привязываем категории (удаляем старые, создаём новые)
+    await db.serviceCategory.deleteMany({ where: { serviceId: service.id } })
+    for (const catSlug of cats) {
+      await db.serviceCategory.create({
+        data: { serviceId: service.id, categoryId: catMap[catSlug] },
+      })
+    }
+
+    // Программа
+    await db.serviceProgramItem.deleteMany({ where: { serviceId: service.id } })
+    for (let i = 0; i < program.length; i++) {
+      await db.serviceProgramItem.create({
+        data: { serviceId: service.id, text: program[i], sortOrder: i },
+      })
+    }
+
+    // Включено
+    await db.serviceIncludeItem.deleteMany({ where: { serviceId: service.id } })
+    for (let i = 0; i < includes.length; i++) {
+      await db.serviceIncludeItem.create({
+        data: { serviceId: service.id, text: includes[i], sortOrder: i },
+      })
+    }
   }
 
-  // ── Расписание ─────────────────────────────────────────────────
-  const rules: { day: DayOfWeek; time: string; title: string }[] = [
-    { day: 'MON', time: '18:00', title: 'Пишем цветы маслом' },
-    { day: 'TUE', time: '18:00', title: 'Лепка и гончарный круг' },
-    { day: 'TUE', time: '19:00', title: 'Живопись, все уровни' },
-    { day: 'WED', time: '19:00', title: 'Наброски' },
-    { day: 'THU', time: '19:00', title: 'Рисунок с натуры' },
-    { day: 'FRI', time: '19:00', title: 'Занятия по копии' },
-    { day: 'SUN', time: '12:00', title: 'Детский кружок по лепке' },
+  // ── Расписание ────────────────────────────────────────────────────────────
+  // 0=Вс, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб — как Date.getDay()
+  const ruleDefs = [
+    { weekday: 1, startTime: '18:00', title: 'Пишем цветы маслом' },
+    { weekday: 2, startTime: '18:00', title: 'Лепка и гончарный круг' },
+    { weekday: 2, startTime: '19:00', title: 'Живопись, все уровни' },
+    { weekday: 3, startTime: '19:00', title: 'Наброски' },
+    { weekday: 4, startTime: '18:00', title: 'Лепка в свободной технике' },
+    { weekday: 4, startTime: '19:00', title: 'Рисунок с натуры' },
+    { weekday: 5, startTime: '19:00', title: 'Занятия по копии' },
+    { weekday: 5, startTime: '19:00', title: 'Лепка с кинопросмотром' },
+    { weekday: 6, startTime: '11:00', title: 'Индивидуальные занятия весь день' },
+    { weekday: 0, startTime: '12:00', title: 'Детский кружок по лепке' },
+    { weekday: 0, startTime: '18:00', title: 'Живопись и рисунок' },
   ]
 
-  // Сначала очищаем, потом добавляем (простой подход для seed)
   await db.scheduleRule.deleteMany()
-  await db.scheduleRule.createMany({ data: rules })
+  await db.scheduleRule.createMany({ data: ruleDefs })
 
-  // ── Акции ──────────────────────────────────────────────────────
-  await db.promo.upsert({
-    where: { id: 'seed-promo-1' },
-    update: {},
-    create: {
+  // ── Акции ─────────────────────────────────────────────────────────────────
+  const promos = [
+    {
       id: 'seed-promo-1',
-      type: 'PROMO',
+      type: 'promo' as const,
       title: 'Каждое 7-е занятие бесплатно',
-      text: 'На все регулярные занятия. Просто приходите, мы считаем.',
+      text: 'Действует на все регулярные занятия для детей и взрослых.',
       active: true,
     },
-  })
+    {
+      id: 'seed-promo-2',
+      type: 'promo' as const,
+      title: 'Скидка пенсионерам 15%',
+      text: 'На еженедельные занятия и коворкинг по будням до 17:00.',
+      active: true,
+    },
+    {
+      id: 'seed-promo-3',
+      type: 'event' as const,
+      title: 'Счастливый день',
+      text: 'Суббота открытых дверей: весь день в студии, каждые 2 часа новое направление.',
+      active: true,
+    },
+  ]
+  for (const p of promos) {
+    await db.promo.upsert({ where: { id: p.id }, update: {}, create: p })
+  }
 
-  // ── Промокоды ──────────────────────────────────────────────────
+  // ── Промокоды ─────────────────────────────────────────────────────────────
   await db.promoCode.upsert({
     where: { code: 'LISA10' },
     update: {},
     create: {
       code: 'LISA10',
-      kind: 'PERCENT',
+      kind: 'percent',
       value: 10,
       limit: 50,
-      used: 0,
       active: true,
       note: 'Для соцсетей',
     },
   })
 
-  // ── Тексты сайта ───────────────────────────────────────────────
+  // ── Тексты сайта ──────────────────────────────────────────────────────────
   const texts = [
     {
       key: 'hero_title',
@@ -254,13 +476,8 @@ async function main() {
       value: 'У нас есть всё, чтобы вы провели время с пользой и удовольствием.',
     },
   ]
-
-  for (const text of texts) {
-    await db.contentText.upsert({
-      where: { key: text.key },
-      update: { value: text.value },
-      create: text,
-    })
+  for (const t of texts) {
+    await db.contentText.upsert({ where: { key: t.key }, update: { value: t.value }, create: t })
   }
 
   console.log('✅ Seed завершён!')

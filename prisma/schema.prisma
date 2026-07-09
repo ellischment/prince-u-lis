@@ -1,5 +1,5 @@
-// Prisma Schema — «Принц и Лис»
-// Строго по моделям из CLAUDE.md
+// Prisma schema — «Принц и Лис» (этап 1)
+// Актуальная ER-диаграмма: docs/db.md
 
 generator client {
   provider = "prisma-client-js"
@@ -11,197 +11,218 @@ datasource db {
 }
 
 // ─────────────────────────────────────────────
-// КАТАЛОГ
+// КАТАЛОГ УСЛУГ
 // ─────────────────────────────────────────────
 
 model Category {
-  id       String    @id @default(cuid())
-  slug     String    @unique
-  name     String
-  order    Int       @default(0)
-  services Service[] @relation("ServiceCategories")
-
-  @@map("categories")
+  id        String            @id @default(cuid())
+  slug      String            @unique
+  name      String
+  sortOrder Int               @default(0)
+  services  ServiceCategory[]
 }
 
 model Service {
-  id         String     @id @default(cuid())
-  slug       String     @unique
-  name       String
-  desc       String
-  longDesc   String?
-  price      Int        // в рублях
-  unit       String     @default("занятие") // «в группе», «3 занятия», ...
-  duration   Int        @default(120) // минут
-  capacity   Int        @default(6)
-  level      String     @default("с нуля")
-  glaze      String     @default("#EDCA9D") // hex-цвет «пятна» на карточке
-  active     Boolean    @default(true)
-  program    String[]
-  includes   String[]
-  forWhom    String?
-  order      Int        @default(0)
-  categories Category[] @relation("ServiceCategories")
-  bookings   Booking[]
-  slots      Slot[]
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  name        String
+  desc        String
+  longDesc    String?
+  level       String
+  forWhom     String?
+  priceRub    Int
+  unit        String
+  durationMin Int
+  capacity    Int                  @default(6)
+  glazeColor  String
+  active      Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  categories  ServiceCategory[]
+  program     ServiceProgramItem[]
+  includes    ServiceIncludeItem[]
+  slots       Slot[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ServiceCategory {
+  serviceId  String
+  categoryId String
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@map("services")
+  @@id([serviceId, categoryId])
+}
+
+model ServiceProgramItem {
+  id        String  @id @default(cuid())
+  serviceId String
+  text      String
+  sortOrder Int     @default(0)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+model ServiceIncludeItem {
+  id        String  @id @default(cuid())
+  serviceId String
+  text      String
+  sortOrder Int     @default(0)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 }
 
 // ─────────────────────────────────────────────
 // РАСПИСАНИЕ И СЛОТЫ
 // ─────────────────────────────────────────────
 
-enum DayOfWeek {
-  MON
-  TUE
-  WED
-  THU
-  FRI
-  SAT
-  SUN
+model ScheduleRule {
+  id        String @id @default(cuid())
+  /// 0 = Вс, 1 = Пн, 2 = Вт, 3 = Ср, 4 = Чт, 5 = Пт, 6 = Сб (как Date.getDay())
+  weekday   Int
+  startTime String // HH:MM
+  title     String
+  serviceId String?
 }
 
-model ScheduleRule {
-  id    String    @id @default(cuid())
-  day   DayOfWeek
-  time  String    // HH:MM
-  title String
-
-  @@map("schedule_rules")
+enum SlotSource {
+  rule
+  manual
 }
 
 model Slot {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   serviceId String
-  service   Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  date      String    // YYYY-MM-DD
-  time      String    // HH:MM
+  startsAt  DateTime
   capacity  Int
+  source    SlotSource @default(rule)
+  service   Service    @relation(fields: [serviceId], references: [id])
   bookings  Booking[]
 
-  @@unique([serviceId, date, time])
-  @@map("slots")
+  @@unique([serviceId, startsAt])
 }
 
 // ─────────────────────────────────────────────
-// ЗАПИСИ
+// КЛИЕНТЫ И ЗАПИСИ
 // ─────────────────────────────────────────────
 
-enum ContactChannel {
-  TG
-  WA
-  SMS
-  CALL
+model Client {
+  id           String    @id @default(cuid())
+  name         String
+  phone        String    @unique
+  visitsCount  Int       @default(0)
+  createdAt    DateTime  @default(now())
+  anonymizedAt DateTime?
+  bookings     Booking[]
+  consents     Consent[]
+}
+
+model Consent {
+  id         String   @id @default(cuid())
+  clientId   String
+  docVersion String   @default("1.0")
+  acceptedAt DateTime @default(now())
+  ip         String
+  client     Client   @relation(fields: [clientId], references: [id])
 }
 
 enum BookingStatus {
-  NEW
-  DONE
-  CANCEL
+  new
+  confirmed
+  done
+  cancelled
+  no_show
+}
+
+enum ContactChannel {
+  tg
+  wa
+  sms
+  call
 }
 
 model Booking {
   id             String         @id @default(cuid())
   slotId         String
-  slot           Slot           @relation(fields: [slotId], references: [id])
-  serviceId      String
-  service        Service        @relation(fields: [serviceId], references: [id])
-  date           String         // YYYY-MM-DD (денормализовано для удобства)
-  time           String         // HH:MM
-  name           String
-  phone          String
-  channel        ContactChannel
-  tgNick         String?
-  status         BookingStatus  @default(NEW)
-  promoCode      String?
-  discountAmount Int?
+  clientId       String
+  status         BookingStatus  @default(new)
+  contactChannel ContactChannel
+  tgUsername     String?
+  comment        String?
+  promoCodeId    String? // этап 5
   createdAt      DateTime       @default(now())
-
-  @@map("bookings")
+  slot           Slot           @relation(fields: [slotId], references: [id])
+  client         Client         @relation(fields: [clientId], references: [id])
+  promoCode      PromoCode?     @relation(fields: [promoCodeId], references: [id])
 }
 
 // ─────────────────────────────────────────────
-// ПРОМО
+// АКЦИИ И ПРОМОКОДЫ
 // ─────────────────────────────────────────────
 
 enum PromoType {
-  PROMO
-  EVENT
+  promo
+  event
 }
 
 model Promo {
-  id     String    @id @default(cuid())
-  type   PromoType @default(PROMO)
-  title  String
-  text   String
-  endsAt DateTime?
-  active Boolean   @default(true)
-
-  @@map("promos")
+  id         String    @id @default(cuid())
+  type       PromoType
+  title      String
+  text       String
+  activeFrom DateTime?
+  activeTo   DateTime?
+  active     Boolean   @default(true)
 }
 
 enum PromoCodeKind {
-  PERCENT
-  FIXED
+  percent
+  fixed
 }
 
 model PromoCode {
   id        String        @id @default(cuid())
   code      String        @unique
   kind      PromoCodeKind
-  value     Int           // процентов или рублей
-  limit     Int?          // null = без лимита
+  value     Int
+  limit     Int?
   used      Int           @default(0)
   active    Boolean       @default(true)
   expiresAt DateTime?
   note      String?
-
-  @@map("promo_codes")
+  bookings  Booking[]
 }
 
 // ─────────────────────────────────────────────
-// ПОЛЬЗОВАТЕЛИ (NextAuth)
+// ПОЛЬЗОВАТЕЛИ И АУДИТ
 // ─────────────────────────────────────────────
 
 enum UserRole {
-  OWNER
-  ADMIN
+  owner
+  admin
 }
 
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
   name         String
-  role         UserRole   @default(ADMIN)
+  role         UserRole
   passwordHash String
   createdAt    DateTime   @default(now())
-  logs         ActionLog[]
-
-  @@map("users")
+  auditLogs    AuditLog[]
 }
-
-// ─────────────────────────────────────────────
-// КОНТЕНТ И ЖУРНАЛ
-// ─────────────────────────────────────────────
 
 model ContentText {
   key   String @id
   label String
   value String
-
-  @@map("content_texts")
 }
 
-model ActionLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String
-  createdAt DateTime @default(now())
-
-  @@map("action_logs")
+model AuditLog {
+  id       String   @id @default(cuid())
+  actorId  String
+  action   String
+  entity   String
+  entityId String
+  payload  Json     @default("{}")
+  at       DateTime @default(now())
+  actor    User     @relation(fields: [actorId], references: [id])
 }

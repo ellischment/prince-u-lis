@@ -4,20 +4,25 @@
 export type {
   Category,
   Service,
+  ServiceCategory,
+  ServiceProgramItem,
+  ServiceIncludeItem,
   ScheduleRule,
   Slot,
+  Client,
+  Consent,
   Booking,
   Promo,
   PromoCode,
   User,
   ContentText,
-  ActionLog,
+  AuditLog,
 } from '@prisma/client'
 
 export type {
-  DayOfWeek,
-  ContactChannel,
+  SlotSource,
   BookingStatus,
+  ContactChannel,
   PromoType,
   PromoCodeKind,
   UserRole,
@@ -27,11 +32,10 @@ export type {
 export interface BookingFormState {
   step: 1 | 2 | 3 | 4
   serviceId: string | null
-  date: string | null
-  time: string | null
+  slotId: string | null
   name: string
   phone: string
-  channel: 'TG' | 'WA' | 'SMS' | 'CALL' | null
+  channel: 'tg' | 'wa' | 'sms' | 'call' | null
   tgNick: string
   promoCode: string
   consent: boolean
@@ -40,8 +44,7 @@ export interface BookingFormState {
 // Слот с количеством свободных мест
 export interface SlotWithAvailability {
   id: string
-  date: string
-  time: string
+  startsAt: Date
   capacity: number
   booked: number
   available: number
@@ -54,7 +57,7 @@ declare module 'next-auth' {
       id: string
       email: string
       name: string
-      role: 'OWNER' | 'ADMIN'
+      role: 'owner' | 'admin'
     }
   }
 }
