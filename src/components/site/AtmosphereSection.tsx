@@ -100,13 +100,17 @@ export function AtmosphereSection() {
         </p>
       </div>
 
-      <style>{`
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @media (max-width: 640px) {
           section .wrap > div:nth-child(2) {
             grid-template-columns: 1fr 1fr !important;
           }
         }
-      `}</style>
+      `,
+        }}
+      />
     </section>
   )
 }
