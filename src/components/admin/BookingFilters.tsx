@@ -28,6 +28,18 @@ export function BookingFilters() {
     [router, pathname, searchParams],
   )
 
+  function buildExportUrl(format: 'csv' | 'xlsx') {
+    const params = new URLSearchParams()
+    params.set('format', format)
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
+    const status = searchParams.get('status')
+    if (dateFrom) params.set('dateFrom', dateFrom)
+    if (dateTo) params.set('dateTo', dateTo)
+    if (status) params.set('status', status)
+    return '/api/admin/bookings/export?' + params.toString()
+  }
+
   const field: React.CSSProperties = {
     padding: '8px 12px',
     border: '1px solid #e3ddcf',
@@ -111,6 +123,68 @@ export function BookingFilters() {
           Сбросить
         </button>
       )}
+
+      {/* Экспорт */}
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <a
+          href={buildExportUrl('csv')}
+          download
+          style={{
+            ...field,
+            textDecoration: 'none',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            color: '#2c3e9e',
+            border: '1px solid #e3e7fa',
+            background: '#e3e7fa',
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          CSV
+        </a>
+        <a
+          href={buildExportUrl('xlsx')}
+          download
+          style={{
+            ...field,
+            textDecoration: 'none',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            color: '#177a50',
+            border: '1px solid #e4f3eb',
+            background: '#e4f3eb',
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          XLSX
+        </a>
+      </div>
     </div>
   )
 }

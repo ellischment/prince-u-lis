@@ -1,10 +1,11 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { ChangePasswordForm } from '@/components/admin/ChangePasswordForm'
+import { AnonymizeClientForm } from '@/components/admin/AnonymizeClientForm'
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions)
-  const user = session?.user as { email: string; name: string } | undefined
+  const user = session?.user as { email: string; name: string; role: string } | undefined
 
   return (
     <div>
@@ -21,7 +22,8 @@ export default async function SettingsPage() {
         Настройки
       </h1>
 
-      <div style={{ maxWidth: 480 }}>
+      <div style={{ maxWidth: 560 }}>
+        {/* Аккаунт */}
         <div
           style={{
             background: '#fff',
@@ -37,6 +39,9 @@ export default async function SettingsPage() {
         </div>
 
         <ChangePasswordForm />
+
+        {/* Анонимизация — только owner и tech */}
+        {(user?.role === 'owner' || user?.role === 'tech') && <AnonymizeClientForm />}
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ interface NavItem {
   label: string
 }
 
-const NAV: NavItem[] = [
+const NAV_ALL: NavItem[] = [
   { href: '/admin/bookings', label: 'Записи' },
   { href: '/admin/schedule', label: 'Расписание' },
   { href: '/admin/services', label: 'Услуги' },
@@ -19,14 +19,27 @@ const NAV: NavItem[] = [
   { href: '/admin/content', label: 'Контент' },
 ]
 
-const NAV_OWNER: NavItem[] = [
-  { href: '/admin/log', label: 'Журнал' },
-  { href: '/admin/settings', label: 'Настройки' },
-]
+const NAV_OWNER_ONLY: NavItem[] = [{ href: '/admin/log', label: 'Журнал' }]
+
+const NAV_SETTINGS: NavItem[] = [{ href: '/admin/settings', label: 'Настройки' }]
+
+const NAV_SYSTEM: NavItem[] = [{ href: '/admin/system', label: 'Система' }]
+
+function buildNav(role: string): NavItem[] {
+  if (role === 'owner') return [...NAV_ALL, ...NAV_OWNER_ONLY, ...NAV_SETTINGS, ...NAV_SYSTEM]
+  if (role === 'tech') return [...NAV_ALL, ...NAV_SETTINGS, ...NAV_SYSTEM]
+  return NAV_ALL // admin
+}
 
 export function AdminSidebar({ role }: { role: string }) {
   const pathname = usePathname()
-  const items = role === 'owner' ? [...NAV, ...NAV_OWNER] : NAV
+  const items = buildNav(role)
+
+  const roleLabel: Record<string, string> = {
+    owner: 'Владелец',
+    admin: 'Администратор',
+    tech: 'Техадмин',
+  }
 
   return (
     <aside
@@ -42,10 +55,9 @@ export function AdminSidebar({ role }: { role: string }) {
         height: '100vh',
       }}
     >
-      {/* Логотип */}
       <div
         style={{
-          padding: '28px 20px 24px',
+          padding: '28px 20px 20px',
           borderBottom: '1px solid rgba(237,202,157,.12)',
         }}
       >
@@ -61,13 +73,23 @@ export function AdminSidebar({ role }: { role: string }) {
         >
           Принц и Лис
         </div>
-        <div style={{ fontSize: '0.75rem', color: '#afbdd6', marginTop: 4 }}>Панель управления</div>
+        <div
+          style={{
+            fontSize: '0.7rem',
+            color: '#afbdd6',
+            marginTop: 4,
+            letterSpacing: '.04em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {roleLabel[role] ?? 'Панель управления'}
+        </div>
       </div>
 
-      {/* Навигация */}
-      <nav style={{ flex: 1, padding: '12px 12px 0' }}>
+      <nav style={{ flex: 1, padding: '12px 12px 0', overflowY: 'auto' }}>
         {items.map((item) => {
           const active = pathname.startsWith(item.href)
+          const isSystem = item.href === '/admin/system'
           return (
             <Link
               key={item.href}
@@ -81,8 +103,11 @@ export function AdminSidebar({ role }: { role: string }) {
                 fontSize: '0.875rem',
                 fontWeight: active ? 600 : 400,
                 background: active ? 'rgba(237,202,157,.14)' : 'transparent',
-                color: active ? '#edca9d' : '#afbdd6',
+                color: active ? '#edca9d' : isSystem ? 'rgba(175,189,214,.6)' : '#afbdd6',
                 transition: 'background .15s, color .15s',
+                marginTop: isSystem ? 8 : 0,
+                borderTop: isSystem ? '1px solid rgba(237,202,157,.1)' : undefined,
+                paddingTop: isSystem ? 14 : 9,
               }}
             >
               {item.label}
@@ -91,7 +116,6 @@ export function AdminSidebar({ role }: { role: string }) {
         })}
       </nav>
 
-      {/* Кнопка выхода */}
       <div style={{ padding: '0 12px' }}>
         <button
           onClick={() => signOut({ callbackUrl: '/admin/login' })}

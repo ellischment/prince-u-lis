@@ -16,10 +16,11 @@ async function main() {
   // ── Пользователи ──────────────────────────────────────────────────────────
   const ownerHash = await hash(process.env.SEED_OWNER_PASSWORD ?? 'dev-owner-123', 12)
   const adminHash = await hash('dev-admin-123', 12)
+  const techHash = await hash(process.env.SEED_TECH_PASSWORD ?? 'dev-tech-123', 12)
 
   await db.user.upsert({
     where: { email: 'liza@princ-lis.ru' },
-    update: {},
+    update: { passwordHash: ownerHash },
     create: {
       email: 'liza@princ-lis.ru',
       name: 'Лиза Якубович',
@@ -29,8 +30,13 @@ async function main() {
   })
   await db.user.upsert({
     where: { email: 'nastya@princ-lis.ru' },
-    update: {},
+    update: { passwordHash: adminHash },
     create: { email: 'nastya@princ-lis.ru', name: 'Настя', role: 'admin', passwordHash: adminHash },
+  })
+  await db.user.upsert({
+    where: { email: 'tech@princ-lis.ru' },
+    update: { passwordHash: techHash },
+    create: { email: 'tech@princ-lis.ru', name: 'Техадмин', role: 'tech', passwordHash: techHash },
   })
 
   // ── Категории ────────────────────────────────────────────────────────────
@@ -484,9 +490,8 @@ async function main() {
   console.log('✅ Seed завершён!')
 }
 
-main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(() => db.$disconnect())
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

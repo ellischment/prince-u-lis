@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Принц и Лис — Панель управления
 
-## Getting Started
+Next.js 14 / TypeScript / Tailwind CSS / Prisma + PostgreSQL / NextAuth.js v4
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ⚠️ КРИТИЧНО: Пароли и seed
+
+> **Это уже вызвало реальный инцидент с недоступностью входа.**
+
+Пароли пользователей хранятся в БД в виде bcrypt-хэша. Хэш вычисляется **в момент запуска seed** из значения переменной окружения.
+
+```
+SEED_OWNER_PASSWORD="change-me-in-production"
+SEED_TECH_PASSWORD="dev-tech-123"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Правило:** если `SEED_*_PASSWORD` изменились в `.env` — **обязательно перезапустить seed**:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx tsx prisma/seed.ts
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Иначе хэш в БД останется от старого пароля и вход будет невозможен с новым паролем.
 
-## Learn More
+**Что проверить после смены пароля:**
 
-To learn more about Next.js, take a look at the following resources:
+1. Запустить seed — убедиться, что вывод содержит `Owner upserted` / `Tech upserted`
+2. Попробовать войти с новым паролем
+3. При проблеме — посмотреть AuditLog (`action = 'login_failed'`) в БД
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Быстрый старт
 
-## Deploy on Vercel
+### Требования
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Node.js 20+
+- Docker (для PostgreSQL)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Установка
+
+```bash
+# 1. Клонировать и установить зависимости
+npm install
+
+# 2. Запустить PostgreSQL
+docker compose up -d
+
+# 3. Скопировать .env.example в .env и задать значения
+cp .env.example .env
+
+# 4. Применить схему БД
+npx prisma db push
+
+# 5. Заполнить начальными данными (создаёт пользователей owner, admin, tech)
+npx tsx prisma/seed.ts
+
+# 6. Запустить dev-сервер
+npm run dev
+```
+
+Открыть [http://localhost:3000](http://localhost:3000)
+
+### Переменные окружения
+
+| Переменная            | Описание                                       |
+| --------------------- | ---------------------------------------------- |
+| `DATABASE_URL`        | PostgreSQL connection string                   |
+| `NEXTAUTH_SECRET`     | Случайная строка для JWT (min 32 символа)      |
+| `NEXTAUTH_URL`        | Базовый URL приложения (http://localhost:3000) |
+| `SEED_OWNER_PASSWORD` | Пароль владельца (liza@princ-lis.ru) при seed  |
+| `SEED_TECH_PASSWORD`  | Пароль техадмина (tech@princ-lis.ru) при seed  |
+
+---
+
+## Пользователи (создаются seed'ом)
+
+| Email              | Роль  | Пароль из переменной  |
+| ------------------ | ----- | --------------------- |
+| liza@princ-lis.ru  | owner | `SEED_OWNER_PASSWORD` |
+| admin@princ-lis.ru | admin | `SEED_ADMIN_PASSWORD` |
+| tech@princ-lis.ru  | tech  | `SEED_TECH_PASSWORD`  |
+
+**Роли:**
+
+- `owner` — полный доступ ко всему
+- `tech` — всё + «Система и безопасность», без «Журнала»
+- `admin` — записи, расписание, услуги, акции, контент
+
+---
+
+## Команды
+
+```bash
+npm run dev          # Dev-сервер
+npm run build        # Production-сборка
+npm run lint         # ESLint
+npm test             # Unit-тесты (Vitest)
+npm run test:watch   # Тесты в watch-режиме
+npm run test:e2e     # E2E-тесты (Playwright)
+
+npx prisma studio    # Визуальный редактор БД
+npx prisma db push   # Применить изменения схемы (без миграций)
+npx tsx prisma/seed.ts  # Заполнить БД начальными данными
+```
+
+### Добавить exceljs (нужно для экспорта .xlsx)
+
+```bash
+npm install exceljs
+```
+
+---
+
+## Структура
+
+```
+src/
+  app/
+    (site)/         -- публичный сайт
+    admin/          -- панель управления
+    api/admin/      -- API роуты
+  components/
+    site/           -- компоненты публичного сайта
+    admin/          -- компоненты панели
+    ui/             -- переиспользуемые примитивы
+  lib/
+    db.ts           -- Prisma client (singleton)
+    auth.ts         -- NextAuth config
+    requireRole.ts  -- RBAC helper (401/403)
+    domain/         -- бизнес-логика (slots, bookings)
+```
+
+Полная документация — в `CLAUDE.md`.
+
+---
+
+## Экспорт записей
+
+В панели управления → Записи доступны кнопки экспорта:
+
+- **CSV** — всегда доступен (без зависимостей)
+- **XLSX** — требует `npm install exceljs`. Без установки вернёт HTTP 500 с подсказкой.
+
+Экспорт учитывает текущие фильтры (дата от/до, статус).

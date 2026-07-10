@@ -198,6 +198,7 @@ model PromoCode {
 enum UserRole {
   owner
   admin
+  tech
 }
 
 model User {
@@ -205,8 +206,9 @@ model User {
   email        String     @unique
   name         String
   role         UserRole
-  passwordHash String
-  createdAt    DateTime   @default(now())
+  passwordHash          String
+  sessionsInvalidatedAt DateTime?
+  createdAt             DateTime   @default(now())
   auditLogs    AuditLog[]
 }
 
@@ -218,11 +220,11 @@ model ContentText {
 
 model AuditLog {
   id       String   @id @default(cuid())
-  actorId  String
+  actorId  String?  // null для системных событий (напр. login_failed с неизвестным email)
   action   String
   entity   String
   entityId String
   payload  Json     @default("{}")
   at       DateTime @default(now())
-  actor    User     @relation(fields: [actorId], references: [id])
+  actor    User?    @relation(fields: [actorId], references: [id])
 }
