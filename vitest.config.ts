@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Интеграционные тесты запускаются отдельно: npm run test:integration
+    exclude: ['**/node_modules/**', '**/*.integration.test.*'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

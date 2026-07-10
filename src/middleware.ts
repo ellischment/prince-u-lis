@@ -18,7 +18,7 @@ export default withAuth(
       // /admin/settings и /admin/log — только OWNER
       if (
         (pathname.startsWith('/admin/settings') || pathname.startsWith('/admin/log')) &&
-        token.role !== 'OWNER'
+        token.role !== 'owner'
       ) {
         return NextResponse.redirect(new URL('/admin/bookings', req.url))
       }

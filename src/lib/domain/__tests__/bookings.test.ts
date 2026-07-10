@@ -8,6 +8,27 @@ import {
 } from '../bookings'
 import type { PrismaClient } from '@prisma/client'
 
+// Базовый мок транзакционного клиента.
+// $executeRaw — заглушка для SELECT … FOR UPDATE внутри bookSlot.
+function makeTx(overrides: Record<string, unknown> = {}) {
+  return {
+    $executeRaw: vi.fn().mockResolvedValue(1),
+    slot: { findUnique: vi.fn() },
+    client: { upsert: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    consent: { create: vi.fn() },
+    booking: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    promoCode: { findUniqueOrThrow: vi.fn() },
+    ...overrides,
+  }
+}
+
+function makePrisma(tx: ReturnType<typeof makeTx>) {
+  return {
+    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
+    client: { findUnique: tx.client.findUnique },
+  } as unknown as PrismaClient
+}
+
 // ─── bookSlot ─────────────────────────────────────────────────────────────
 describe('bookSlot', () => {
   const BASE_PARAMS = {
@@ -19,22 +40,13 @@ describe('bookSlot', () => {
   }
 
   it('бросает SlotNotFoundError если слот не найден', async () => {
-    const tx = {
-      slot: { findUnique: vi.fn().mockResolvedValue(null) },
-      client: { upsert: vi.fn() },
-      consent: { create: vi.fn() },
-      booking: { create: vi.fn(), findUnique: vi.fn() },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-      client: { findUnique: vi.fn() },
-    } as unknown as PrismaClient
-
+    const tx = makeTx({ slot: { findUnique: vi.fn().mockResolvedValue(null) } })
+    const prisma = makePrisma(tx)
     await expect(bookSlot(prisma, BASE_PARAMS)).rejects.toBeInstanceOf(SlotNotFoundError)
   })
 
   it('бросает SlotFullError если все места заняты', async () => {
-    const tx = {
+    const tx = makeTx({
       slot: {
         findUnique: vi.fn().mockResolvedValue({
           id: 'slot-1',
@@ -42,20 +54,13 @@ describe('bookSlot', () => {
           bookings: [{ id: 'b1' }, { id: 'b2' }], // 2 активных = полный
         }),
       },
-      client: { upsert: vi.fn() },
-      consent: { create: vi.fn() },
-      booking: { create: vi.fn(), findUnique: vi.fn() },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-      client: { findUnique: vi.fn() },
-    } as unknown as PrismaClient
-
+    })
+    const prisma = makePrisma(tx)
     await expect(bookSlot(prisma, BASE_PARAMS)).rejects.toBeInstanceOf(SlotFullError)
   })
 
   it('создаёт бронирование, согласие и возвращает bookingId', async () => {
-    const tx = {
+    const tx = makeTx({
       slot: {
         findUnique: vi.fn().mockResolvedValue({
           id: 'slot-1',
@@ -66,16 +71,16 @@ describe('bookSlot', () => {
       client: {
         upsert: vi.fn().mockResolvedValue({ id: 'client-1', visitsCount: 0 }),
         findUnique: vi.fn().mockResolvedValue({ visitsCount: 0 }),
+        update: vi.fn(),
       },
       consent: { create: vi.fn() },
       booking: {
         create: vi.fn().mockResolvedValue({ id: 'booking-1' }),
+        findUnique: vi.fn(),
+        update: vi.fn(),
       },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 0 }) },
-    } as unknown as PrismaClient
+    })
+    const prisma = makePrisma(tx)
 
     const result = await bookSlot(prisma, BASE_PARAMS)
 
@@ -84,10 +89,12 @@ describe('bookSlot', () => {
     expect(tx.consent.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ ip: '127.0.0.1' }) }),
     )
+    // SELECT FOR UPDATE должен вызваться ровно один раз
+    expect(tx.$executeRaw).toHaveBeenCalledOnce()
   })
 
-  it('возвращает isFree=true для каждого 7-го занятия', async () => {
-    const tx = {
+  it('возвращает isFree=true когда у клиента 6 выполненных занятий (7-е бесплатно)', async () => {
+    const tx = makeTx({
       slot: {
         findUnique: vi.fn().mockResolvedValue({
           id: 'slot-1',
@@ -96,18 +103,18 @@ describe('bookSlot', () => {
         }),
       },
       client: {
-        upsert: vi.fn().mockResolvedValue({ id: 'client-1', visitsCount: 7 }),
-        findUnique: vi.fn().mockResolvedValue({ visitsCount: 7 }), // 7-е занятие выполнено → 8-е бесплатно
+        upsert: vi.fn().mockResolvedValue({ id: 'client-1', visitsCount: 6 }),
+        findUnique: vi.fn().mockResolvedValue({ visitsCount: 6 }), // 6 выполненных → 7-е бесплатно
+        update: vi.fn(),
       },
       consent: { create: vi.fn() },
       booking: {
         create: vi.fn().mockResolvedValue({ id: 'booking-7' }),
+        findUnique: vi.fn(),
+        update: vi.fn(),
       },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 7 }) },
-    } as unknown as PrismaClient
+    })
+    const prisma = makePrisma(tx)
 
     const result = await bookSlot(prisma, BASE_PARAMS)
     expect(result.isFree).toBe(true)
@@ -115,63 +122,67 @@ describe('bookSlot', () => {
 })
 
 // ─── everySeventhFree ────────────────────────────────────────────────────
+//
+// Правило: бесплатным становится каждый 7-й визит — первый после 6 выполненных
+// (visitsCount = 6), затем при 13, 20 …
+// Формула: (visitsCount + 1) % 7 === 0
 describe('everySeventhFree', () => {
+  function mockCount(count: number | null) {
+    return {
+      client: {
+        findUnique: vi.fn().mockResolvedValue(count === null ? null : { visitsCount: count }),
+      },
+    } as unknown as PrismaClient
+  }
+
   it('возвращает false если клиент не найден', async () => {
-    const prisma = {
-      client: { findUnique: vi.fn().mockResolvedValue(null) },
-    } as unknown as PrismaClient
-    expect(await everySeventhFree(prisma, 'x')).toBe(false)
+    expect(await everySeventhFree(mockCount(null), 'x')).toBe(false)
   })
 
-  it('возвращает false при visitsCount=0', async () => {
-    const prisma = {
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 0 }) },
-    } as unknown as PrismaClient
-    expect(await everySeventhFree(prisma, 'x')).toBe(false)
+  it('возвращает false при visitsCount=0 — новый клиент', async () => {
+    expect(await everySeventhFree(mockCount(0), 'x')).toBe(false)
   })
 
-  it('возвращает true при visitsCount=7', async () => {
-    const prisma = {
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 7 }) },
-    } as unknown as PrismaClient
-    expect(await everySeventhFree(prisma, 'x')).toBe(true)
+  it('возвращает false при visitsCount=1', async () => {
+    expect(await everySeventhFree(mockCount(1), 'x')).toBe(false)
   })
 
-  it('возвращает true при visitsCount=14', async () => {
-    const prisma = {
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 14 }) },
-    } as unknown as PrismaClient
-    expect(await everySeventhFree(prisma, 'x')).toBe(true)
+  it('возвращает true при visitsCount=6 — 7-е занятие бесплатно', async () => {
+    expect(await everySeventhFree(mockCount(6), 'x')).toBe(true)
   })
 
-  it('возвращает false при visitsCount=6', async () => {
-    const prisma = {
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 6 }) },
-    } as unknown as PrismaClient
-    expect(await everySeventhFree(prisma, 'x')).toBe(false)
+  it('возвращает false при visitsCount=7 — 8-е НЕ бесплатно', async () => {
+    expect(await everySeventhFree(mockCount(7), 'x')).toBe(false)
   })
 
   it('возвращает false при visitsCount=8', async () => {
-    const prisma = {
-      client: { findUnique: vi.fn().mockResolvedValue({ visitsCount: 8 }) },
-    } as unknown as PrismaClient
-    expect(await everySeventhFree(prisma, 'x')).toBe(false)
+    expect(await everySeventhFree(mockCount(8), 'x')).toBe(false)
+  })
+
+  it('возвращает true при visitsCount=13 — 14-е занятие бесплатно', async () => {
+    expect(await everySeventhFree(mockCount(13), 'x')).toBe(true)
+  })
+
+  it('возвращает false при visitsCount=14 — 15-е НЕ бесплатно', async () => {
+    expect(await everySeventhFree(mockCount(14), 'x')).toBe(false)
+  })
+
+  it('возвращает true при visitsCount=20 — 21-е занятие бесплатно', async () => {
+    expect(await everySeventhFree(mockCount(20), 'x')).toBe(true)
   })
 })
 
 // ─── cancelBooking ────────────────────────────────────────────────────────
 describe('cancelBooking', () => {
   it('меняет статус на cancelled', async () => {
-    const tx = {
+    const tx = makeTx({
       booking: {
         findUnique: vi.fn().mockResolvedValue({ id: 'b-1', status: 'new', clientId: 'c-1' }),
         update: vi.fn().mockResolvedValue({}),
+        create: vi.fn(),
       },
-      client: { update: vi.fn() },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-    } as unknown as PrismaClient
+    })
+    const prisma = makePrisma(tx)
 
     const result = await cancelBooking(prisma, 'b-1')
     expect(result.bookingId).toBe('b-1')
@@ -182,16 +193,19 @@ describe('cancelBooking', () => {
   })
 
   it('декрементирует visitsCount если статус был done', async () => {
-    const tx = {
+    const tx = makeTx({
       booking: {
         findUnique: vi.fn().mockResolvedValue({ id: 'b-2', status: 'done', clientId: 'c-2' }),
         update: vi.fn().mockResolvedValue({}),
+        create: vi.fn(),
       },
-      client: { update: vi.fn().mockResolvedValue({}) },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-    } as unknown as PrismaClient
+      client: {
+        upsert: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn().mockResolvedValue({}),
+      },
+    })
+    const prisma = makePrisma(tx)
 
     const result = await cancelBooking(prisma, 'b-2')
     expect(result.wasDecremented).toBe(true)
@@ -200,17 +214,45 @@ describe('cancelBooking', () => {
     )
   })
 
+  it('НЕ декрементирует visitsCount если статус был new', async () => {
+    const tx = makeTx({
+      booking: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'b-3', status: 'new', clientId: 'c-3' }),
+        update: vi.fn().mockResolvedValue({}),
+        create: vi.fn(),
+      },
+    })
+    const prisma = makePrisma(tx)
+
+    const result = await cancelBooking(prisma, 'b-3')
+    expect(result.wasDecremented).toBe(false)
+    expect(tx.client.update).not.toHaveBeenCalled()
+  })
+
+  it('НЕ декрементирует visitsCount если статус был no_show', async () => {
+    const tx = makeTx({
+      booking: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'b-4', status: 'no_show', clientId: 'c-4' }),
+        update: vi.fn().mockResolvedValue({}),
+        create: vi.fn(),
+      },
+    })
+    const prisma = makePrisma(tx)
+
+    const result = await cancelBooking(prisma, 'b-4')
+    expect(result.wasDecremented).toBe(false)
+    expect(tx.client.update).not.toHaveBeenCalled()
+  })
+
   it('бросает ошибку если запись не найдена', async () => {
-    const tx = {
+    const tx = makeTx({
       booking: {
         findUnique: vi.fn().mockResolvedValue(null),
         update: vi.fn(),
+        create: vi.fn(),
       },
-      client: { update: vi.fn() },
-    }
-    const prisma = {
-      $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(tx)),
-    } as unknown as PrismaClient
+    })
+    const prisma = makePrisma(tx)
 
     await expect(cancelBooking(prisma, 'missing')).rejects.toThrow('missing')
   })

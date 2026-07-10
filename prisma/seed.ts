@@ -5,7 +5,8 @@
  * Данные из reference/princ-i-lis-site.html
  */
 import { PrismaClient } from '@prisma/client'
-import { hash } from 'bcryptjs'
+import bcryptjs from 'bcryptjs'
+const { hash } = bcryptjs
 
 const db = new PrismaClient()
 

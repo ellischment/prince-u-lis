@@ -11,11 +11,12 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "prepare": "husky"
   },
@@ -57,13 +58,5 @@
       "prettier --write"
     ],
     "*.{json,md,css}": "prettier --write"
-  },
-  "allowScripts": {
-    "@prisma/client@5.22.0": true,
-    "@prisma/engines@5.22.0": true,
-    "esbuild@0.28.1": true,
-    "esbuild@0.21.5": true,
-    "prisma@5.22.0": true,
-    "unrs-resolver@1.12.2": true
   }
 }
