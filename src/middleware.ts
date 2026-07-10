@@ -12,8 +12,14 @@ export default withAuth(
     if (pathname === '/admin/login') return NextResponse.next()
 
     if (pathname.startsWith('/admin')) {
+      // Не залогинен → на страницу входа
       if (!token) {
         return NextResponse.redirect(new URL('/admin/login', req.url))
+      }
+
+      // /admin без подпути → на список записей
+      if (pathname === '/admin') {
+        return NextResponse.redirect(new URL('/admin/bookings', req.url))
       }
 
       const role = token.role as string
@@ -32,5 +38,6 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  // '/admin' без trailing path тоже должен попадать в middleware
+  matcher: ['/admin', '/admin/:path*'],
 }
