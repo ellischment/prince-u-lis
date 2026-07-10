@@ -12,6 +12,7 @@ Next.js 14 / TypeScript / Tailwind CSS / Prisma + PostgreSQL / NextAuth.js v4
 
 ```
 SEED_OWNER_PASSWORD="change-me-in-production"
+SEED_ADMIN_PASSWORD="dev-admin-123"
 SEED_TECH_PASSWORD="dev-tech-123"
 ```
 
@@ -64,29 +65,30 @@ npm run dev
 
 ### Переменные окружения
 
-| Переменная            | Описание                                       |
-| --------------------- | ---------------------------------------------- |
-| `DATABASE_URL`        | PostgreSQL connection string                   |
-| `NEXTAUTH_SECRET`     | Случайная строка для JWT (min 32 символа)      |
-| `NEXTAUTH_URL`        | Базовый URL приложения (http://localhost:3000) |
-| `SEED_OWNER_PASSWORD` | Пароль владельца (liza@princ-lis.ru) при seed  |
-| `SEED_TECH_PASSWORD`  | Пароль техадмина (tech@princ-lis.ru) при seed  |
+| Переменная            | Описание                                             |
+| --------------------- | ---------------------------------------------------- |
+| `DATABASE_URL`        | PostgreSQL connection string                         |
+| `NEXTAUTH_SECRET`     | Случайная строка для JWT (min 32 символа)            |
+| `NEXTAUTH_URL`        | Базовый URL приложения (http://localhost:3000)       |
+| `SEED_OWNER_PASSWORD` | Пароль владельца (liza@princ-lis.ru) при seed        |
+| `SEED_ADMIN_PASSWORD` | Пароль администратора (nastya@princ-lis.ru) при seed |
+| `SEED_TECH_PASSWORD`  | Пароль техадмина (tech@princ-lis.ru) при seed        |
 
 ---
 
 ## Пользователи (создаются seed'ом)
 
-| Email              | Роль  | Пароль из переменной  |
-| ------------------ | ----- | --------------------- |
-| liza@princ-lis.ru  | owner | `SEED_OWNER_PASSWORD` |
-| admin@princ-lis.ru | admin | `SEED_ADMIN_PASSWORD` |
-| tech@princ-lis.ru  | tech  | `SEED_TECH_PASSWORD`  |
+| Email               | Роль  | Пароль из переменной  |
+| ------------------- | ----- | --------------------- |
+| liza@princ-lis.ru   | owner | `SEED_OWNER_PASSWORD` |
+| nastya@princ-lis.ru | admin | `SEED_ADMIN_PASSWORD` |
+| tech@princ-lis.ru   | tech  | `SEED_TECH_PASSWORD`  |
 
 **Роли:**
 
 - `owner` — полный доступ ко всему
-- `tech` — всё + «Система и безопасность», без «Журнала»
-- `admin` — записи, расписание, услуги, акции, контент
+- `tech` — всё, включая «Система и безопасность» и «Настройки» (анонимизация)
+- `admin` — записи, расписание, услуги, акции, скидки, контент (без «Настроек», «Системы», «Журнала»)
 
 ---
 

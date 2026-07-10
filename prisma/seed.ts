@@ -15,7 +15,7 @@ async function main() {
 
   // ── Пользователи ──────────────────────────────────────────────────────────
   const ownerHash = await hash(process.env.SEED_OWNER_PASSWORD ?? 'dev-owner-123', 12)
-  const adminHash = await hash('dev-admin-123', 12)
+  const adminHash = await hash(process.env.SEED_ADMIN_PASSWORD ?? 'dev-admin-123', 12)
   const techHash = await hash(process.env.SEED_TECH_PASSWORD ?? 'dev-tech-123', 12)
 
   await db.user.upsert({
