@@ -1,7 +1,3 @@
-'use client'
-
-import { useReveal } from '@/hooks/useReveal'
-
 const FAQ = [
   {
     q: 'Нужно ли приносить что-то с собой?',
@@ -34,13 +30,8 @@ const FAQ = [
 ]
 
 export function FaqSection() {
-  const ref = useReveal() as React.RefObject<HTMLElement>
-
   return (
-    <section
-      ref={ref as React.RefObject<HTMLDivElement>}
-      style={{ padding: '80px 0', background: 'var(--navy-deep)' }}
-    >
+    <section data-reveal-group style={{ padding: '80px 0', background: 'var(--navy-deep)' }}>
       <div className="wrap">
         <div className="reveal" style={{ marginBottom: 48 }}>
           <span className="eyebrow">Вопросы и ответы</span>

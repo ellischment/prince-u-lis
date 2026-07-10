@@ -1,6 +1,3 @@
-'use client'
-
-import { useReveal } from '@/hooks/useReveal'
 import type { Promo } from '@prisma/client'
 
 interface Props {
@@ -8,8 +5,6 @@ interface Props {
 }
 
 export function PromosSection({ promos }: Props) {
-  const ref = useReveal() as React.RefObject<HTMLElement>
-
   const now = new Date()
   const visible = promos.filter((p) => {
     if (!p.active) return false
@@ -25,7 +20,7 @@ export function PromosSection({ promos }: Props) {
   return (
     <section
       id="promos"
-      ref={ref as React.RefObject<HTMLDivElement>}
+      data-reveal-group
       style={{ padding: '80px 0', background: 'var(--navy-soft)' }}
     >
       <div className="wrap">

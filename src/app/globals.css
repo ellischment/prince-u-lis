@@ -205,19 +205,29 @@ a {
 }
 
 /* ======================================================
-   СКРОЛЛ-РЕВИЛ (применяется через useReveal hook)
+   СКРОЛЛ-РЕВИЛ (применяется через RevealInit / useReveal)
+   opacity и transform не задаём здесь — их ставит JS только для
+   элементов вне viewport. Так контент виден до загрузки скрипта
+   (progressive enhancement для медленного интернета).
    ====================================================== */
 .reveal {
-  opacity: 0;
-  transform: translateY(26px);
   transition:
     opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* !important перебивает inline-стили, которые ставит JS */
 .reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
+  }
 }
 
 /* ======================================================

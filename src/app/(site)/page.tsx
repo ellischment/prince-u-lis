@@ -1,3 +1,4 @@
+import dynamic from 'next/dynamic'
 import { db as prisma } from '@/lib/db'
 import { HeroSection } from '@/components/site/HeroSection'
 import { TrustBand } from '@/components/site/TrustBand'
@@ -7,9 +8,15 @@ import { ScheduleSection } from '@/components/site/ScheduleSection'
 import { WhatIfSection } from '@/components/site/WhatIfSection'
 import { PromosSection } from '@/components/site/PromosSection'
 import { FaqSection } from '@/components/site/FaqSection'
-import { BookingSection } from '@/components/site/BookingSection'
+import { RevealInit } from '@/components/site/RevealInit'
 import type { Metadata } from 'next'
 import type { Service, Category, ScheduleRule, Promo } from '@prisma/client'
+
+// Форма записи — внизу страницы, загружаем после основного контента
+const BookingSection = dynamic(
+  () => import('@/components/site/BookingSection').then((m) => ({ default: m.BookingSection })),
+  { ssr: false },
+)
 
 type ServiceWithCategories = Service & { categories: { category: Category }[] }
 
@@ -136,6 +143,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd />
+      <RevealInit />
       <HeroSection />
       <TrustBand />
       <CatalogSection services={services} categories={categories} />

@@ -39,6 +39,19 @@ export function useReveal(options: UseRevealOptions = {}) {
     const children = Array.from(container.querySelectorAll<HTMLElement>('.reveal'))
     children.forEach((el, i) => {
       if (!reduced) {
+        const rect = el.getBoundingClientRect()
+        const alreadyInView = rect.top < window.innerHeight && rect.bottom > 0
+
+        if (alreadyInView) {
+          // Уже в viewport — не скрываем, просто помечаем
+          el.classList.add('visible')
+          return
+        }
+
+        // Вне viewport — скрываем через JS (не через CSS), чтобы контент был виден
+        // до загрузки скрипта (progressive enhancement)
+        el.style.opacity = '0'
+        el.style.transform = 'translateY(26px)'
         el.style.transitionDelay = `${Math.min(i % 6, 5) * staggerMs}ms`
       }
       io.observe(el)

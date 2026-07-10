@@ -1,7 +1,3 @@
-'use client'
-
-import { useReveal } from '@/hooks/useReveal'
-
 // Мозаика из заглушек-цветов до появления реальных фото
 const TILES = [
   { bg: '#2a1810', label: 'Гончарный круг', aspect: '4/3' },
@@ -13,13 +9,8 @@ const TILES = [
 ]
 
 export function AtmosphereSection() {
-  const ref = useReveal() as React.RefObject<HTMLElement>
-
   return (
-    <section
-      ref={ref as React.RefObject<HTMLDivElement>}
-      style={{ padding: '80px 0', background: 'var(--navy)' }}
-    >
+    <section data-reveal-group style={{ padding: '80px 0', background: 'var(--navy)' }}>
       <div className="wrap">
         <div className="reveal" style={{ marginBottom: 48 }}>
           <span className="eyebrow">Атмосфера студии</span>

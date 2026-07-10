@@ -1,7 +1,3 @@
-'use client'
-
-import { useReveal } from '@/hooks/useReveal'
-
 const ITEMS = [
   { icon: '🏛', title: '5 лет', desc: 'работы студии' },
   { icon: '🎨', title: '14 видов', desc: 'занятий и форматов' },
@@ -10,11 +6,9 @@ const ITEMS = [
 ]
 
 export function TrustBand() {
-  const ref = useReveal() as React.RefObject<HTMLElement>
-
   return (
     <section
-      ref={ref as React.RefObject<HTMLDivElement>}
+      data-reveal-group
       style={{
         background: 'var(--navy-soft)',
         borderTop: '1px solid var(--line)',

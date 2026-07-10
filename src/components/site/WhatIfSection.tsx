@@ -1,7 +1,3 @@
-'use client'
-
-import { useReveal } from '@/hooks/useReveal'
-
 const CARDS = [
   {
     fear: 'А что если я никогда не лепил?',
@@ -24,13 +20,8 @@ const CARDS = [
 ]
 
 export function WhatIfSection() {
-  const ref = useReveal() as React.RefObject<HTMLElement>
-
   return (
-    <section
-      ref={ref as React.RefObject<HTMLDivElement>}
-      style={{ padding: '80px 0', background: 'var(--navy)' }}
-    >
+    <section data-reveal-group style={{ padding: '80px 0', background: 'var(--navy)' }}>
       <div className="wrap">
         <div className="reveal" style={{ marginBottom: 48, textAlign: 'center' }}>
           <span className="eyebrow">Развеиваем страхи</span>

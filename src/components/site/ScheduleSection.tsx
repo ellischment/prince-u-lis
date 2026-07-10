@@ -1,6 +1,3 @@
-'use client'
-
-import { useReveal } from '@/hooks/useReveal'
 import type { ScheduleRule } from '@prisma/client'
 
 interface RuleWithService extends ScheduleRule {
@@ -13,12 +10,10 @@ interface Props {
 
 const DAY_NAMES = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
-// Группируем правила по дню недели (Пн–Вс, но показываем Пн первым)
+// Показываем Пн первым
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0]
 
 export function ScheduleSection({ rules }: Props) {
-  const ref = useReveal() as React.RefObject<HTMLElement>
-
   const byDay = WEEKDAYS.reduce<Record<number, RuleWithService[]>>((acc, day) => {
     acc[day] = rules
       .filter((r) => r.weekday === day)
@@ -29,7 +24,7 @@ export function ScheduleSection({ rules }: Props) {
   return (
     <section
       id="schedule"
-      ref={ref as React.RefObject<HTMLDivElement>}
+      data-reveal-group
       style={{ padding: '80px 0', background: 'var(--green-deep)' }}
     >
       <div className="wrap">

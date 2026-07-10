@@ -10,6 +10,7 @@ const forum = Forum({
 })
 
 const manrope = Manrope({
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin', 'cyrillic'],
   variable: '--font-manrope',
   display: 'swap',
