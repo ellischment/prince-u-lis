@@ -69,7 +69,7 @@ export default async function LogPage() {
                     minute: '2-digit',
                   })}
                 </td>
-                <td style={tdStyle}>{log.actor.name}</td>
+                <td style={tdStyle}>{log.actor?.name ?? '—'}</td>
                 <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.75rem' }}>
                   {log.action}
                 </td>

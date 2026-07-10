@@ -1,4 +1,5 @@
 import { NextAuthOptions } from 'next-auth'
+import type { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { compare } from 'bcryptjs'
 import { db } from '@/lib/db'
@@ -86,7 +87,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser?.sessionsInvalidatedAt) {
           const invalidatedAt = Math.floor(dbUser.sessionsInvalidatedAt.getTime() / 1000)
           if (((token.issuedAt as number) ?? 0) < invalidatedAt) {
-            return {} // токен выпущен до инвалидации
+            return {} as JWT // токен выпущен до инвалидации
           }
         }
       }
