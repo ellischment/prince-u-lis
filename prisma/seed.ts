@@ -1,10 +1,9 @@
 /**
- * Seed — «Принц и Лис», этап 1
+ * Seed — «Принц и Лис», этап мастеров
  *
  * Запуск: npm run db:seed
- * Данные из reference/princ-i-lis-site.html
  */
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, ServiceFormat } from '@prisma/client'
 import bcryptjs from 'bcryptjs'
 const { hash } = bcryptjs
 
@@ -46,14 +45,51 @@ async function main() {
     { slug: 'paint', name: 'Живопись', sortOrder: 3 },
     { slug: 'kids', name: 'Детям', sortOrder: 4 },
     { slug: 'course', name: 'Курсы', sortOrder: 5 },
+    // Новые категории (этап мастеров)
+    { slug: 'glass', name: 'Витраж и стекло', sortOrder: 6 },
+    { slug: 'coworking', name: 'Коворкинг', sortOrder: 7 },
   ]
   for (const c of catDefs) {
     await db.category.upsert({ where: { slug: c.slug }, update: c, create: c })
   }
   const catMap = Object.fromEntries((await db.category.findMany()).map((c) => [c.slug, c.id]))
 
-  // ── Услуги (все 14 из прототипа) ─────────────────────────────────────────
-  const serviceDefs = [
+  // ── Услуги ────────────────────────────────────────────────────────────────
+  // Поле format:
+  //   group            – групповой мастер-класс (большинство)
+  //   individual       – индивидуальное (роспись майолика)
+  //   course_group     – многозанятийный курс (группа)
+  //   course_individual – многозанятийный курс (инд.)
+  //   subscription     – абонемент с тирами (детские кружки)
+  //   seasonal         – сезонный (пленэры)
+  //
+  // УТОЧНИТЬ у Лизы (в REPORT-masters.md):
+  //   - «Занятия по копии» (kopii) — group или individual? (сейчас group)
+  //   - «Двойной МК: свечи» (svechi) — group или course_group? (сейчас course_group)
+  //   - «Интенсив» (intensiv-keramika) — group или course_group? (сейчас course_group)
+  //   - «Коворкинг» — нужен отдельный формат или subscription?
+
+  type ServiceDef = {
+    slug: string
+    name: string
+    desc: string
+    longDesc: string
+    priceRub: number
+    unit: string
+    durationMin: number
+    capacity: number
+    level: string
+    glazeColor: string
+    sortOrder: number
+    format: ServiceFormat
+    cats: string[]
+    program: string[]
+    includes: string[]
+    forWhom?: string
+    priceTiers?: { label: string; priceRub: number; sortOrder: number }[]
+  }
+
+  const serviceDefs: ServiceDef[] = [
     {
       slug: 'goncharny-krug',
       name: 'Мастер-класс за гончарным кругом',
@@ -67,6 +103,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#E8895B',
       sortOrder: 1,
+      format: 'group',
       cats: ['wheel'],
       program: [
         'Знакомство с глиной, посадка и центровка на круге',
@@ -90,6 +127,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#EDCA9D',
       sortOrder: 2,
+      format: 'group',
       cats: ['hand'],
       program: [
         'Выбираем идею и разминаем глину',
@@ -114,6 +152,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#7FA0CE',
       sortOrder: 3,
+      format: 'individual',
       cats: ['hand', 'paint'],
       program: [
         'Выбор изделия и эскиз росписи',
@@ -137,6 +176,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#31435F',
       sortOrder: 4,
+      format: 'group',
       cats: ['wheel', 'paint'],
       program: [
         'Создаём форму на гончарном круге',
@@ -160,6 +200,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#B9C9A9',
       sortOrder: 5,
+      format: 'course_group',
       cats: ['hand'],
       program: [
         'Занятие 1: лепим и декорируем форму свечи',
@@ -182,6 +223,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#E8895B',
       sortOrder: 6,
+      format: 'course_group',
       cats: ['wheel', 'course'],
       program: [
         'Занятие 1: эскиз и форма чашки на круге',
@@ -205,6 +247,7 @@ async function main() {
       level: 'с нуля и выше',
       glazeColor: '#EDCA9D',
       sortOrder: 7,
+      format: 'course_group',
       cats: ['wheel', 'course'],
       program: [
         'Центровка и базовые формы',
@@ -230,6 +273,7 @@ async function main() {
       level: 'с нуля',
       glazeColor: '#7FA0CE',
       sortOrder: 8,
+      format: 'course_group',
       cats: ['wheel', 'hand', 'course'],
       program: [
         'День 1: глина и круг, первые формы',
@@ -254,6 +298,7 @@ async function main() {
       level: 'любой',
       glazeColor: '#B9C9A9',
       sortOrder: 9,
+      format: 'group', // УТОЧНИТЬ: может быть individual
       cats: ['paint'],
       program: ['Выбор работы и разбор композиции', 'Подмалёвок', 'Проработка и лессировки'],
       includes: ['Холст, краски, кисти', 'Мольберт', 'Чай и сушки'],
@@ -272,6 +317,7 @@ async function main() {
       level: 'любой',
       glazeColor: '#31435F',
       sortOrder: 10,
+      format: 'group',
       cats: ['paint'],
       program: ['Разогрев: позы по 1-2 минуты', 'Средние позы по 5-10 минут', 'Длинная постановка'],
       includes: ['Бумага, уголь, сангина', 'Мольберт', 'Чай'],
@@ -290,6 +336,7 @@ async function main() {
       level: 'любой',
       glazeColor: '#E8895B',
       sortOrder: 11,
+      format: 'seasonal',
       cats: ['paint'],
       program: [
         'Выбор мотива и композиция',
@@ -312,6 +359,7 @@ async function main() {
       level: 'любой',
       glazeColor: '#EDCA9D',
       sortOrder: 12,
+      format: 'course_group',
       cats: ['paint', 'course'],
       program: [
         'Рисунок: линия, тон, форма',
@@ -335,6 +383,7 @@ async function main() {
       level: 'дети 5+',
       glazeColor: '#E8895B',
       sortOrder: 13,
+      format: 'subscription',
       cats: ['kids', 'hand'],
       program: [
         'Простые формы и звери',
@@ -344,6 +393,11 @@ async function main() {
       ],
       includes: ['Глина, краски, фартук', 'Обжиг', 'Сок и печенье'],
       forWhom: 'Детям с 5 лет. Группы до 8 человек, дважды в неделю по 90 минут.',
+      priceTiers: [
+        { label: '4 занятия', priceRub: 8500, sortOrder: 0 },
+        { label: '8 занятий', priceRub: 16000, sortOrder: 1 },
+        { label: 'Месяц (8–10 занятий)', priceRub: 18000, sortOrder: 2 },
+      ],
     },
     {
       slug: 'detsky-risovanie',
@@ -358,6 +412,7 @@ async function main() {
       level: 'дети 6+',
       glazeColor: '#7FA0CE',
       sortOrder: 14,
+      format: 'subscription',
       cats: ['kids', 'paint'],
       program: [
         'Основы: линия, пятно, цвет',
@@ -367,11 +422,73 @@ async function main() {
       ],
       includes: ['Все материалы', 'Папка для работ', 'Сок и печенье'],
       forWhom: 'Детям с 6 лет, дважды в неделю по 90 минут.',
+      priceTiers: [
+        { label: '4 занятия', priceRub: 6500, sortOrder: 0 },
+        { label: '8 занятий', priceRub: 12000, sortOrder: 1 },
+        { label: 'Месяц (8–10 занятий)', priceRub: 14000, sortOrder: 2 },
+      ],
+    },
+    // Новые услуги — Витраж и стекло
+    // УТОЧНИТЬ у Лизы: точное название, цены, программу
+    {
+      slug: 'vitrazh-tiffany',
+      name: 'Витраж в технике Тиффани',
+      desc: 'Классическая техника спаянных кусочков стекла. Создаём подвес или панно.',
+      longDesc:
+        'Техника Тиффани — это маленькие кусочки цветного стекла, обёрнутые в медную фольгу и спаянные оловом. Создаём законченное изделие за одно занятие.',
+      priceRub: 4500,
+      unit: 'в группе',
+      durationMin: 150,
+      capacity: 6,
+      level: 'с нуля',
+      glazeColor: '#6BAED6',
+      sortOrder: 15,
+      format: 'group',
+      cats: ['glass'],
+      program: [
+        'Выбор эскиза и стекла',
+        'Резка и шлифовка',
+        'Фольгирование и пайка',
+        'Финальная обработка',
+      ],
+      includes: ['Стекло, фольга, припой, инструменты', 'Готовое изделие забираете сразу'],
+      forWhom: 'Взрослым от 16 лет. Работаем с паяльником — нужна аккуратность.',
+    },
+    // Коворкинг (УТОЧНИТЬ: цены, форматы, что включено)
+    {
+      slug: 'coworking-keramika',
+      name: 'Коворкинг по керамике',
+      desc: 'Аренда места и оборудования для самостоятельной работы.',
+      longDesc:
+        'Рабочее место за гончарным кругом или за лепным столом. Глина, инструменты и печь — всё здесь. Приходите со своим проектом.',
+      priceRub: 1200,
+      unit: 'час',
+      durationMin: 60,
+      capacity: 4,
+      level: 'есть опыт',
+      glazeColor: '#8FA0BF',
+      sortOrder: 16,
+      format: 'subscription', // УТОЧНИТЬ: возможно нужен отдельный формат
+      cats: ['coworking', 'wheel'],
+      program: [
+        'Свободная работа на вашем проекте',
+        'Мастер рядом — можно задавать вопросы',
+        'Обжиг по договорённости (оплачивается отдельно)',
+      ],
+      includes: ['Рабочее место', 'Глина и базовые инструменты', 'Чай'],
+      forWhom:
+        'Тем, кто уже умеет лепить или работать на круге и хочет практиковаться самостоятельно.',
+      priceTiers: [
+        { label: '1 час', priceRub: 1200, sortOrder: 0 },
+        { label: '3 часа', priceRub: 3200, sortOrder: 1 },
+        { label: 'День (6 ч)', priceRub: 6000, sortOrder: 2 },
+        { label: 'Абонемент 10 ч', priceRub: 9500, sortOrder: 3 },
+      ],
     },
   ]
 
   for (const svc of serviceDefs) {
-    const { cats, program, includes, ...data } = svc
+    const { cats, program, includes, priceTiers, ...data } = svc
 
     const service = await db.service.upsert({
       where: { slug: data.slug },
@@ -379,15 +496,15 @@ async function main() {
       create: { ...data },
     })
 
-    // Привязываем категории (удаляем старые, создаём новые)
     await db.serviceCategory.deleteMany({ where: { serviceId: service.id } })
     for (const catSlug of cats) {
-      await db.serviceCategory.create({
-        data: { serviceId: service.id, categoryId: catMap[catSlug] },
-      })
+      if (catMap[catSlug]) {
+        await db.serviceCategory.create({
+          data: { serviceId: service.id, categoryId: catMap[catSlug] },
+        })
+      }
     }
 
-    // Программа
     await db.serviceProgramItem.deleteMany({ where: { serviceId: service.id } })
     for (let i = 0; i < program.length; i++) {
       await db.serviceProgramItem.create({
@@ -395,17 +512,95 @@ async function main() {
       })
     }
 
-    // Включено
     await db.serviceIncludeItem.deleteMany({ where: { serviceId: service.id } })
     for (let i = 0; i < includes.length; i++) {
       await db.serviceIncludeItem.create({
         data: { serviceId: service.id, text: includes[i], sortOrder: i },
       })
     }
+
+    // Тиры цен
+    await db.priceTier.deleteMany({ where: { serviceId: service.id } })
+    if (priceTiers) {
+      for (const tier of priceTiers) {
+        await db.priceTier.create({ data: { serviceId: service.id, ...tier } })
+      }
+    }
   }
 
-  // ── Расписание ────────────────────────────────────────────────────────────
-  // 0=Вс, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб — как Date.getDay()
+  // ── Мастера ───────────────────────────────────────────────────────────────
+  // Данные-заглушки — Лиза заполнит через админку
+  // УТОЧНИТЬ: реальные имена, фото, специализацию
+  const masterDefs = [
+    {
+      id: 'seed-master-1',
+      name: 'Лиза Якубович',
+      bio: 'Основательница студии, мастер гончарного дела и живописи. Работает с глиной с 2015 года.',
+      active: true,
+    },
+    {
+      id: 'seed-master-2',
+      name: 'Настя',
+      bio: 'Мастер ручной лепки и росписи. Ведёт детские группы и индивидуальные занятия.',
+      active: true,
+    },
+    {
+      id: 'seed-master-3',
+      name: 'Мастер витража', // УТОЧНИТЬ: имя
+      bio: 'Специалист по технике Тиффани и росписи стекла.',
+      active: true,
+    },
+  ]
+
+  for (const m of masterDefs) {
+    await db.master.upsert({
+      where: { id: m.id },
+      update: { name: m.name, bio: m.bio, active: m.active },
+      create: m,
+    })
+  }
+
+  // Привязка мастеров к индивидуальным услугам
+  const masterServiceMap: Record<string, string[]> = {
+    'seed-master-1': ['rospis-majolika', 'goncharny-krug', 'zhuravli'],
+    'seed-master-2': ['rospis-majolika', 'ruchnaya-lepka'],
+    'seed-master-3': ['vitrazh-tiffany'],
+  }
+  const allServices = await db.service.findMany({ select: { id: true, slug: true } })
+  const slugToId = Object.fromEntries(allServices.map((s) => [s.slug, s.id]))
+
+  await db.serviceMaster.deleteMany()
+  for (const [masterId, slugs] of Object.entries(masterServiceMap)) {
+    for (const slug of slugs) {
+      const serviceId = slugToId[slug]
+      if (serviceId) {
+        await db.serviceMaster.upsert({
+          where: { serviceId_masterId: { serviceId, masterId } },
+          update: {},
+          create: { serviceId, masterId },
+        })
+      }
+    }
+  }
+
+  // Шаблоны доступности мастеров (MasterAvailabilityRule)
+  await db.masterAvailabilityRule.deleteMany()
+  const masterRules = [
+    // Лиза: Вт, Пт, Сб 11:00-20:00
+    { masterId: 'seed-master-1', weekday: 2, startTime: '11:00', endTime: '20:00' },
+    { masterId: 'seed-master-1', weekday: 5, startTime: '11:00', endTime: '20:00' },
+    { masterId: 'seed-master-1', weekday: 6, startTime: '11:00', endTime: '18:00' },
+    // Настя: Пн, Ср, Чт 14:00-21:00
+    { masterId: 'seed-master-2', weekday: 1, startTime: '14:00', endTime: '21:00' },
+    { masterId: 'seed-master-2', weekday: 3, startTime: '14:00', endTime: '21:00' },
+    { masterId: 'seed-master-2', weekday: 4, startTime: '14:00', endTime: '21:00' },
+    // Мастер витража: Сб, Вс 12:00-18:00
+    { masterId: 'seed-master-3', weekday: 6, startTime: '12:00', endTime: '18:00' },
+    { masterId: 'seed-master-3', weekday: 0, startTime: '12:00', endTime: '18:00' },
+  ]
+  await db.masterAvailabilityRule.createMany({ data: masterRules })
+
+  // ── Расписание ─────────────────────────────────────────────────────────────
   const ruleDefs = [
     { weekday: 1, startTime: '18:00', title: 'Пишем цветы маслом' },
     { weekday: 2, startTime: '18:00', title: 'Лепка и гончарный круг' },
@@ -419,11 +614,10 @@ async function main() {
     { weekday: 0, startTime: '12:00', title: 'Детский кружок по лепке' },
     { weekday: 0, startTime: '18:00', title: 'Живопись и рисунок' },
   ]
-
   await db.scheduleRule.deleteMany()
   await db.scheduleRule.createMany({ data: ruleDefs })
 
-  // ── Акции ─────────────────────────────────────────────────────────────────
+  // ── Акции ──────────────────────────────────────────────────────────────────
   const promos = [
     {
       id: 'seed-promo-1',
@@ -451,7 +645,7 @@ async function main() {
     await db.promo.upsert({ where: { id: p.id }, update: {}, create: p })
   }
 
-  // ── Промокоды ─────────────────────────────────────────────────────────────
+  // ── Промокоды ──────────────────────────────────────────────────────────────
   await db.promoCode.upsert({
     where: { code: 'LISA10' },
     update: {},
@@ -465,7 +659,7 @@ async function main() {
     },
   })
 
-  // ── Тексты сайта ──────────────────────────────────────────────────────────
+  // ── Тексты сайта ───────────────────────────────────────────────────────────
   const texts = [
     {
       key: 'hero_title',

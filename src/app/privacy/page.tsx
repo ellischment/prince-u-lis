@@ -157,18 +157,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 32 }}>
-      <h2
-        style={{
-          fontFamily: 'var(--font-forum), serif',
-          fontSize: 18,
-          fontWeight: 400,
-          color: 'var(--cream)',
-          marginBottom: 12,
-          letterSpacing: '.04em',
-        }}
-      >
-        {title}
-      </h2>
+      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1a2233', marginBottom: 8 }}>{title}</h3>
       {children}
     </div>
   )

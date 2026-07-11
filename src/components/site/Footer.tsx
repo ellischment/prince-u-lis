@@ -164,7 +164,7 @@ export function Footer() {
             href="/consent"
             style={{ color: 'var(--muted)', fontSize: 12, textDecoration: 'none' }}
           >
-            Согласие на обработку ПД
+            Согласие на обработку данных
           </Link>
         </div>
       </div>

@@ -18,6 +18,11 @@ export async function GET() {
         capacity: true,
         level: true,
         glazeColor: true,
+        format: true,
+        priceTiers: {
+          orderBy: { sortOrder: 'asc' as const },
+          select: { id: true, label: true, priceRub: true },
+        },
       },
     })
     return NextResponse.json(services)

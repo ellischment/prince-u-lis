@@ -9,6 +9,7 @@ import { WhatIfSection } from '@/components/site/WhatIfSection'
 import { PromosSection } from '@/components/site/PromosSection'
 import { FaqSection } from '@/components/site/FaqSection'
 import { RevealInit } from '@/components/site/RevealInit'
+import { MastersSection } from '@/components/site/MastersSection'
 import type { Metadata } from 'next'
 import type { Service, Category, ScheduleRule, Promo } from '@prisma/client'
 
@@ -113,9 +114,16 @@ export default async function HomePage() {
   let categories: Category[] = []
   let rules: ScheduleRule[] = []
   let promos: Promo[] = []
+  let masters: Array<{
+    id: string
+    name: string
+    photo: string | null
+    bio: string | null
+    services: Array<{ service: { name: string } }>
+  }> = []
 
   try {
-    ;[services, categories, rules, promos] = await Promise.all([
+    ;[services, categories, rules, promos, masters] = await Promise.all([
       prisma.service.findMany({
         where: { active: true },
         orderBy: { sortOrder: 'asc' },
@@ -135,6 +143,13 @@ export default async function HomePage() {
         where: { active: true },
         orderBy: { activeFrom: 'asc' },
       }),
+      prisma.master.findMany({
+        where: { active: true },
+        orderBy: { createdAt: 'asc' },
+        include: {
+          services: { include: { service: { select: { name: true } } } },
+        },
+      }),
     ])
   } catch {
     // БД недоступна при статической сборке без .env
@@ -150,6 +165,7 @@ export default async function HomePage() {
       <AtmosphereSection />
       <ScheduleSection rules={rules} />
       <WhatIfSection />
+      <MastersSection masters={masters} />
       <PromosSection promos={promos} />
       <FaqSection />
       <BookingSection />

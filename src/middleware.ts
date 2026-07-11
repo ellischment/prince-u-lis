@@ -25,19 +25,26 @@ export default withAuth(
       const role = token.role as string
 
       // admin не видит settings / log / system
-      if (OWNER_TECH_ONLY.some((p) => pathname.startsWith(p)) && role === 'admin') {
+      if (
+        role !== 'owner' &&
+        role !== 'tech' &&
+        OWNER_TECH_ONLY.some((p) => pathname.startsWith(p))
+      ) {
         return NextResponse.redirect(new URL('/admin/bookings', req.url))
       }
+
+      return NextResponse.next()
     }
 
     return NextResponse.next()
   },
   {
-    callbacks: { authorized: () => true },
+    callbacks: {
+      authorized: () => true, // withAuth middleware проверяет токен сам, но нам нужен доступ к token.role
+    },
   },
 )
 
 export const config = {
-  // '/admin' без trailing path тоже должен попадать в middleware
-  matcher: ['/admin', '/admin/:path*'],
+  matcher: ['/admin/:path*'],
 }

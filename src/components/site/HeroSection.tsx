@@ -4,7 +4,7 @@ import { FoxScene } from './FoxScene'
 import { useParallax } from '@/hooks/useReveal'
 
 // Генерируем 40+ звёзд с разными задержками
-const STARS = Array.from({ length: 52 }, (_, i) => ({
+const STARS = Array.from({ length: 30 }, (_, i) => ({
   id: i,
   x: (i * 37 + 13) % 100,
   y: (i * 53 + 7) % 55,
@@ -171,7 +171,6 @@ export function HeroSection() {
             style={{
               width: 'clamp(220px, 28vw, 360px)',
               flexShrink: 0,
-              willChange: 'transform',
             }}
           >
             <FoxScene />

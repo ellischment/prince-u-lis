@@ -46,6 +46,8 @@ export async function POST(req: Request) {
       payload: { originalPhone: phone, anonName, visitsCount: client.visitsCount },
     },
   })
-
-  return NextResponse.json({ ok: true, client: updated })
+  return NextResponse.json({
+    ok: true,
+    client: { phone: updated.phone, visitsCount: updated.visitsCount },
+  })
 }

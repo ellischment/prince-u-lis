@@ -82,11 +82,9 @@ a {
   0%,
   100% {
     opacity: 0.15;
-    transform: scale(0.7);
   }
   50% {
     opacity: 0.75;
-    transform: scale(1);
   }
 }
 
@@ -153,18 +151,27 @@ a {
 }
 
 .f3-breath {
+  /* scale от центра собственного bbox — без сдвига */
+  transform-box: fill-box;
+  transform-origin: center;
   animation: breath 5.4s ease-in-out infinite;
 }
 .f3-tail {
-  transform-origin: 132px 296px;
+  /* pivot — правый нижний угол bbox (точка крепления к телу) */
+  transform-box: fill-box;
+  transform-origin: right bottom;
   animation: sway3 7.5s ease-in-out infinite;
 }
 .f3-eye {
-  transform-origin: 226px 162px;
+  /* моргание от центра глаза */
+  transform-box: fill-box;
+  transform-origin: center;
   animation: blink3 6.5s ease-in-out infinite;
 }
 .f3-ear {
-  transform-origin: 234px 128px;
+  /* поворот уха от основания */
+  transform-box: fill-box;
+  transform-origin: center bottom;
   animation: ear3 9s ease-in-out infinite;
 }
 .f3-shoot {

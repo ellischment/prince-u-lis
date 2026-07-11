@@ -106,7 +106,7 @@ export function AnonymizeClientForm() {
           {message}
           {result && (
             <div style={{ marginTop: 6, fontSize: '0.8125rem', opacity: 0.85 }}>
-              ID: {result.phone} · визитов: {result.visitsCount}
+              Телефон: {result.phone}, визитов: {result.visitsCount}
             </div>
           )}
         </div>

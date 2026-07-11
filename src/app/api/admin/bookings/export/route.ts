@@ -156,15 +156,12 @@ export async function GET(req: Request) {
     const buf = await wb.xlsx.writeBuffer()
     return new NextResponse(buf, {
       headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': 'attachment; filename="bookings.xlsx"',
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetsheet.sheet',
+        'Content-Disposition': 'attachment; filename=bookings.xlsx',
       },
     })
-  } catch (err) {
-    console.error('exceljs error:', err)
-    return NextResponse.json(
-      { error: 'exceljs не установлен. Выполните: npm install exceljs' },
-      { status: 500 },
-    )
+  } catch (e) {
+    console.error(e)
+    return NextResponse.json({ error: 'Ошибка экспорта' }, { status: 500 })
   }
 }

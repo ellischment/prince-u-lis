@@ -24,7 +24,7 @@ export default async function SystemPage() {
         Доступно владельцу и техадмину
       </p>
 
-      <SystemClient role={role} />
+      <SystemClient role={role as string} />
     </div>
   )
 }

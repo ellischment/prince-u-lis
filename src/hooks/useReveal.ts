@@ -72,22 +72,23 @@ export function useParallax() {
     if (typeof window === 'undefined') return
     if (window.innerWidth <= 1024) return
 
-    const sky = document.querySelector<HTMLElement>('.hero-sky')
-    const sceneWrap = document.querySelector<HTMLElement>('.scene-wrap')
+    const sky = document.querySelector<HTMLElement>('.sky')
+    const scene = document.querySelector<HTMLElement>('.scene-wrap')
+    if (!sky && !scene) return
 
-    let tick = false
+    let rafId: number
     const onScroll = () => {
-      if (tick) return
-      tick = true
-      requestAnimationFrame(() => {
-        const y = Math.min(window.scrollY, 900)
-        if (sky) sky.style.transform = `translateY(${y * 0.28}px)`
-        if (sceneWrap) sceneWrap.style.transform = `translateY(${y * 0.1}px)`
-        tick = false
+      rafId = requestAnimationFrame(() => {
+        const y = window.scrollY
+        if (sky) sky.style.transform = `translateY(${y * 0.25}px)`
+        if (scene) scene.style.transform = `translateY(${y * 0.12}px)`
       })
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(rafId)
+    }
   }, [])
 }

@@ -14,6 +14,7 @@ const NAV_ALL: NavItem[] = [
   { href: '/admin/schedule', label: 'Расписание' },
   { href: '/admin/services', label: 'Услуги' },
   { href: '/admin/categories', label: 'Разделы' },
+  { href: '/admin/masters', label: 'Команда' },
   { href: '/admin/discounts', label: 'Скидки' },
   { href: '/admin/promotions', label: 'Акции' },
   { href: '/admin/content', label: 'Контент' },

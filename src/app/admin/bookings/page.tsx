@@ -3,6 +3,9 @@ import { db } from '@/lib/db'
 import { BookingStatus } from '@prisma/client'
 import { BookingFilters } from '@/components/admin/BookingFilters'
 import { BookingActions } from '@/components/admin/BookingActions'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = { title: 'Записи — Принц и Лис' }
 
 const PAGE_SIZE = 25
 
@@ -15,33 +18,40 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 }
 
 const STATUS_STYLE: Record<BookingStatus, React.CSSProperties> = {
-  new: { background: '#fff8e1', color: '#856404' },
+  new: { background: '#fff8e1', color: '#b45309' },
   confirmed: { background: '#e4f3eb', color: '#177a50' },
   done: { background: '#e3e7fa', color: '#2c3e9e' },
-  cancelled: { background: '#f3f0e9', color: '#5a6478' },
-  no_show: { background: '#fbe7dd', color: '#b4491f' },
+  cancelled: { background: '#fbe7dd', color: '#b4491f' },
+  no_show: { background: '#f5f5f5', color: '#5a6478' },
 }
 
 const CHANNEL_LABEL: Record<string, string> = {
-  tg: 'Telegram',
-  wa: 'WhatsApp',
+  tg: 'TG',
+  wa: 'WA',
   sms: 'SMS',
   call: 'Звонок',
 }
 
-interface PageProps {
-  searchParams: Record<string, string | undefined>
+interface SearchParams {
+  page?: string
+  status?: string
+  search?: string
+  from?: string
+  to?: string
 }
 
-export default async function BookingsPage({ searchParams }: PageProps) {
-  const status = searchParams.status as BookingStatus | undefined
-  const search = searchParams.search ?? ''
-  const dateFrom = searchParams.dateFrom
-  const dateTo = searchParams.dateTo
+export default async function BookingsPage({ searchParams }: { searchParams: SearchParams }) {
   const page = Math.max(1, Number(searchParams.page ?? 1))
+  const status = searchParams.status as BookingStatus | undefined
+  const search = searchParams.search?.trim()
+  const from = searchParams.from ? new Date(searchParams.from) : undefined
+  const to = searchParams.to ? new Date(searchParams.to + 'T23:59:59') : undefined
 
   const where = {
     ...(status ? { status } : {}),
+    ...(from || to
+      ? { slot: { startsAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } }
+      : {}),
     ...(search
       ? {
           OR: [
@@ -50,204 +60,168 @@ export default async function BookingsPage({ searchParams }: PageProps) {
           ],
         }
       : {}),
-    ...(dateFrom || dateTo
-      ? {
-          slot: {
-            startsAt: {
-              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-              ...(dateTo ? { lte: new Date(dateTo + 'T23:59:59') } : {}),
-            },
-          },
-        }
-      : {}),
   }
 
   const [bookings, total] = await Promise.all([
     db.booking.findMany({
       where,
-      include: {
-        client: { select: { name: true, phone: true, visitsCount: true } },
-        slot: {
-          select: {
-            startsAt: true,
-            service: { select: { name: true } },
-          },
-        },
-      },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
+      include: {
+        client: { select: { id: true, name: true, phone: true, visitsCount: true } },
+        slot: { include: { service: { select: { name: true } } } },
+        promoCode: { select: { code: true } },
+      },
     }),
     db.booking.count({ where }),
   ])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
-  const thStyle: React.CSSProperties = {
-    padding: '10px 12px',
-    textAlign: 'left',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: '#5a6478',
-    textTransform: 'uppercase',
-    letterSpacing: '.06em',
-    borderBottom: '1px solid #e3ddcf',
-    whiteSpace: 'nowrap',
-  }
-
-  const tdStyle: React.CSSProperties = {
-    padding: '12px 12px',
-    fontSize: '0.875rem',
-    color: '#1a2233',
-    borderBottom: '1px solid #e3ddcf',
-    verticalAlign: 'top',
-  }
-
   return (
-    <div>
+    <div style={{ padding: '32px 40px' }}>
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 24,
+          marginBottom: 28,
         }}
       >
-        <h1
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a2233', marginBottom: 4 }}>
+            Записи
+          </h1>
+          <p style={{ color: '#5a6478', fontSize: 14 }}>Всего: {total}</p>
+        </div>
+        <a
+          href="/api/admin/bookings/export"
           style={{
-            fontFamily: 'var(--font-forum), serif',
-            fontSize: '1.5rem',
-            textTransform: 'uppercase',
-            letterSpacing: '.08em',
-            color: '#1a2233',
-            margin: 0,
+            padding: '9px 18px',
+            background: '#1a2233',
+            color: '#fff',
+            borderRadius: 8,
+            textDecoration: 'none',
+            fontSize: 13,
+            fontWeight: 600,
           }}
         >
-          Записи
-        </h1>
-        <span style={{ fontSize: '0.875rem', color: '#5a6478' }}>Всего: {total}</span>
+          Экспорт .xlsx
+        </a>
       </div>
 
-      <Suspense fallback={null}>
+      <Suspense>
         <BookingFilters />
       </Suspense>
 
-      {bookings.length === 0 ? (
-        <div
-          style={{
-            padding: '60px 0',
-            textAlign: 'center',
-            color: '#5a6478',
-            background: '#fff',
-            borderRadius: 12,
-            border: '1px solid #e3ddcf',
-          }}
-        >
-          Записей не найдено
-        </div>
-      ) : (
-        <div
-          style={{
-            background: '#fff',
-            borderRadius: 12,
-            border: '1px solid #e3ddcf',
-            overflowX: 'auto',
-          }}
-        >
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
+      <div style={{ overflowX: 'auto', marginTop: 8 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #e3ddcf' }}>
+              {['Дата', 'Занятие', 'Клиент', 'Телефон', 'Канал', 'Статус', 'Промокод', ''].map(
+                (h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: '10px 12px',
+                      textAlign: 'left',
+                      color: '#5a6478',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {h}
+                  </th>
+                ),
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {bookings.length === 0 && (
               <tr>
-                <th style={thStyle}>Дата занятия</th>
-                <th style={thStyle}>Занятие</th>
-                <th style={thStyle}>Клиент</th>
-                <th style={thStyle}>Телефон</th>
-                <th style={thStyle}>Канал</th>
-                <th style={thStyle}>Визиты</th>
-                <th style={thStyle}>Статус</th>
-                <th style={thStyle}>Действия</th>
+                <td
+                  colSpan={8}
+                  style={{ padding: '40px 12px', textAlign: 'center', color: '#5a6478' }}
+                >
+                  Записей не найдено
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {bookings.map((b) => {
-                const d = new Date(b.slot.startsAt)
-                const dateStr = d.toLocaleDateString('ru-RU', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: '2-digit',
-                })
-                const timeStr = d.toLocaleTimeString('ru-RU', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
-                return (
-                  <tr key={b.id} style={{ transition: 'background .1s' }}>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: 500 }}>{dateStr}</div>
-                      <div style={{ color: '#5a6478', fontSize: '0.8rem' }}>{timeStr}</div>
-                    </td>
-                    <td style={{ ...tdStyle, maxWidth: 180 }}>
-                      <div
-                        style={{
-                          fontSize: '0.8125rem',
-                          lineHeight: 1.35,
-                          color: '#1a2233',
-                        }}
-                      >
-                        {b.slot.service.name}
-                      </div>
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: 500 }}>{b.client.name}</div>
-                      {b.tgUsername && (
-                        <div style={{ fontSize: '0.75rem', color: '#5a6478' }}>@{b.tgUsername}</div>
-                      )}
-                    </td>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{b.client.phone}</td>
-                    <td style={{ ...tdStyle, color: '#5a6478' }}>
-                      {CHANNEL_LABEL[b.contactChannel] ?? b.contactChannel}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'center' }}>{b.client.visitsCount}</td>
-                    <td style={tdStyle}>
+            )}
+            {bookings.map((b) => {
+              const d = new Date(b.slot.startsAt)
+              const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+              const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+              return (
+                <tr key={b.id} style={{ borderBottom: '1px solid #e3ddcf' }}>
+                  <td style={{ padding: '10px 12px', whiteSpace: 'nowrap', color: '#1a2233' }}>
+                    {dateStr} {timeStr}
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#1a2233' }}>{b.slot.service.name}</td>
+                  <td style={{ padding: '10px 12px', color: '#1a2233' }}>
+                    {b.client.name}
+                    {b.client.visitsCount >= 7 && (
                       <span
                         style={{
-                          ...STATUS_STYLE[b.status],
-                          padding: '3px 8px',
-                          borderRadius: 6,
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          whiteSpace: 'nowrap',
+                          marginLeft: 6,
+                          fontSize: 10,
+                          background: '#e3e7fa',
+                          color: '#2c3e9e',
+                          padding: '1px 5px',
+                          borderRadius: 4,
                         }}
                       >
-                        {STATUS_LABEL[b.status]}
+                        7-е бесплатно
                       </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <BookingActions bookingId={b.id} currentStatus={b.status} />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    )}
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#5a6478', whiteSpace: 'nowrap' }}>
+                    {b.client.phone}
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#5a6478' }}>
+                    {CHANNEL_LABEL[b.contactChannel] ?? b.contactChannel}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    <span
+                      style={{
+                        ...STATUS_STYLE[b.status],
+                        fontSize: 11,
+                        padding: '3px 8px',
+                        borderRadius: 100,
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {STATUS_LABEL[b.status]}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#5a6478', fontSize: 11 }}>
+                    {b.promoCode?.code ?? '—'}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    <BookingActions bookingId={b.id} currentStatus={b.status} />
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Пагинация */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 24 }}>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}
-              href={`?${new URLSearchParams({ ...searchParams, page: String(p) }).toString()}`}
+              href={`?page=${p}${status ? `&status=${status}` : ''}${search ? `&search=${search}` : ''}`}
               style={{
-                padding: '6px 14px',
-                borderRadius: 8,
-                fontSize: '0.875rem',
+                padding: '6px 12px',
+                borderRadius: 6,
                 textDecoration: 'none',
-                background: p === page ? '#101e39' : '#fff',
-                color: p === page ? '#edca9d' : '#1a2233',
-                border: '1px solid #e3ddcf',
-                fontWeight: p === page ? 600 : 400,
+                fontSize: 13,
+                background: p === page ? '#1a2233' : '#f3f0e9',
+                color: p === page ? '#fff' : '#1a2233',
+                fontWeight: p === page ? 700 : 400,
               }}
             >
               {p}

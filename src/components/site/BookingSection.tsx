@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useReveal } from '@/hooks/useReveal'
 
-type Step = 1 | 2 | 3 | 4 | 'done'
+type Step = 1 | 2 | 3 | 4 | 'done' | 'sub_done'
+
+interface PriceTier {
+  id: string
+  label: string
+  priceRub: number
+}
 
 interface ServiceOption {
   id: string
@@ -11,17 +17,29 @@ interface ServiceOption {
   priceRub: number
   durationMin: number
   slug: string
+  format: string
+  priceTiers: PriceTier[]
+}
+
+interface MasterOption {
+  id: string
+  name: string
+  photo: string | null
+  bio: string | null
 }
 
 interface SlotOption {
   id: string
   startsAt: string
   remaining: number
+  masterId: string | null
 }
 
 interface FormData {
   serviceId: string
   slotId: string
+  masterId: string | null
+  tierId: string
   name: string
   phone: string
   channel: 'tg' | 'wa' | 'sms' | 'call'
@@ -34,6 +52,7 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
   const [step, setStep] = useState<Step>(1)
   const [services, setServices] = useState<ServiceOption[]>([])
   const [slots, setSlots] = useState<SlotOption[]>([])
+  const [masters, setMasters] = useState<MasterOption[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const ref = useReveal() as React.RefObject<HTMLElement>
@@ -41,6 +60,8 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
   const [form, setForm] = useState<FormData>({
     serviceId: preselectedServiceId ?? '',
     slotId: '',
+    masterId: null,
+    tierId: '',
     name: '',
     phone: '',
     channel: 'tg',
@@ -57,17 +78,46 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
       .catch(() => {})
   }, [])
 
-  // Загружаем слоты при выборе услуги
+  // Загружаем мастеров для индивидуальных занятий
+  useEffect(() => {
+    const svc = services.find((s) => s.id === form.serviceId)
+    if (!svc || !['individual', 'course_individual'].includes(svc.format)) {
+      setMasters([])
+      return
+    }
+    fetch(`/api/masters?serviceId=${form.serviceId}`)
+      .then((r) => r.json())
+      .then(setMasters)
+      .catch(() => {})
+  }, [form.serviceId, services])
+
+  // Загружаем слоты при выборе услуги (и мастера для индивидуальных)
   useEffect(() => {
     if (!form.serviceId) {
       setSlots([])
       return
     }
-    fetch(`/api/slots?serviceId=${form.serviceId}`)
+    const svc = services.find((s) => s.id === form.serviceId)
+    if (!svc) return
+
+    // Для индивидуальных — слоты только если мастер выбран
+    if (['individual', 'course_individual'].includes(svc.format) && !form.masterId) {
+      setSlots([])
+      return
+    }
+    // Для подписки — слоты не нужны
+    if (svc.format === 'subscription') {
+      setSlots([])
+      return
+    }
+
+    const params = new URLSearchParams({ serviceId: form.serviceId })
+    if (form.masterId) params.set('masterId', form.masterId)
+    fetch(`/api/slots?${params}`)
       .then((r) => r.json())
       .then(setSlots)
       .catch(() => {})
-  }, [form.serviceId])
+  }, [form.serviceId, form.masterId, services])
 
   // Если пришли со страницы услуги — сразу на шаг 2
   useEffect(() => {
@@ -76,6 +126,13 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
 
   const selectedService = services.find((s) => s.id === form.serviceId)
   const selectedSlot = slots.find((s) => s.id === form.slotId)
+  const selectedMaster = masters.find((m) => m.id === form.masterId)
+  const selectedTier = selectedService?.priceTiers.find((t) => t.id === form.tierId)
+
+  const isIndividual = selectedService
+    ? ['individual', 'course_individual'].includes(selectedService.format)
+    : false
+  const isSubscription = selectedService?.format === 'subscription'
 
   const formatSlot = (slot: SlotOption) => {
     const d = new Date(slot.startsAt)
@@ -84,6 +141,7 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
     return { date, time }
   }
 
+  // Обычная запись (групп/индив)
   const handleSubmit = async () => {
     if (!form.consent) {
       setError('Необходимо согласие на обработку персональных данных')
@@ -109,6 +167,52 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
     }
   }
 
+  // Заявка на абонемент
+  const handleSubscription = async () => {
+    if (!form.consent) {
+      setError('Необходимо согласие на обработку персональных данных')
+      return
+    }
+    if (!form.tierId) {
+      setError('Выберите вариант абонемента')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/bookings/subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: form.serviceId,
+          tierId: form.tierId,
+          name: form.name,
+          phone: form.phone,
+          channel: form.channel,
+          tgUsername: form.tgUsername || null,
+          comment: form.comment || null,
+          consent: form.consent,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? 'Ошибка при отправке заявки')
+      }
+      setStep('sub_done')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Попробуйте ещё раз')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // can2 — условие перехода со шага 2 на 3
+  const canProceedFromStep2 = isSubscription
+    ? !!form.tierId
+    : isIndividual
+      ? !!form.slotId && !!form.masterId
+      : !!form.slotId
+
   return (
     <section
       id="booking"
@@ -133,14 +237,8 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
           }}
         >
           {/* Шаги-индикатор */}
-          {step !== 'done' && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                marginBottom: 36,
-              }}
-            >
+          {step !== 'done' && step !== 'sub_done' && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 36 }}>
               {([1, 2, 3, 4] as const).map((n) => (
                 <div
                   key={n}
@@ -156,7 +254,7 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
             </div>
           )}
 
-          {/* Шаг 1: Занятие */}
+          {/* ── Шаг 1: Занятие ── */}
           {step === 1 && (
             <div>
               <h3 style={stepTitleStyle}>Шаг 1 – Выберите занятие</h3>
@@ -185,7 +283,15 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                       name="service"
                       value={svc.id}
                       checked={form.serviceId === svc.id}
-                      onChange={() => setForm((f) => ({ ...f, serviceId: svc.id, slotId: '' }))}
+                      onChange={() =>
+                        setForm((f) => ({
+                          ...f,
+                          serviceId: svc.id,
+                          slotId: '',
+                          masterId: null,
+                          tierId: '',
+                        }))
+                      }
                       style={{ accentColor: 'var(--cream)', width: 16, height: 16 }}
                     />
                     <span style={{ flex: 1, color: 'var(--paper)', fontSize: 14 }}>{svc.name}</span>
@@ -194,9 +300,12 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                         color: 'var(--cream)',
                         fontSize: 14,
                         fontFamily: 'var(--font-forum), serif',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {svc.priceRub.toLocaleString('ru-RU')} ₽
+                      {svc.format === 'subscription'
+                        ? 'абонемент'
+                        : `${svc.priceRub.toLocaleString('ru-RU')} ₽`}
                     </span>
                   </label>
                 ))}
@@ -212,55 +321,222 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
             </div>
           )}
 
-          {/* Шаг 2: Дата и время */}
+          {/* ── Шаг 2: Дата/время или мастер или тарифы ── */}
           {step === 2 && (
             <div>
-              <h3 style={stepTitleStyle}>Шаг 2 – Выберите дату и время</h3>
+              <h3 style={stepTitleStyle}>Шаг 2 – {step2Title(selectedService)}</h3>
               {selectedService && (
-                <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
+                <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4, marginBottom: 20 }}>
                   {selectedService.name}
                 </p>
               )}
-              <div
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 10,
-                  marginTop: 20,
-                }}
-              >
-                {slots.length === 0 && (
-                  <p style={{ color: 'var(--muted)', fontSize: 14 }}>
-                    Доступных слотов нет. Напишите нам – подберём время индивидуально.
-                  </p>
-                )}
-                {slots.map((slot) => {
-                  const { date, time } = formatSlot(slot)
-                  const isOff = slot.remaining === 0
-                  const isLow = slot.remaining > 0 && slot.remaining <= 2
-                  return (
-                    <button
-                      key={slot.id}
-                      onClick={() => !isOff && setForm((f) => ({ ...f, slotId: slot.id }))}
-                      className={`chip${form.slotId === slot.id ? ' sel' : ''}${isOff ? ' off' : ''}`}
-                      disabled={isOff}
-                      style={{ border: 'none' }}
+
+              {/* Абонемент: тарифы */}
+              {isSubscription && (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {selectedService?.priceTiers.length === 0 && (
+                    <p style={{ color: 'var(--muted)', fontSize: 14 }}>
+                      Уточните стоимость у администратора
+                    </p>
+                  )}
+                  {selectedService?.priceTiers.map((tier) => (
+                    <label
+                      key={tier.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        background:
+                          form.tierId === tier.id ? 'rgba(237,202,157,.1)' : 'var(--navy-soft)',
+                        border: `1px solid ${form.tierId === tier.id ? 'var(--cream)' : 'var(--line)'}`,
+                        borderRadius: 14,
+                        padding: '16px 18px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
                     >
-                      <span>{time}</span>
-                      <small>{date}</small>
-                      {!isOff && (
-                        <small className={`left-badge${isLow ? ' low' : ''}`}>
-                          {slot.remaining}{' '}
-                          {slot.remaining === 1 ? 'место' : slot.remaining < 5 ? 'места' : 'мест'}
-                        </small>
-                      )}
-                      {isOff && (
-                        <small style={{ color: 'var(--warn)', fontSize: 10 }}>занято</small>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+                      <input
+                        type="radio"
+                        name="tier"
+                        value={tier.id}
+                        checked={form.tierId === tier.id}
+                        onChange={() => setForm((f) => ({ ...f, tierId: tier.id }))}
+                        style={{ accentColor: 'var(--cream)', width: 16, height: 16 }}
+                      />
+                      <span style={{ flex: 1, color: 'var(--paper)', fontSize: 15 }}>
+                        {tier.label}
+                      </span>
+                      <span
+                        style={{
+                          color: 'var(--cream)',
+                          fontSize: 18,
+                          fontFamily: 'var(--font-forum), serif',
+                        }}
+                      >
+                        {tier.priceRub.toLocaleString('ru-RU')} ₽
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {/* Индивидуальное: выбор мастера */}
+              {isIndividual && (
+                <>
+                  <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>
+                    Выберите мастера или отметьте «Неважно»
+                  </p>
+                  <div style={{ display: 'grid', gap: 10, marginBottom: 24 }}>
+                    {/* Неважно кто */}
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        background:
+                          form.masterId === 'any' ? 'rgba(237,202,157,.1)' : 'var(--navy-soft)',
+                        border: `1px solid ${form.masterId === 'any' ? 'var(--cream)' : 'var(--line)'}`,
+                        borderRadius: 14,
+                        padding: '12px 16px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="master"
+                        value="any"
+                        checked={form.masterId === 'any'}
+                        onChange={() => setForm((f) => ({ ...f, masterId: 'any', slotId: '' }))}
+                        style={{ accentColor: 'var(--cream)' }}
+                      />
+                      <span style={{ color: 'var(--paper)', fontSize: 14 }}>
+                        Неважно, кто будет вести
+                      </span>
+                    </label>
+                    {masters.map((m) => (
+                      <label
+                        key={m.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          background:
+                            form.masterId === m.id ? 'rgba(237,202,157,.1)' : 'var(--navy-soft)',
+                          border: `1px solid ${form.masterId === m.id ? 'var(--cream)' : 'var(--line)'}`,
+                          borderRadius: 14,
+                          padding: '12px 16px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="master"
+                          value={m.id}
+                          checked={form.masterId === m.id}
+                          onChange={() => setForm((f) => ({ ...f, masterId: m.id, slotId: '' }))}
+                          style={{ accentColor: 'var(--cream)' }}
+                        />
+                        {m.photo && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={m.photo}
+                            alt={m.name}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <div>
+                          <div style={{ color: 'var(--paper)', fontSize: 14, fontWeight: 500 }}>
+                            {m.name}
+                          </div>
+                          {m.bio && (
+                            <div style={{ color: 'var(--muted)', fontSize: 12 }}>
+                              {m.bio.length > 60 ? m.bio.slice(0, 60) + '…' : m.bio}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Слоты после выбора мастера */}
+                  {form.masterId && (
+                    <>
+                      <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 12 }}>
+                        {form.masterId === 'any'
+                          ? 'Доступные слоты'
+                          : `Слоты у мастера ${selectedMaster?.name}`}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                        {slots.length === 0 && (
+                          <p style={{ color: 'var(--muted)', fontSize: 14 }}>
+                            Доступных слотов нет. Напишите нам – подберём время.
+                          </p>
+                        )}
+                        {slots.map((slot) => {
+                          const { date, time } = formatSlot(slot)
+                          const isOff = slot.remaining === 0
+                          return (
+                            <button
+                              key={slot.id}
+                              onClick={() => !isOff && setForm((f) => ({ ...f, slotId: slot.id }))}
+                              className={`chip${form.slotId === slot.id ? ' sel' : ''}${isOff ? ' off' : ''}`}
+                              disabled={isOff}
+                              style={{ border: 'none' }}
+                            >
+                              <span>{time}</span>
+                              <small>{date}</small>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Групповые: обычная сетка слотов */}
+              {!isIndividual && !isSubscription && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  {slots.length === 0 && (
+                    <p style={{ color: 'var(--muted)', fontSize: 14 }}>
+                      Доступных слотов нет. Напишите нам – подберём время индивидуально.
+                    </p>
+                  )}
+                  {slots.map((slot) => {
+                    const { date, time } = formatSlot(slot)
+                    const isOff = slot.remaining === 0
+                    const isLow = slot.remaining > 0 && slot.remaining <= 2
+                    return (
+                      <button
+                        key={slot.id}
+                        onClick={() => !isOff && setForm((f) => ({ ...f, slotId: slot.id }))}
+                        className={`chip${form.slotId === slot.id ? ' sel' : ''}${isOff ? ' off' : ''}`}
+                        disabled={isOff}
+                        style={{ border: 'none' }}
+                      >
+                        <span>{time}</span>
+                        <small>{date}</small>
+                        {!isOff && (
+                          <small className={`left-badge${isLow ? ' low' : ''}`}>
+                            {slot.remaining}{' '}
+                            {slot.remaining === 1 ? 'место' : slot.remaining < 5 ? 'места' : 'мест'}
+                          </small>
+                        )}
+                        {isOff && (
+                          <small style={{ color: 'var(--warn)', fontSize: 10 }}>занято</small>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                 <button
                   onClick={() => setStep(1)}
@@ -271,9 +547,9 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                 </button>
                 <button
                   onClick={() => setStep(3)}
-                  disabled={!form.slotId}
+                  disabled={!canProceedFromStep2}
                   className="btn"
-                  style={{ opacity: form.slotId ? 1 : 0.4 }}
+                  style={{ opacity: canProceedFromStep2 ? 1 : 0.4 }}
                 >
                   Далее →
                 </button>
@@ -281,7 +557,7 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
             </div>
           )}
 
-          {/* Шаг 3: Контакты */}
+          {/* ── Шаг 3: Контакты ── */}
           {step === 3 && (
             <div>
               <h3 style={stepTitleStyle}>Шаг 3 – Ваши контакты</h3>
@@ -366,7 +642,7 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
             </div>
           )}
 
-          {/* Шаг 4: Подтверждение */}
+          {/* ── Шаг 4: Подтверждение ── */}
           {step === 4 && (
             <div>
               <h3 style={stepTitleStyle}>Шаг 4 – Проверьте запись</h3>
@@ -383,10 +659,18 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                 }}
               >
                 <Row label="Занятие">{selectedService?.name}</Row>
-                {selectedSlot && (
+                {isSubscription && selectedTier && (
+                  <Row label="Абонемент">
+                    {selectedTier.label} – {selectedTier.priceRub.toLocaleString('ru-RU')} ₽
+                  </Row>
+                )}
+                {!isSubscription && selectedSlot && (
                   <Row label="Время">
                     {formatSlot(selectedSlot).date}, {formatSlot(selectedSlot).time}
                   </Row>
+                )}
+                {isIndividual && selectedMaster && form.masterId !== 'any' && (
+                  <Row label="Мастер">{selectedMaster.name}</Row>
                 )}
                 <Row label="Имя">{form.name}</Row>
                 <Row label="Телефон">{form.phone}</Row>
@@ -397,7 +681,7 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                 {form.comment && <Row label="Комментарий">{form.comment}</Row>}
               </div>
 
-              {/* Согласие — НЕ предотмечено */}
+              {/* Согласие — НЕ предотмечено (152-ФЗ) */}
               <label
                 style={{
                   display: 'flex',
@@ -444,41 +728,23 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                   ← Назад
                 </button>
                 <button
-                  onClick={handleSubmit}
+                  onClick={isSubscription ? handleSubscription : handleSubmit}
                   disabled={loading || !form.consent}
                   className="btn fox"
                   style={{ opacity: form.consent && !loading ? 1 : 0.5 }}
                 >
-                  {loading ? 'Отправляем...' : 'Записаться'}
+                  {loading ? 'Отправляем...' : isSubscription ? 'Хочу оформить' : 'Записаться'}
                 </button>
               </div>
             </div>
           )}
 
-          {/* Успех */}
+          {/* ── Успех: обычная запись ── */}
           {step === 'done' && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div style={{ fontSize: 52, marginBottom: 20 }}>🦊</div>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-forum), serif',
-                  fontSize: 28,
-                  color: 'var(--cream)',
-                  marginBottom: 16,
-                  letterSpacing: '.04em',
-                }}
-              >
-                Вы записаны!
-              </h3>
-              <p
-                style={{
-                  color: 'var(--muted)',
-                  fontSize: 15,
-                  lineHeight: 1.7,
-                  maxWidth: 400,
-                  margin: '0 auto 28px',
-                }}
-              >
+              <h3 style={successTitleStyle}>Вы записаны!</h3>
+              <p style={successTextStyle}>
                 Мы свяжемся с вами в ближайшее время для подтверждения. Если вопросы – пишите в
                 Telegram!
               </p>
@@ -491,23 +757,33 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
                 >
                   Написать в Telegram
                 </a>
-                <button
-                  onClick={() => {
-                    setStep(1)
-                    setForm({
-                      serviceId: '',
-                      slotId: '',
-                      name: '',
-                      phone: '',
-                      channel: 'tg',
-                      tgUsername: '',
-                      comment: '',
-                      consent: false,
-                    })
-                  }}
-                  className="btn ghost"
-                >
+                <button onClick={resetForm} className="btn ghost">
                   Записаться ещё
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Успех: заявка на абонемент ── */}
+          {step === 'sub_done' && (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ fontSize: 52, marginBottom: 20 }}>✨</div>
+              <h3 style={successTitleStyle}>Заявка принята!</h3>
+              <p style={successTextStyle}>
+                Администратор свяжется с вами, чтобы уточнить детали и оформить абонемент. Обычно
+                это занимает не больше нескольких часов.
+              </p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <a
+                  href="https://t.me/princ_liss"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn fox"
+                >
+                  Написать в Telegram
+                </a>
+                <button onClick={resetForm} className="btn ghost">
+                  Вернуться
                 </button>
               </div>
             </div>
@@ -516,6 +792,29 @@ export function BookingSection({ preselectedServiceId }: { preselectedServiceId?
       </div>
     </section>
   )
+
+  function resetForm() {
+    setStep(1)
+    setForm({
+      serviceId: '',
+      slotId: '',
+      masterId: null,
+      tierId: '',
+      name: '',
+      phone: '',
+      channel: 'tg',
+      tgUsername: '',
+      comment: '',
+      consent: false,
+    })
+  }
+}
+
+function step2Title(svc: ServiceOption | undefined): string {
+  if (!svc) return 'Выберите дату и время'
+  if (svc.format === 'subscription') return 'Выберите абонемент'
+  if (['individual', 'course_individual'].includes(svc.format)) return 'Выберите мастера'
+  return 'Выберите дату и время'
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -533,6 +832,22 @@ const stepTitleStyle: React.CSSProperties = {
   color: 'var(--cream-strong)',
   fontWeight: 400,
   letterSpacing: '.04em',
+}
+
+const successTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-forum), serif',
+  fontSize: 28,
+  color: 'var(--cream)',
+  marginBottom: 16,
+  letterSpacing: '.04em',
+}
+
+const successTextStyle: React.CSSProperties = {
+  color: 'var(--muted)',
+  fontSize: 15,
+  lineHeight: 1.7,
+  maxWidth: 400,
+  margin: '0 auto 28px',
 }
 
 const labelStyle: React.CSSProperties = {

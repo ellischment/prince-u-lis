@@ -1,4 +1,4 @@
-// Prisma schema — «Принц и Лис» (этап 1)
+// Prisma schema — «Принц и Лис» (этап мастеров)
 // Актуальная ER-диаграмма: docs/db.md
 
 generator client {
@@ -13,6 +13,16 @@ datasource db {
 // ─────────────────────────────────────────────
 // КАТАЛОГ УСЛУГ
 // ─────────────────────────────────────────────
+
+/// Формат проведения занятия — влияет на шаг 2 визарда записи
+enum ServiceFormat {
+  group            // групповой мастер-класс — сетка дат/времени
+  individual       // индивидуальное — выбор мастера → его календарь
+  course_group     // курс (группа) — просто информация + контакт
+  course_individual // курс (индивидуальный)
+  subscription     // абонемент — выбор тарифа + заявка администратору
+  seasonal         // сезонный формат (пленэры и т.п.)
+}
 
 model Category {
   id        String            @id @default(cuid())
@@ -37,10 +47,13 @@ model Service {
   glazeColor  String
   active      Boolean              @default(true)
   sortOrder   Int                  @default(0)
+  format      ServiceFormat        @default(group)
   categories  ServiceCategory[]
   program     ServiceProgramItem[]
   includes    ServiceIncludeItem[]
   slots       Slot[]
+  priceTiers  PriceTier[]
+  masters     ServiceMaster[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 }
@@ -70,6 +83,70 @@ model ServiceIncludeItem {
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 }
 
+/// Ценовые тиры для абонементов (subscription)
+model PriceTier {
+  id        String  @id @default(cuid())
+  serviceId String
+  label     String  // напр. «4 занятия», «8 занятий»
+  priceRub  Int
+  sortOrder Int     @default(0)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────
+// МАСТЕРА
+// ─────────────────────────────────────────────
+
+model Master {
+  id         String                  @id @default(cuid())
+  name       String
+  photo      String?                 // URL или путь к фото
+  bio        String?
+  active     Boolean                 @default(true)
+  createdAt  DateTime                @default(now())
+  services   ServiceMaster[]
+  rules      MasterAvailabilityRule[]
+  exceptions MasterException[]
+  slots      Slot[]
+}
+
+/// M2M: мастер ведёт конкретную услугу (индивидуальные занятия)
+model ServiceMaster {
+  serviceId String
+  masterId  String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  master    Master  @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, masterId])
+}
+
+/// Шаблон доступности мастера по дням недели
+model MasterAvailabilityRule {
+  id        String @id @default(cuid())
+  masterId  String
+  /// 0 = Вс, 1 = Пн, 2 = Вт, 3 = Ср, 4 = Чт, 5 = Пт, 6 = Сб
+  weekday   Int
+  startTime String // HH:MM
+  endTime   String // HH:MM
+  master    Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+}
+
+enum MasterExceptionKind {
+  closed // мастер не работает в этот день (или в указанное время)
+  extra  // дополнительное время вне шаблона
+}
+
+/// Точечные исключения из шаблона (выходной или доп. слот)
+model MasterException {
+  id        String              @id @default(cuid())
+  masterId  String
+  date      DateTime            // дата (время 00:00 UTC)
+  kind      MasterExceptionKind
+  startTime String?             // только для extra: начало
+  endTime   String?             // только для extra: конец
+  master    Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+}
+
 // ─────────────────────────────────────────────
 // РАСПИСАНИЕ И СЛОТЫ
 // ─────────────────────────────────────────────
@@ -91,13 +168,18 @@ enum SlotSource {
 model Slot {
   id        String     @id @default(cuid())
   serviceId String
+  masterId  String?    // null = групповой слот, String = индивидуальный (конкретный мастер)
   startsAt  DateTime
   capacity  Int
   source    SlotSource @default(rule)
   service   Service    @relation(fields: [serviceId], references: [id])
+  master    Master?    @relation(fields: [masterId], references: [id])
   bookings  Booking[]
 
-  @@unique([serviceId, startsAt])
+  // NULL != NULL в PostgreSQL, поэтому для групповых слотов уникальность
+  // контролируется на уровне приложения (findFirst перед create в generateSlots).
+  // Для индивидуальных слотов (masterId != null) уникальность гарантирует этот индекс.
+  @@unique([serviceId, startsAt, masterId])
 }
 
 // ─────────────────────────────────────────────
@@ -202,14 +284,14 @@ enum UserRole {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  name         String
-  role         UserRole
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  name                  String
+  role                  UserRole
   passwordHash          String
   sessionsInvalidatedAt DateTime?
   createdAt             DateTime   @default(now())
-  auditLogs    AuditLog[]
+  auditLogs             AuditLog[]
 }
 
 model ContentText {

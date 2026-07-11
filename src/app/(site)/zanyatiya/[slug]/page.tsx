@@ -4,9 +4,9 @@ import type { Metadata } from 'next'
 import type { ServiceProgramItem, ServiceIncludeItem } from '@prisma/client'
 import { BookingStatus } from '@prisma/client'
 import Link from 'next/link'
-import { BookingSection } from '@/components/site/BookingSection'
 
 export const revalidate = 60
+export const dynamicParams = true
 
 interface Props {
   params: { slug: string }
@@ -26,21 +26,25 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const service = await prisma.service.findUnique({
-    where: { slug: params.slug },
-  })
-  if (!service) return {}
+  try {
+    const service = await prisma.service.findUnique({
+      where: { slug: params.slug },
+    })
+    if (!service) return {}
 
-  return {
-    title: `${service.name} – мастер-класс в Москве`,
-    description: service.desc,
-    alternates: {
-      canonical: `https://princ-lis.ru/zanyatiya/${service.slug}`,
-    },
-    openGraph: {
-      title: `${service.name} | Принц и Лис`,
+    return {
+      title: `${service.name} – мастер-класс в Москве`,
       description: service.desc,
-    },
+      alternates: {
+        canonical: `https://princ-lis.ru/zanyatiya/${service.slug}`,
+      },
+      openGraph: {
+        title: `${service.name} | Принц и Лис`,
+        description: service.desc,
+      },
+    }
+  } catch {
+    return {}
   }
 }
 
@@ -57,33 +61,54 @@ const UNIT_LABEL: Record<string, string> = {
 }
 
 export default async function ServicePage({ params }: Props) {
-  const service = await prisma.service.findUnique({
-    where: { slug: params.slug },
-    include: {
-      program: { orderBy: { sortOrder: 'asc' } },
-      includes: { orderBy: { sortOrder: 'asc' } },
-    },
-  })
+  let service:
+    | (Awaited<ReturnType<typeof prisma.service.findUnique>> & {
+        program: ServiceProgramItem[]
+        includes: ServiceIncludeItem[]
+      })
+    | null = null
+
+  try {
+    service = await prisma.service.findUnique({
+      where: { slug: params.slug },
+      include: {
+        program: { orderBy: { sortOrder: 'asc' } },
+        includes: { orderBy: { sortOrder: 'asc' } },
+      },
+    })
+  } catch {
+    notFound()
+  }
 
   if (!service || !service.active) notFound()
 
   // Слоты с оставшимися местами
   const now = new Date()
-  const slots = await prisma.slot.findMany({
-    where: {
-      serviceId: service.id,
-      startsAt: { gte: now },
-    },
-    orderBy: { startsAt: 'asc' },
-    take: 20,
-    include: {
-      _count: {
-        select: {
-          bookings: { where: { status: { in: [BookingStatus.new, BookingStatus.confirmed] } } },
+  let slots: Array<{
+    id: string
+    capacity: number
+    startsAt: Date
+    _count: { bookings: number }
+  }> = []
+  try {
+    slots = await prisma.slot.findMany({
+      where: {
+        serviceId: service.id,
+        startsAt: { gte: now },
+      },
+      orderBy: { startsAt: 'asc' },
+      take: 20,
+      include: {
+        _count: {
+          select: {
+            bookings: { where: { status: { in: [BookingStatus.new, BookingStatus.confirmed] } } },
+          },
         },
       },
-    },
-  })
+    })
+  } catch {
+    // БД недоступна — показываем страницу без слотов
+  }
 
   const slotsWithRemaining: Array<{ id: string; startsAt: string; remaining: number }> = slots.map(
     (s) => ({
@@ -199,10 +224,56 @@ export default async function ServicePage({ params }: Props) {
                 marginTop: 24,
               }}
             >
-              <MetaChip>{service.durationMin} мин</MetaChip>
-              <MetaChip>До {service.capacity} чел.</MetaChip>
-              <MetaChip>{LEVEL_LABEL[service.level] ?? service.level}</MetaChip>
-              {service.forWhom && <MetaChip>{service.forWhom}</MetaChip>}
+              <span
+                style={{
+                  background: 'rgba(237,202,157,.13)',
+                  border: '1px solid rgba(237,202,157,.22)',
+                  borderRadius: 100,
+                  padding: '6px 14px',
+                  fontSize: 13,
+                  color: 'var(--cream)',
+                }}
+              >
+                {service.durationMin} мин
+              </span>
+              <span
+                style={{
+                  background: 'rgba(237,202,157,.13)',
+                  border: '1px solid rgba(237,202,157,.22)',
+                  borderRadius: 100,
+                  padding: '6px 14px',
+                  fontSize: 13,
+                  color: 'var(--cream)',
+                }}
+              >
+                До {service.capacity} чел.
+              </span>
+              <span
+                style={{
+                  background: 'rgba(237,202,157,.13)',
+                  border: '1px solid rgba(237,202,157,.22)',
+                  borderRadius: 100,
+                  padding: '6px 14px',
+                  fontSize: 13,
+                  color: 'var(--cream)',
+                }}
+              >
+                {LEVEL_LABEL[service.level] ?? service.level}
+              </span>
+              {service.forWhom && (
+                <span
+                  style={{
+                    background: 'rgba(237,202,157,.13)',
+                    border: '1px solid rgba(237,202,157,.22)',
+                    borderRadius: 100,
+                    padding: '6px 14px',
+                    fontSize: 13,
+                    color: 'var(--cream)',
+                  }}
+                >
+                  {service.forWhom}
+                </span>
+              )}
             </div>
           </div>
 
@@ -438,25 +509,12 @@ export default async function ServicePage({ params }: Props) {
         </section>
       )}
 
-      {/* Форма записи */}
-      <BookingSection preselectedServiceId={service.id} />
+      {/* CTA */}
+      <div style={{ textAlign: 'center', padding: '40px 0' }}>
+        <a href="/#booking" className="btn">
+          Записаться на занятие
+        </a>
+      </div>
     </div>
-  )
-}
-
-function MetaChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      style={{
-        background: 'rgba(237,202,157,.1)',
-        border: '1px solid rgba(237,202,157,.2)',
-        borderRadius: 10,
-        padding: '5px 12px',
-        fontSize: 13,
-        color: 'var(--muted)',
-      }}
-    >
-      {children}
-    </span>
   )
 }

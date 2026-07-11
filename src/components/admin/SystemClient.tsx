@@ -79,6 +79,7 @@ export function SystemClient({ role }: { role: string }) {
   const [perms, setPerms] = useState<Record<string, boolean> | null>(null)
   const [permsSaving, setPermsSaving] = useState(false)
   const [sessionMsg, setSessionMsg] = useState('')
+  const [sessionLoading, setSessionLoading] = useState(false)
 
   const loadHealth = useCallback(async () => {
     setHealthLoading(true)
@@ -116,9 +117,11 @@ export function SystemClient({ role }: { role: string }) {
 
   async function terminateSessions() {
     if (!confirm('Завершить все активные сессии? Все пользователи будут разлогинены.')) return
+    setSessionLoading(true)
     const r = await fetch('/api/admin/system/sessions', { method: 'POST' })
     if (r.ok) setSessionMsg('Все сессии завершены. Пользователи будут перенаправлены на вход.')
     else setSessionMsg('Ошибка при завершении сессий.')
+    setSessionLoading(false)
   }
 
   const actionLabel: Record<string, string> = {
@@ -296,17 +299,20 @@ export function SystemClient({ role }: { role: string }) {
         )}
         <button
           onClick={terminateSessions}
+          disabled={sessionLoading}
           style={{
-            padding: '8px 18px',
+            padding: '10px 20px',
             background: '#b4491f',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
+            cursor: sessionLoading ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
             fontSize: '0.875rem',
-            cursor: 'pointer',
+            opacity: sessionLoading ? 0.6 : 1,
           }}
         >
-          Завершить все сессии
+          {sessionLoading ? 'Завершение...' : 'Завершить все сессии'}
         </button>
       </div>
     </div>

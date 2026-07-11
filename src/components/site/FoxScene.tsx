@@ -180,17 +180,13 @@ function LottieScene() {
           renderer: 'svg',
           loop: true,
           autoplay: true,
-          path: '/lottie/fox.json',
+          path: '/fox-animation.json',
         })
       })
-      .catch(() => {})
+      .catch(() => {
+        /* нет lottie-web — покажем статичную SVG */
+      })
   }, [])
 
-  return (
-    <div
-      id="lottie-fox"
-      style={{ width: '100%', maxWidth: 360, aspectRatio: '1' }}
-      aria-label="Лис смотрит на ночное небо"
-    />
-  )
+  return <div id="lottie-fox" style={{ width: '100%', height: '100%' }} />
 }

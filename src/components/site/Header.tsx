@@ -87,6 +87,9 @@ export function Header() {
           <a href="/#schedule" style={navLinkStyle}>
             Расписание
           </a>
+          <Link href="/team" style={navLinkStyle}>
+            Мастера
+          </Link>
           <a href="/#promos" style={navLinkStyle}>
             Акции
           </a>

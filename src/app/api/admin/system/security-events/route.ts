@@ -13,5 +13,5 @@ export async function GET() {
     include: { actor: { select: { name: true, email: true } } },
   })
 
-  return NextResponse.json({ events })
+  return NextResponse.json(events)
 }

@@ -5,6 +5,7 @@ import { BookingStatus } from '@prisma/client'
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const serviceId = searchParams.get('serviceId')
+  const masterId = searchParams.get('masterId')
 
   if (!serviceId) {
     return NextResponse.json({ error: 'serviceId обязателен' }, { status: 400 })
@@ -16,6 +17,9 @@ export async function GET(req: Request) {
       where: {
         serviceId,
         startsAt: { gte: now },
+        // masterId=null — групповые слоты; конкретный id — слоты мастера
+        // 'any' — все слоты по услуге без фильтра мастера
+        ...(masterId && masterId !== 'any' ? { masterId } : {}),
       },
       orderBy: { startsAt: 'asc' },
       take: 30,
@@ -34,6 +38,7 @@ export async function GET(req: Request) {
       id: slot.id,
       startsAt: slot.startsAt.toISOString(),
       remaining: slot.capacity - slot._count.bookings,
+      masterId: slot.masterId,
     }))
 
     return NextResponse.json(result)

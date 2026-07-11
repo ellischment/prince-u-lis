@@ -207,17 +207,16 @@ export default function LoginPage() {
               color: 'var(--navy-deep, #101e39)',
               border: 'none',
               borderRadius: '100px',
-              fontSize: '0.8125rem',
-              fontFamily: 'var(--font-forum), serif',
-              fontWeight: 400,
+              fontFamily: 'var(--font-forum, serif)',
+              fontSize: '1rem',
               letterSpacing: '.12em',
               textTransform: 'uppercase',
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.7 : 1,
-              transition: 'opacity .2s',
+              fontWeight: 400,
             }}
           >
-            {loading ? 'Входим…' : 'Войти'}
+            {loading ? 'Вход...' : 'Войти'}
           </button>
         </form>
       </div>
