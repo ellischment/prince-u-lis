@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import type React from 'react'
 import Link from 'next/link'
 
 type Master = {
@@ -71,12 +71,16 @@ export function MastersSection({ masters }: Props) {
                   }}
                 >
                   {master.photo ? (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={master.photo}
                       alt={master.name}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      sizes="280px"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
                     />
                   ) : (
                     <div
