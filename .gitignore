@@ -39,3 +39,5 @@ next-env.d.ts
 # IDE
 .idea/
 .vscode/
+
+prince-u-lis/
