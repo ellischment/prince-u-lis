@@ -153,7 +153,7 @@ export function Footer() {
         <p style={{ color: 'var(--muted)', fontSize: 12 }}>
           © {new Date().getFullYear()} Студия «Принц и Лис». Все права защищены.
         </p>
-        <div style={{ display: 'flex', gap: 20 }}>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <Link
             href="/privacy"
             style={{ color: 'var(--muted)', fontSize: 12, textDecoration: 'none' }}
@@ -165,6 +165,12 @@ export function Footer() {
             style={{ color: 'var(--muted)', fontSize: 12, textDecoration: 'none' }}
           >
             Согласие на обработку данных
+          </Link>
+          <Link
+            href="/admin"
+            style={{ color: 'var(--muted)', fontSize: 11, textDecoration: 'none', opacity: 0.45 }}
+          >
+            Войти
           </Link>
         </div>
       </div>
