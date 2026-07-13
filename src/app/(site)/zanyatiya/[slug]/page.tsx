@@ -302,7 +302,7 @@ export default async function ServicePage({ params }: Props) {
             <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>
               / {UNIT_LABEL[service.unit] ?? service.unit}
             </div>
-            <a href="#booking" className="btn" style={{ width: '100%', justifyContent: 'center' }}>
+            <a href="/#booking" className="btn" style={{ width: '100%', justifyContent: 'center' }}>
               Записаться
             </a>
           </div>
@@ -488,7 +488,7 @@ export default async function ServicePage({ params }: Props) {
                 return (
                   <a
                     key={slot.id}
-                    href={`#booking`}
+                    href="/#booking"
                     className={`chip${isOff ? ' off' : ''}`}
                     style={{ textDecoration: 'none', border: '1px solid var(--line)' }}
                     aria-disabled={isOff}

@@ -105,7 +105,9 @@ export function ScheduleSection({ rules }: Props) {
         </div>
       </div>
 
-      <style>{`
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @media (max-width: 700px) {
           #schedule .wrap > div:nth-child(2) {
             grid-template-columns: repeat(4, 1fr) !important;
@@ -116,7 +118,9 @@ export function ScheduleSection({ rules }: Props) {
             grid-template-columns: repeat(3, 1fr) !important;
           }
         }
-      `}</style>
+      `,
+        }}
+      />
     </section>
   )
 }

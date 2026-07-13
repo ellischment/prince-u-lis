@@ -85,4 +85,15 @@ test.describe('Админка — авторизация', () => {
       body.includes('запрещён')
     expect(isBlocked).toBe(true)
   })
+
+  test('/admin/system открывается без падения (events из API — массив, не {events})', async ({
+    page,
+  }) => {
+    await loginAs(page, OWNER.email, OWNER.pwd)
+    await expect(page).toHaveURL(/\/admin\/bookings/, { timeout: 10000 })
+    await page.locator('a[href="/admin/system"]').click()
+    await expect(page.getByText('Система и безопасность')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('События безопасности')).toBeVisible()
+    await expect(page.getByText('Unhandled Runtime Error')).not.toBeVisible()
+  })
 })

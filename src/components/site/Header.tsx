@@ -148,7 +148,7 @@ export function Header() {
             ✈
           </a>
 
-          <a href="#booking" className="btn sm">
+          <a href="/#booking" className="btn sm">
             Записаться
           </a>
         </div>

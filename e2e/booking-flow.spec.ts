@@ -62,3 +62,34 @@ test.describe('Форма записи — BookingSection', () => {
     expect(hasBooking).toBe(true)
   })
 })
+
+test.describe('Форма записи — полный путь до создания брони', () => {
+  test('Все 4 шага проходят и бронь создаётся', async ({ page }) => {
+    await page.goto('/#booking')
+    const booking = page.locator('#booking')
+    await booking.locator('input[type="radio"]').first().check()
+    await booking.getByRole('button', { name: 'Далее →' }).click()
+
+    // Шаг 2: выбираем первый доступный слот, кнопка «Далее» должна
+    // разблокироваться только после выбора (canProceedFromStep2)
+    const firstSlot = booking.locator('button.chip:not([disabled])').first()
+    await expect(firstSlot).toBeVisible({ timeout: 10000 })
+    await firstSlot.click()
+    const step2Next = booking.getByRole('button', { name: 'Далее →' })
+    await expect(step2Next).toBeEnabled()
+    await step2Next.click()
+
+    // Шаг 3: контакты
+    await booking.getByPlaceholder('Как вас зовут?').fill('E2E Тест')
+    await booking.getByPlaceholder('+7 900 000-00-00').fill('+79995554433')
+    await booking.getByRole('button', { name: 'Telegram', exact: true }).click()
+    await booking.getByRole('button', { name: 'Далее →' }).click()
+
+    // Шаг 4: подтверждение
+    await expect(booking.getByText('Шаг 4')).toBeVisible()
+    await booking.locator('input[type="checkbox"]').check()
+    await booking.getByRole('button', { name: 'Записаться', exact: true }).click()
+
+    await expect(booking.getByText('Вы записаны!')).toBeVisible({ timeout: 10000 })
+  })
+})

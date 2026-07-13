@@ -90,7 +90,7 @@ export function SystemClient({ role }: { role: string }) {
 
   const loadEvents = useCallback(async () => {
     const r = await fetch('/api/admin/system/security-events')
-    if (r.ok) setEvents((await r.json()).events)
+    if (r.ok) setEvents(await r.json())
   }, [])
 
   const loadPerms = useCallback(async () => {
@@ -239,11 +239,11 @@ export function SystemClient({ role }: { role: string }) {
       {/* Безопасность — события */}
       <div style={card}>
         <div style={sectionTitle}>События безопасности</div>
-        {events.length === 0 ? (
+        {(events ?? []).length === 0 ? (
           <div style={{ color: '#5a6478', fontSize: '0.875rem' }}>Событий пока нет</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {events.slice(0, 20).map((ev) => (
+            {(events ?? []).slice(0, 20).map((ev) => (
               <div
                 key={ev.id}
                 style={{

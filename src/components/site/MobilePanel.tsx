@@ -27,7 +27,7 @@ export function MobilePanel() {
       >
         Telegram
       </a>
-      <a href="#booking" className="btn" style={{ flex: 1, justifyContent: 'center' }}>
+      <a href="/#booking" className="btn" style={{ flex: 1, justifyContent: 'center' }}>
         Записаться
       </a>
 

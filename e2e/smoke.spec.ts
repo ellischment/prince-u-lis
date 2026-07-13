@@ -27,4 +27,32 @@ test.describe('Публичный сайт — smoke', () => {
     await expect(adminLink).toBeVisible()
     await expect(adminLink).toHaveText('Войти')
   })
+
+  test('Со страницы занятия «Записаться» реально ведёт в визард', async ({ page }) => {
+    // Регрессия: href="#booking" (без ведущего /) на странице занятия был
+    // мёртвой ссылкой — на этой странице элемента #booking нет, клик никуда
+    // не вёл. Должно быть href="/#booking".
+    await page.goto('/zanyatiya/goncharny-krug')
+    const cta = page.locator('a:has-text("Записаться")').first()
+    await expect(cta).toHaveAttribute('href', '/#booking')
+    await cta.click()
+    await expect(page).toHaveURL(/\/#booking$/)
+    await expect(page.locator('#booking')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('Главная страница без ошибок гидратации в консоли', async ({ page }) => {
+    // Регрессия: инлайн <style> в ScheduleSection экранировал `>` как `&gt;`
+    // на сервере, но не на клиенте — React считал это расхождением
+    // и заменял всё дерево целиком, ломая интерактивность страницы.
+    const errors: string[] = []
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') errors.push(msg.text())
+    })
+    await page.goto('/')
+    await page.waitForTimeout(1500)
+    const hydrationErrors = errors.filter(
+      (e) => e.includes('hydrat') || e.includes('did not match'),
+    )
+    expect(hydrationErrors).toEqual([])
+  })
 })
