@@ -1,49 +1,157 @@
+/* Палитра и типографика из SPEC.md раздел 12. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --deep: #0c1a2e;
+  --navy: #122540;
+  --card: #16294a;
+  --cream: #ead9ac;
+  --gold: #c9a24b;
+  --paper: #f3ecdd;
+  --muted: #9fb0cc;
+  --fox: #d96e30;
+  --sky: #8fb8d8;
+
+  --bonus-1: var(--sky);
+  --bonus-2: var(--gold);
+  --bonus-3: var(--fox);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 24px;
+  --radius-pill: 999px;
+
+  --container: 1180px;
+  --header-height: 72px;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 320ms;
+
+  --shadow-card: 0 18px 40px rgba(6, 14, 26, 0.35);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
-  height: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
-html,
 body {
-  max-width: 100vw;
+  margin: 0;
+  background: var(--deep);
+  color: var(--paper);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  /* Вёрстка рассчитана от 320px, горизонтальной прокрутки быть не должно. */
   overflow-x: hidden;
 }
 
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 var(--space-4);
+  color: var(--cream);
+  text-wrap: balance;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+}
+
+h2 {
+  font-size: clamp(1.6rem, 4.4vw, 2.4rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+}
+
+p {
+  margin: 0 0 var(--space-4);
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--sky);
+  text-underline-offset: 3px;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+a:hover {
+  color: var(--cream);
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Видимый фокус не убирается: без него сайт непроходим с клавиатуры. */
+:focus-visible {
+  outline: 3px solid var(--fox);
+  outline-offset: 3px;
+  border-radius: var(--radius-s);
+}
+
+.hand {
+  font-family: var(--font-neucha), cursive;
+  color: var(--fox);
+  font-size: 1.15rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: calc(var(--space-4) * -4);
+  z-index: 100;
+  padding: var(--space-3) var(--space-4);
+  background: var(--cream);
+  color: var(--deep);
+  border-radius: var(--radius-s);
+  font-weight: 600;
+  transition: top var(--duration) var(--ease);
+}
+
+.skip-link:focus-visible {
+  top: var(--space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

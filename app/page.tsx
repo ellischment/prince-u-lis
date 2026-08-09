@@ -1,69 +1,65 @@
-import Image from "next/image";
+import { Button, ButtonLink } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Container } from "@/components/Container";
+import { Section } from "@/components/Section";
+import { prisma } from "@/lib/db";
 import styles from "./page.module.css";
 
-export default function Home() {
+// Временная главная страница этапа 0: показывает, что связка база — страница работает.
+// Полный набор блоков и порядок из blocksOrder делаются на шаге 2.1.
+
+export default async function HomePage() {
+  const lessons = await prisma.lesson.findMany({
+    where: { visible: true },
+    orderBy: { sort: "asc" },
+    take: 6,
+    include: { direction: true },
+  });
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main>
+      <a className="skip-link" href="#soderzhanie">
+        Перейти к содержанию
+      </a>
+
+      <section className={styles.hero}>
+        <Container>
+          <p className={styles.eyebrow}>Студия «Принц и Лис»</p>
+          <h1>Мастерская, где делают руками</h1>
+          <p className={styles.lead}>
+            Керамика, живопись и витраж в центре Москвы. Занятия с нуля, курсы, праздники и
+            коворкинг для тех, кто уже умеет.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <p className="hand">приходите как есть, фартук найдётся</p>
+          <div className={styles.actions}>
+            <Button>Записаться</Button>
+            <ButtonLink href="/styleguide" variant="ghost">
+              Дизайн-система
+            </ButtonLink>
+          </div>
+        </Container>
+      </section>
+
+      <div id="soderzhanie">
+        <Section
+          title="Занятия"
+          subtitle="Данные читаются из базы, наполнение демонстрационное"
+          tone="navy"
+        >
+          <div className={styles.grid}>
+            {lessons.map((lesson) => (
+              <Card
+                key={lesson.id}
+                title={lesson.title}
+                eyebrow={lesson.direction.title}
+                price={lesson.price}
+              >
+                <p>{lesson.intro}</p>
+              </Card>
+            ))}
+          </div>
+        </Section>
+      </div>
+    </main>
   );
 }

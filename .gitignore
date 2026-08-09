@@ -36,6 +36,11 @@ yarn-error.log*
 # локальная база данных (создаётся миграцией, не хранится в репозитории)
 /prisma/dev.db
 /prisma/dev.db-journal
+/prisma/dev.db-shm
+/prisma/dev.db-wal
+
+# настройки редакторов
+/.idea/
 
 # vercel
 .vercel

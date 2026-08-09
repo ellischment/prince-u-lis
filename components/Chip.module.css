@@ -1,0 +1,42 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: 1px solid rgba(159, 176, 204, 0.45);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.active {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--deep);
+  font-weight: 600;
+}
+
+/* Категория «События» выделена цветом по SPEC.md раздел 9. */
+.accent {
+  border-color: var(--fox);
+  color: var(--fox);
+}
+
+.accent.active {
+  background: var(--fox);
+  border-color: var(--fox);
+  color: var(--paper);
+}
