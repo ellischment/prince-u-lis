@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# STARTER. Готовые файлы проекта
 
-## Getting Started
+Заготовки, которые кладутся в проект и экономят несколько часов на старте. Каждый файл переименовывается и раскладывается по своему месту.
 
-First, run the development server:
+---
+
+## Куда что класть
+
+| Файл здесь | Куда в проекте | Когда |
+|---|---|---|
+| `prisma-schema.prisma` | `prisma/schema.prisma` | шаг 0.1 |
+| `lib-db.ts` | `lib/db.ts` | шаг 0.1 |
+| `lib-env.ts` | `lib/env.ts` | шаг 0.1 |
+| `lib-time.ts` | `lib/time.ts` | шаг 0.1 |
+| `env.example` | `.env.example`, копия в `.env` | шаг 0.1 |
+| `package-scripts.json` | раздел `scripts` в `package.json` | шаг 0.1 |
+| `globals.css` | `app/globals.css` | шаг 0.2 |
+| `lib-cache.ts` | `lib/cache.ts` | шаг 0.5 |
+| `lib-action.ts` | `lib/action.ts` | шаг 0.5 |
+| `Dockerfile` | корень | шаг 0.6 |
+| `docker-entrypoint.sh` | корень, дать право на запуск | шаг 0.6 |
+| `docker-compose.yml` | корень | шаг 0.6 |
+| `Caddyfile` | корень | шаг 0.6 |
+| `backup.sh` | `scripts/backup.sh` | шаг 0.6 |
+| `github-workflow-check.yml` | `.github/workflows/check.yml` | шаг 1.3 |
+| `tests-examples.ts` | разложить по `lib/*.test.ts` | шаг 1.3 |
+| `playwright-scenarios.ts` | `e2e/scenarios.spec.ts` | шаг 1.3 |
+| `lib-crypto.ts` | `lib/crypto.ts` | шаг 4.1 |
+| `lib-validation-request.ts` | `lib/validation/request.ts` | шаг 4.1 |
+| `lib-journal.ts` | `lib/journal.ts` | шаг 4.1 |
+| `lib-request-pipeline.ts` | `lib/request-pipeline.ts` | шаг 4.1 |
+| `lib-retry.ts` | `lib/retry.ts` | шаг 11.2 |
+| `amo-fields-template.md` | `docs/amo-fields.md` | шаг 0.4 |
+
+---
+
+## Что в этих файлах уже решено за вас
+
+Это не просто заготовки, в них зашиты ответы на грабли, описанные в `TECH-REVIEW.md`.
+
+**Схема базы.** Полная модель по спецификации, включая потоки курсов. Учтены ограничения SQLite: перечислений нет, статусы строкой, списки в формате JSON. Указаны бинарники Prisma под Alpine, без них контейнер не запустится.
+
+**Клиент базы.** Режим WAL и `busy_timeout` включаются один раз при создании. Без первого редкая запись блокирует выдачу страниц, без второго параллельная запись падает с ошибкой вместо ожидания.
+
+**Проверка переменных окружения.** Приложение падает при старте с понятным списком, чего не хватает. Это лучше, чем узнать про пустой ключ шифрования через неделю в проде.
+
+**Часовой пояс.** Внутри контейнера UTC. Текущий день недели считается явно в московском времени, иначе вечером сайт показывает завтрашний день. На эту функцию есть тест.
+
+**Обёртка серверных действий.** Порядок из архитектуры соблюдается один раз в общем месте: роль, валидация, транзакция, журнал действий, сброс кэша. Забыть сброс кэша в отдельном действии становится невозможно.
+
+**Карта сброса кэша.** Соответствие сущности и тегов вынесено в одну таблицу. Меняется только вместе с таблицей в архитектуре.
+
+**Сборка контейнера.** Клиент Prisma генерируется до сборки Next, миграции применяются при старте контейнера, а не при сборке образа. База и загруженные файлы в томах: обновление образа их не стирает.
+
+**Резервная копия.** Через `sqlite3 .backup`, а не копированием файла. Копия живой базы даёт битый файл, и это выясняется в момент, когда копия понадобилась.
+
+**Конвейер заявки.** Запись в базу и журнал происходит до обращения к внешним системам. Гость получает подтверждение независимо от доступности amoCRM. Дубли по телефону и типу за десять минут отсекаются.
+
+**Журнал заявок.** Телефон маскирован. Полный остаётся только в зашифрованном поле базы, иначе открытый файл рядом сводит шифрование на нет.
+
+**Повторы отправки.** Заявка помечается перед попыткой, поэтому пересекающиеся запуски задачи не отправят её дважды.
+
+**Стили.** Палитра и типографика из спецификации. Видимый фокус не убран: без него сайт непроходим с клавиатуры. Уменьшенное движение выключает анимации.
+
+**Тесты.** Покрыто то, что ломается незаметно: часовой пояс, приведение телефона, обязательность согласия, совмещение фильтров, маска телефона. Плюс пять сквозных сценариев, включая проверку кэша обоими способами.
+
+---
+
+## Порядок первого дня
 
 ```bash
+# 1. Создать проект
+npx create-next-app@latest princ-i-lis --typescript --app --eslint
+cd princ-i-lis
+
+# 2. Зависимости
+npm i prisma @prisma/client sharp bcryptjs zod marked dompurify
+npm i -D @types/bcryptjs tsx vitest @playwright/test
+
+# 3. Разложить файлы из этой папки по таблице выше
+
+# 4. База
+npx prisma migrate dev --name init
+npm run seed
+
+# 5. Проверка
+npm run check
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Дальше открыть `PLAN.md` и идти по шагам, начиная с 0.1.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Чего в заготовках намеренно нет
 
-## Learn More
+- `lib/auth.ts`, `lib/amo.ts`, `lib/telegram.ts`, `lib/audit.ts`, `lib/media.ts`: их пишет агент по спецификации, потому что там больше решений, чем шаблона
+- Компоненты интерфейса: они зависят от вёрстки, шаблон только помешает
+- `prisma/seed.ts`: содержимое зависит от материалов студии
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Эти файлы упоминаются в импортах заготовок. Это не ошибка: агент создаст их на соответствующих шагах.

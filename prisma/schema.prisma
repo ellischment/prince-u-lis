@@ -1,0 +1,519 @@
+// Схема базы по SPEC.md раздел 2.
+// SQLite через Prisma не поддерживает перечисления и массивы:
+// статусы хранятся строкой, допустимые значения в lib/constants.ts,
+// списки хранятся строкой в формате JSON.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Категории и фильтры ----------
+
+model Category {
+  id        String     @id @default(cuid())
+  title     String
+  slug      String
+  kind      String // lesson_direction | lesson_format | work_author | work_material | shop
+  display   String? // showcase | cards, только у первого уровня
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  visible   Boolean    @default(true)
+  sort      Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  lessonsAsDirection Lesson[]   @relation("LessonDirection")
+  lessonsAsFormat    Lesson[]   @relation("LessonFormat")
+  worksAsAuthor      Work[]     @relation("WorkAuthor")
+  worksAsMaterial    Work[]     @relation("WorkMaterial")
+  shopItems          ShopItem[]
+
+  @@unique([kind, slug])
+  @@index([kind, visible, sort])
+}
+
+// ---------- Занятия ----------
+
+model Lesson {
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  directionId String
+  direction   Category @relation("LessonDirection", fields: [directionId], references: [id])
+  formatId    String
+  format      Category @relation("LessonFormat", fields: [formatId], references: [id])
+
+  price       String // «от 2 500 ₽», текстом: студия меняет формулировки
+  duration    String // «2 часа»
+  level       String // «с нуля»
+  formatText  String // «группа до 6 человек»
+
+  intro               String
+  notForBeginnersText String?
+  note                String?
+
+  visible   Boolean @default(true)
+  sort      Int     @default(0)
+  readiness Int     @default(0) // 0..100, считается по FEATURES.md 2.2
+
+  seoTitle       String?
+  seoDescription String?
+
+  fits     LessonFit[]
+  steps    LessonStep[]
+  includes LessonInclude[]
+  taskTags LessonTaskTag[]
+  media    Media[]
+  runs     CourseRun[]
+  slots    ScheduleSlot[]
+  masters  MasterLesson[]
+  articles Article[]
+  requests Request[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([visible, sort])
+}
+
+model LessonFit {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  text     String
+  sort     Int    @default(0)
+}
+
+model LessonStep {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title    String
+  text     String
+  sort     Int    @default(0)
+}
+
+model LessonInclude {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  text     String
+  sort     Int    @default(0)
+}
+
+model LessonTaskTag {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  tag      String // duo | kids | gift | self | company | practice
+
+  @@unique([lessonId, tag])
+  @@index([tag])
+}
+
+// ---------- Потоки курсов ----------
+
+model CourseRun {
+  id           String   @id @default(cuid())
+  lessonId     String
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  startDate    DateTime
+  sessionsCount Int
+  timeText     String // «по субботам в 12:00»
+  note         String?
+  visible      Boolean  @default(true)
+  sort         Int      @default(0)
+
+  @@index([lessonId, visible, startDate])
+}
+
+// ---------- Мастера ----------
+
+model Master {
+  id         String  @id @default(cuid())
+  name       String
+  slug       String  @unique
+  speciality String
+  quote      String?
+  experience String?
+  visible    Boolean @default(true)
+  sort       Int     @default(0)
+
+  media   Media[]
+  lessons MasterLesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterLesson {
+  masterId String
+  lessonId String
+  master   Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([masterId, lessonId])
+}
+
+// ---------- Каталог ----------
+
+model Work {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  authorId    String
+  author      Category @relation("WorkAuthor", fields: [authorId], references: [id])
+  materialId  String
+  material    Category @relation("WorkMaterial", fields: [materialId], references: [id])
+  price       String
+  description String
+  short       String?
+  visible     Boolean  @default(true)
+  sort        Int      @default(0)
+
+  media Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([visible, sort])
+}
+
+model ShopItem {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  price       String
+  description String
+  terms       String?
+  visible     Boolean  @default(true)
+  sort        Int      @default(0)
+
+  media Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId, visible, sort])
+}
+
+// ---------- Праздники и сотрудничество ----------
+
+model Celebration {
+  id        String  @id @default(cuid())
+  title     String
+  slug      String  @unique
+  intro     String
+  priceHint String
+  visible   Boolean @default(true)
+  sort      Int     @default(0)
+
+  steps    CelebrationStep[]
+  includes CelebrationInclude[]
+  media    Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CelebrationStep {
+  id            String      @id @default(cuid())
+  celebrationId String
+  celebration   Celebration @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
+  text          String
+  sort          Int         @default(0)
+}
+
+model CelebrationInclude {
+  id            String      @id @default(cuid())
+  celebrationId String
+  celebration   Celebration @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
+  text          String
+  sort          Int         @default(0)
+}
+
+model Partnership {
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  description String
+  visible     Boolean @default(true)
+  sort        Int     @default(0)
+
+  steps PartnershipStep[]
+  needs PartnershipNeed[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PartnershipStep {
+  id            String      @id @default(cuid())
+  partnershipId String
+  partnership   Partnership @relation(fields: [partnershipId], references: [id], onDelete: Cascade)
+  text          String
+  sort          Int         @default(0)
+}
+
+model PartnershipNeed {
+  id            String      @id @default(cuid())
+  partnershipId String
+  partnership   Partnership @relation(fields: [partnershipId], references: [id], onDelete: Cascade)
+  text          String
+  sort          Int         @default(0)
+}
+
+// ---------- Бонусы ----------
+
+model BonusLevel {
+  id         String  @id @default(cuid())
+  title      String
+  levelLabel String
+  condition  String
+  accent     String // b1 | b2 | b3
+  visible    Boolean @default(true)
+  sort       Int     @default(0)
+
+  perks BonusPerk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BonusPerk {
+  id      String     @id @default(cuid())
+  levelId String
+  level   BonusLevel @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  text    String
+  sort    Int        @default(0)
+}
+
+// ---------- Блог и события ----------
+
+model Article {
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  excerpt      String
+  bodyMarkdown String
+  coverId      String?
+  cover        Media?    @relation("ArticleCover", fields: [coverId], references: [id])
+  topic        String?
+  lessonId     String?
+  lesson       Lesson?   @relation(fields: [lessonId], references: [id])
+  pinned       Boolean   @default(false)
+  status       String    @default("draft") // draft | published
+  publishedAt  DateTime?
+
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([pinned])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  date        DateTime
+  description String
+  visible     Boolean  @default(true)
+
+  media Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([visible, date])
+}
+
+model Review {
+  id               String  @id @default(cuid())
+  guestName        String
+  kind             String // text | photo | video
+  text             String
+  videoUrl         String?
+  mediaId          String?
+  media            Media?  @relation("ReviewMedia", fields: [mediaId], references: [id])
+  consentReceived  Boolean @default(false)
+  status           String  @default("draft") // draft | published | blocked
+  sort             Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, sort])
+}
+
+// ---------- Расписание ----------
+
+model ScheduleSlot {
+  id       String  @id @default(cuid())
+  weekday  Int // 1 понедельник .. 7 воскресенье
+  time     String // «19:00»
+  lessonId String
+  lesson   Lesson  @relation(fields: [lessonId], references: [id])
+  visible  Boolean @default(true)
+  sort     Int     @default(0)
+
+  @@index([weekday, visible, sort])
+}
+
+model FreeDay {
+  id      String   @id @default(cuid())
+  date    DateTime @unique
+  times   String // JSON: ["11:00","12:30"]
+  visible Boolean  @default(true)
+}
+
+model StudioHours {
+  id       String  @id @default(cuid())
+  weekday  Int     @unique
+  opensAt  String
+  closesAt String
+  dayOff   Boolean @default(false)
+}
+
+// ---------- Заявки ----------
+
+model Request {
+  id       String  @id @default(cuid())
+  type     String // booking | free_time | celebration | purchase | partnership
+  lessonId String?
+  lesson   Lesson? @relation(fields: [lessonId], references: [id])
+
+  dateText String?
+  timeText String?
+
+  nameEnc  String // зашифровано
+  phoneEnc String // зашифровано
+  phoneMask String // «+7 916 ХХХ 41-77», для журнала и списков
+  channel  String // call | telegram | whatsapp | max | sms
+  comment  String?
+
+  consentVersion String
+  consentAt      DateTime
+  ip             String?
+
+  amoDealId String?
+  amoStatus String   @default("pending") // pending | sent | failed
+  attempts  Int      @default(0)
+  lastError String?
+  nextTryAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([amoStatus, nextTryAt])
+  @@index([createdAt])
+}
+
+// ---------- Медиа ----------
+
+model Media {
+  id     String  @id @default(cuid())
+  kind   String // image | video
+  path   String? // для изображений
+  url    String? // для видео
+  alt    String?
+  width  Int?
+  height Int?
+  bytes  Int?
+  sort   Int     @default(0)
+
+  lessonId      String?
+  lesson        Lesson?      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  masterId      String?
+  master        Master?      @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  workId        String?
+  work          Work?        @relation(fields: [workId], references: [id], onDelete: Cascade)
+  shopItemId    String?
+  shopItem      ShopItem?    @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  celebrationId String?
+  celebration   Celebration? @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
+  eventId       String?
+  event         Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  articleCovers Article[] @relation("ArticleCover")
+  reviews       Review[]  @relation("ReviewMedia")
+
+  createdAt DateTime @default(now())
+
+  @@index([lessonId, sort])
+}
+
+// ---------- Тексты и настройки ----------
+
+model SiteText {
+  key   String @id
+  value String // JSON
+}
+
+// ---------- Доступ ----------
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String
+  role         String // admin | owner | tech
+  active       Boolean @default(true)
+
+  sessions Session[]
+  logs     AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  userId   String?
+  user     User?    @relation(fields: [userId], references: [id])
+  action   String
+  entity   String
+  entityId String?
+  payload  String? // JSON
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ---------- Редиректы ----------
+
+model Redirect {
+  id        String   @id @default(cuid())
+  fromPath  String   @unique
+  toPath    String
+  createdAt DateTime @default(now())
+}
