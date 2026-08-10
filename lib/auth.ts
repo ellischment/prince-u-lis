@@ -51,6 +51,32 @@ export const currentUser = cache(async (): Promise<SessionUser | null> => {
   return { id: session.user.id, email: session.user.email, role: session.user.role };
 });
 
+/** Отказ в доступе. Отдельный тип, чтобы обёртка действий отличала его от поломки. */
+export class AccessError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AccessError";
+  }
+}
+
+/**
+ * Пользователь для серверного действия. Требование DEPLOY.md раздел B3:
+ * прямое обращение к действию без сессии или с чужой ролью отклоняется.
+ */
+export async function requireUser(roles: readonly UserRole[]): Promise<SessionUser> {
+  const user = await currentUser();
+
+  if (!user) {
+    throw new AccessError("Нужно войти в панель заново: сессия истекла");
+  }
+
+  if (!roles.includes(user.role)) {
+    throw new AccessError("Недостаточно прав для этого действия");
+  }
+
+  return user;
+}
+
 /** Сколько неудачных попыток осталось у адреса до блокировки. */
 export async function loginLock(ip: string): Promise<{ locked: boolean; minutesLeft: number }> {
   const since = new Date(Date.now() - ATTEMPT_WINDOW_MINUTES * 60 * 1000);

@@ -1,0 +1,84 @@
+// lib/cache.ts
+// Теги кэша и сброс. Карта соответствия в ARCHITECTURE.md раздел 3.
+// Правило: каждое серверное действие панели заканчивается сбросом.
+
+import { revalidatePath, unstable_cache, updateTag } from "next/cache";
+
+export const TAGS = {
+  home: "home",
+  lessons: "lessons",
+  categories: "categories",
+  masters: "masters",
+  works: "works",
+  shop: "shop",
+  celebrations: "celebrations",
+  partnerships: "partnerships",
+  bonus: "bonus",
+  articles: "articles",
+  events: "events",
+  reviews: "reviews",
+  schedule: "schedule",
+  texts: "texts",
+} as const;
+
+export type Tag = (typeof TAGS)[keyof typeof TAGS];
+
+/**
+ * Что сбрасывать при изменении каждой сущности.
+ * Таблица повторяет карту ARCHITECTURE.md раздел 3 и меняется только вслед за ней.
+ *
+ * Тега home здесь почти нигде нет намеренно: главная помечена тегами всех сущностей,
+ * которые на ней показаны (таблица режимов в том же разделе), поэтому сброс lessons
+ * обновляет и её. Дублировать home в каждой строке значит спрятать эту связь.
+ */
+const MAP: Record<string, Tag[]> = {
+  lesson: [TAGS.lessons],
+  courseRun: [TAGS.lessons],
+  category: [TAGS.categories, TAGS.lessons, TAGS.works, TAGS.shop],
+  master: [TAGS.masters],
+  work: [TAGS.works],
+  shopItem: [TAGS.shop],
+  celebration: [TAGS.celebrations],
+  partnership: [TAGS.partnerships],
+  bonusLevel: [TAGS.bonus],
+  article: [TAGS.articles],
+  event: [TAGS.events],
+  review: [TAGS.reviews],
+  schedule: [TAGS.schedule],
+  siteText: [TAGS.texts, TAGS.home],
+};
+
+export type Entity = keyof typeof MAP;
+
+/**
+ * Сброс кэша после записи в панели. Пути нужны там, где страница адресуется по slug.
+ *
+ * Используется updateTag, а не revalidateTag. В Next 16 revalidateTag с профилем max
+ * помечает данные устаревшими и отдаёт старое содержимое, пока свежее готовится в фоне.
+ * Для панели это неприемлемо: ARCHITECTURE.md раздел 3 требует, чтобы правка была видна
+ * сразу после сохранения. updateTag обнуляет запись немедленно, следующий заход ждёт
+ * свежие данные. Вызывается только из серверных действий, что для панели и нужно.
+ */
+export function revalidateEntity(entity: Entity, paths: string[] = []): void {
+  const tags = MAP[entity];
+  if (!tags) throw new Error(`Нет карты сброса для сущности ${entity}`);
+
+  for (const tag of tags) updateTag(tag);
+  for (const path of paths) revalidatePath(path);
+}
+
+/**
+ * Чтение публичных страниц с тегами. Без тега страница не узнает о правке в панели.
+ *
+ * Пока построено на unstable_cache. В Next 16 он объявлен устаревшим в пользу
+ * директивы use cache, но она требует включить cacheComponents, а это меняет модель
+ * рендеринга всего приложения. Решение вынесено в STATE.md: переход трогает только
+ * этот файл, вызывающий код останется прежним.
+ */
+export function cachedRead<TArgs extends unknown[], TResult>(
+  keyParts: string[],
+  tags: Tag[],
+  read: (...args: TArgs) => Promise<TResult>,
+): (...args: TArgs) => Promise<TResult> {
+  return unstable_cache(read, keyParts, { tags });
+}

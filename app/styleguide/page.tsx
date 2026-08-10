@@ -38,6 +38,11 @@ export default function StyleguidePage() {
     <main>
       <Section title="Дизайн-система" subtitle="Служебная страница, на сайте её нет">
         <p className="hand">Рукописный акцент шрифтом Neucha</p>
+        <p className={styles.row}>
+          <ButtonLink href="/" variant="ghost" small>
+            На главную
+          </ButtonLink>
+        </p>
       </Section>
 
       <Section title="Палитра" tone="navy">

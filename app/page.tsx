@@ -2,19 +2,15 @@ import { Button, ButtonLink } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Container } from "@/components/Container";
 import { Section } from "@/components/Section";
-import { prisma } from "@/lib/db";
+import { getHomeLessons } from "@/lib/lessons";
+import { getHeroTexts } from "@/lib/site-texts";
 import styles from "./page.module.css";
 
 // Временная главная страница этапа 0: показывает, что связка база — страница работает.
 // Полный набор блоков и порядок из blocksOrder делаются на шаге 2.1.
 
 export default async function HomePage() {
-  const lessons = await prisma.lesson.findMany({
-    where: { visible: true },
-    orderBy: { sort: "asc" },
-    take: 6,
-    include: { direction: true },
-  });
+  const [hero, lessons] = await Promise.all([getHeroTexts(), getHomeLessons()]);
 
   return (
     <main>
@@ -24,13 +20,13 @@ export default async function HomePage() {
 
       <section className={styles.hero}>
         <Container>
-          <p className={styles.eyebrow}>Студия «Принц и Лис»</p>
-          <h1>Мастерская, где делают руками</h1>
+          <p className={styles.eyebrow}>{hero.subtitle}</p>
+          <h1>{hero.title}</h1>
           <p className={styles.lead}>
             Керамика, живопись и витраж в центре Москвы. Занятия с нуля, курсы, праздники и
             коворкинг для тех, кто уже умеет.
           </p>
-          <p className="hand">приходите как есть, фартук найдётся</p>
+          <p className="hand">{hero.hand}</p>
           <div className={styles.actions}>
             <Button>Записаться</Button>
             <ButtonLink href="/styleguide" variant="ghost">
