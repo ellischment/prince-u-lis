@@ -1,4 +1,3 @@
-# Положить в .github/workflows/check.yml
 name: check
 
 on:
@@ -8,6 +7,12 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "file:./data/ci.db"
+      SESSION_SECRET: "ci-secret-ci-secret-ci-secret-32"
+      ENCRYPTION_KEY: "ci-key-ci-key-ci-key-ci-key-32ch"
+      CRON_SECRET: "ci-cron-secret-16"
+      NEXT_PUBLIC_SITE_URL: "https://ci.example.invalid"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,18 +23,19 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
 
+      # Миграция нужна до сборки: generateStaticParams на страницах занятий
+      # читает базу через Prisma, без применённой схемы это «no such table».
+      - name: Миграция базы
+        run: npx prisma migrate deploy
+
       - name: Типы
-        run: npx tsc --noEmit
+        run: npx next typegen && npx tsc --noEmit
 
       - name: Линтер
-        run: npx next lint
+        run: npm run lint
 
       - name: Тесты
         run: npm run test:unit
 
       - name: Сборка
         run: npm run build
-        env:
-          DATABASE_URL: "file:./ci.db"
-          SESSION_SECRET: "ci-secret-ci-secret-ci-secret-32"
-          ENCRYPTION_KEY: "ci-key-ci-key-ci-key-ci-key-32ch"
