@@ -64,6 +64,26 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   border-radius: 4px;
 }
 
+/* Скрыта до фокуса с клавиатуры: position: absolute убирает её из потока,
+   поэтому она не растягивается флекс-контейнером (например .shell панели)
+   и не сдвигает соседей, но остаётся доступна Tab и скринридерам. */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -80px;
+  z-index: 100;
+  padding: 12px 20px;
+  background: var(--cream);
+  color: var(--deep);
+  border-radius: var(--r);
+  font-weight: 600;
+  transition: top 0.18s var(--ease);
+}
+
+.skip-link:focus-visible {
+  top: 16px;
+}
+
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
 section { padding: 62px 0; position: relative; }
 
