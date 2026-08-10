@@ -1,0 +1,15 @@
+.note {
+  max-width: 60ch;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.denied {
+  max-width: 60ch;
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: rgba(200, 50, 74, 0.16);
+  border: 1px solid var(--rose);
+  border-radius: var(--r);
+  color: var(--paper);
+}

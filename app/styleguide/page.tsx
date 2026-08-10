@@ -11,16 +11,26 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Значения берутся из таблицы SPEC.md раздел 12, там единственный источник.
+// Здесь только показ: цвет рисуется переменной, а не копией значения.
 const palette = [
-  { name: "deep", value: "#0C1A2E" },
-  { name: "navy", value: "#122540" },
-  { name: "card", value: "#16294A" },
-  { name: "cream", value: "#EAD9AC" },
-  { name: "gold", value: "#C9A24B" },
-  { name: "paper", value: "#F3ECDD" },
-  { name: "muted", value: "#9FB0CC" },
-  { name: "fox", value: "#D96E30" },
-  { name: "sky", value: "#8FB8D8" },
+  { name: "deep", value: "#0C1A2E", use: "Фон страницы" },
+  { name: "navy", value: "#122540", use: "Фон шапки и подвала" },
+  { name: "card", value: "#16294A", use: "Карточки" },
+  { name: "card2", value: "#1D3457", use: "Карточки при наведении" },
+  { name: "cream", value: "#EAD9AC", use: "Акцентный текст" },
+  { name: "gold", value: "#C9A24B", use: "Нить гирлянды, рамки" },
+  { name: "gold-soft", value: "#E0C274", use: "Осветлённое золото" },
+  { name: "paper", value: "#F3ECDD", use: "Основной текст" },
+  { name: "muted", value: "#9FB0CC", use: "Второстепенный текст" },
+  { name: "fox", value: "#D96E30", use: "Кнопки действия" },
+  { name: "fox-soft", value: "#E8935C", use: "Надзаголовки" },
+  { name: "sky", value: "#8FB8D8", use: "Второстепенные элементы" },
+  { name: "peri", value: "#8B93D4", use: "Флажки гирлянды" },
+  { name: "green", value: "#1C3A2C", use: "Флажки гирлянды" },
+  { name: "rose", value: "#C8324A", use: "Флажки гирлянды" },
+  { name: "line", value: "rgba(234, 217, 172, 0.15)", use: "Тонкие границы" },
+  { name: "line2", value: "rgba(234, 217, 172, 0.28)", use: "Заметные границы" },
 ];
 
 export default function StyleguidePage() {
@@ -36,11 +46,12 @@ export default function StyleguidePage() {
             <li key={color.name} className={styles.swatch}>
               <span
                 className={styles.color}
-                style={{ backgroundColor: color.value }}
+                style={{ backgroundColor: `var(--${color.name})` }}
                 aria-hidden="true"
               />
               <span className={styles.swatchName}>{color.name}</span>
               <span className={styles.swatchValue}>{color.value}</span>
+              <span className={styles.swatchValue}>{color.use}</span>
             </li>
           ))}
         </ul>

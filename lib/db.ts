@@ -1,25 +1,34 @@
+// lib/db.ts
+// Клиент Prisma. WAL и busy_timeout включаются один раз при создании.
+
 import { PrismaClient } from "@prisma/client";
 
-// WAL позволяет читать во время записи, без него редкая запись блокирует выдачу страниц.
-// busy_timeout заставляет параллельную запись ждать вместо ошибки SQLITE_BUSY.
-// Это единственное разрешённое место с сырым SQL: только PRAGMA при инициализации.
-// Оба PRAGMA возвращают строку результата, поэтому вызываются запросом:
-// $executeRaw в SQLite падает, если команда что-то вернула.
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+  prismaReady?: Promise<void>;
+};
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+  });
+
+// WAL: чтение не блокируется записью.
+// busy_timeout: параллельная запись ждёт, а не падает с SQLITE_BUSY.
+// Оба PRAGMA возвращают строку результата, поэтому вызываются через $queryRawUnsafe:
+// $executeRaw в SQLite бросает P2010, если команда что-то вернула.
 async function applyPragmas(client: PrismaClient): Promise<void> {
   await client.$queryRawUnsafe("PRAGMA journal_mode = WAL");
   await client.$queryRawUnsafe("PRAGMA busy_timeout = 5000");
 }
 
-function createClient(): PrismaClient {
-  const client = new PrismaClient();
-  void applyPragmas(client);
-  return client;
-}
+// Промис сохраняется, а не теряется: иначе сбой настройки базы
+// превратится в необработанное отклонение и останется незамеченным.
+export const prismaReady: Promise<void> =
+  globalForPrisma.prismaReady ?? applyPragmas(prisma);
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-
-export const prisma = globalForPrisma.prisma ?? createClient();
-
-if (process.env.NODE_ENV !== "production") {
+if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaReady = prismaReady;
 }

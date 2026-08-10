@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
-    "check": "tsc --noEmit && npm run lint && next build"
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "backup": "sh scripts/backup.sh",
+    "check": "tsc --noEmit && npm run lint && vitest run && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -1,5 +1,6 @@
 .section {
-  padding-block: var(--space-7);
+  padding: 62px 0;
+  position: relative;
 }
 
 .deep {
@@ -12,9 +13,11 @@
 
 .header {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .title {
@@ -22,24 +25,17 @@
 }
 
 .subtitle {
-  margin: var(--space-2) 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
+  max-width: 60ch;
 }
 
 .action {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 560px) {
   .section {
-    padding-block: var(--space-8);
-  }
-
-  .header {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
+    padding: 44px 0;
   }
 }

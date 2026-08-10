@@ -1,5 +1,5 @@
 .hero {
-  padding-block: var(--space-8);
+  padding-block: 72px;
   background:
     radial-gradient(circle at 15% 10%, rgba(217, 110, 48, 0.18), transparent 45%),
     radial-gradient(circle at 85% 0%, rgba(143, 184, 216, 0.14), transparent 40%),
@@ -7,29 +7,29 @@
 }
 
 .eyebrow {
-  margin: 0 0 var(--space-3);
-  color: var(--muted);
+  margin: 0 0 12px;
+  color: var(--fox-soft);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: 12.5px;
 }
 
 .lead {
   max-width: 46ch;
   color: var(--muted);
-  font-size: 1.1rem;
+  font-size: 17px;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
+  gap: 12px;
+  margin-top: 28px;
 }
 
 .grid {
   display: grid;
-  gap: var(--space-4);
+  gap: 18px;
   grid-template-columns: 1fr;
 }
 
@@ -42,5 +42,11 @@
 @media (min-width: 1000px) {
   .grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding-block: 48px;
   }
 }

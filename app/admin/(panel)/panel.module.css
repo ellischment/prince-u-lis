@@ -1,0 +1,105 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--deep);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px 16px;
+  background: var(--navy);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brandLink {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 22px;
+  color: var(--cream);
+}
+
+.role {
+  margin: 0;
+  color: var(--cream);
+  font-size: 13.5px;
+}
+
+.email {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuLink {
+  display: block;
+  padding: 9px 14px;
+  border-radius: 12px;
+  color: var(--paper);
+  font-size: 14.5px;
+  transition: background-color 0.18s var(--ease);
+}
+
+.menuLink:hover {
+  background: var(--card2);
+  color: var(--cream);
+}
+
+.logout {
+  margin-top: auto;
+}
+
+.logoutButton {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 18px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 14.5px;
+  transition: 0.18s var(--ease);
+}
+
+.logoutButton:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.content {
+  flex-grow: 1;
+  padding: 28px 16px;
+}
+
+@media (min-width: 900px) {
+  .shell {
+    flex-direction: row;
+  }
+
+  .side {
+    width: 280px;
+    flex-shrink: 0;
+    min-height: 100vh;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+    padding: 32px 24px;
+  }
+
+  .content {
+    padding: 40px;
+  }
+}

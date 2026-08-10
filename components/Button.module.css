@@ -1,59 +1,43 @@
+/* Размеры и кривая повторяют .btn из globals.css: там источник, здесь модуль
+   для компонента. Менять только вслед за SPEC.md раздел 12. */
+
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 48px;
-  padding: var(--space-3) var(--space-5);
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  font-family: inherit;
-  font-size: 1rem;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-size: 14.5px;
   font-weight: 600;
-  line-height: 1.2;
   text-align: center;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background-color var(--duration) var(--ease),
-    border-color var(--duration) var(--ease),
-    color var(--duration) var(--ease),
-    transform var(--duration) var(--ease);
-}
-
-.button:active {
-  transform: translateY(1px);
+  transition: 0.18s var(--ease);
 }
 
 .button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  transform: none;
 }
 
 .primary {
   background: var(--fox);
-  color: var(--paper);
+  color: #fff;
 }
 
 .primary:hover:not(:disabled) {
-  background: #e07f45;
-  color: var(--paper);
+  background: #c65f26;
 }
 
 .ghost {
-  background: transparent;
-  border-color: var(--muted);
-  color: var(--cream);
+  border: 1px solid var(--line2);
+  color: var(--paper);
 }
 
 .ghost:hover:not(:disabled) {
   border-color: var(--cream);
-  color: var(--cream);
 }
 
 .small {
-  min-height: 38px;
-  padding: var(--space-2) var(--space-4);
-  font-size: 0.9rem;
+  padding: 9px 18px;
+  font-size: 13px;
 }

@@ -1,16 +1,15 @@
 .container {
-  width: 100%;
-  max-width: var(--container);
+  max-width: var(--wrap);
   margin: 0 auto;
-  padding-inline: var(--space-4);
+  padding: 0 24px;
 }
 
 .narrow {
   max-width: 760px;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 560px) {
   .container {
-    padding-inline: var(--space-6);
+    padding: 0 16px;
   }
 }
