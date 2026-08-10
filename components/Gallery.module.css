@@ -1,0 +1,236 @@
+.grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+
+.main {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--r);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.small {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.smallItem {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.videoThumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(140deg, var(--card2), var(--navy));
+}
+
+.play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(12, 26, 46, 0.72);
+  border: 1px solid var(--line2);
+}
+
+.play::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 54%;
+  translate: -50% -50%;
+  border-style: solid;
+  border-width: 10px 0 10px 16px;
+  border-color: transparent transparent transparent var(--cream);
+}
+
+.more {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 26, 46, 0.7);
+  color: var(--cream);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.placeholder {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+/* Просмотр на весь экран */
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(6, 14, 26, 0.94);
+}
+
+.viewerInner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 100%;
+}
+
+.close {
+  align-self: flex-end;
+  padding: 9px 18px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--paper);
+  font-size: 13px;
+}
+
+.close:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  flex-grow: 1;
+}
+
+.viewerImage {
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+}
+
+.video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 70vh;
+  border: none;
+  border-radius: 14px;
+}
+
+.videoFallback {
+  color: var(--muted);
+  text-align: center;
+  word-break: break-all;
+}
+
+.videoFallback a {
+  color: var(--cream);
+  text-decoration: underline;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(18, 37, 64, 0.85);
+  border: 1px solid var(--line2);
+  color: var(--paper);
+  font-size: 20px;
+}
+
+.arrow:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.prev {
+  left: 4px;
+}
+
+.next {
+  right: 4px;
+}
+
+.thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.thumb,
+.thumbActive {
+  flex: 0 0 72px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  opacity: 0.6;
+}
+
+.thumbActive {
+  border-color: var(--cream);
+  opacity: 1;
+}
+
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: 2fr 1fr;
+  }
+
+  .small {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+  }
+
+  .main {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .arrow {
+    width: 56px;
+    height: 56px;
+  }
+
+  .prev {
+    left: -8px;
+  }
+
+  .next {
+    right: -8px;
+  }
+}

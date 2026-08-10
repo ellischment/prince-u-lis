@@ -39,14 +39,20 @@ export default async function HomePage() {
       <div id="soderzhanie">
         <Section
           title="Занятия"
-          subtitle="Данные читаются из базы, наполнение демонстрационное"
+          subtitle="Витрина: полный список открывается ссылкой"
           tone="navy"
+          action={
+            <ButtonLink href="/zanyatiya" variant="ghost">
+              Все занятия
+            </ButtonLink>
+          }
         >
           <div className={styles.grid}>
             {lessons.map((lesson) => (
               <Card
                 key={lesson.id}
                 title={lesson.title}
+                href={`/zanyatiya/${lesson.slug}`}
                 eyebrow={lesson.direction.title}
                 price={lesson.price}
               >
