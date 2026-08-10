@@ -4,7 +4,9 @@ set -e
 
 STAMP=$(date +%Y-%m-%d_%H-%M)
 DIR=/app/backups
-DB=/app/prisma/data/prod.db
+# Имя файла берётся из DATABASE_URL в .env: сейчас там dev.db везде,
+# отдельного имени для боевого окружения не заведено. Разойдётся с .env — правь тут.
+DB=/app/prisma/data/dev.db
 
 mkdir -p "$DIR"
 
