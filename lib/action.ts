@@ -15,13 +15,27 @@ export type ActionResult<TOutput> =
   | { ok: true; data: TOutput }
   | { ok: false; errors: Record<string, string> };
 
+/**
+ * Ошибка бизнес-правила внутри run: сообщение безопасно показать как есть
+ * (например «занятие стоит в расписании, уберите его сначала»). Любая другая
+ * ошибка внутри транзакции — это отказ базы или баг, её текст пользователю
+ * не показывается, только пишется в консоль сервера.
+ */
+export class ActionError extends Error {}
+
 type Options<TInput, TOutput> = {
   roles: readonly UserRole[];
   schema: z.ZodType<TInput>;
   entity: Entity;
   action: string;
-  /** Пути, которые нужно сбросить дополнительно к тегам: страницы по slug. */
-  paths?: (input: TInput) => string[];
+  /**
+   * Пути, которые нужно сбросить дополнительно к тегам: страницы по slug.
+   * Получает и вход, и результат run: slug чаще известен только после записи
+   * (создание) или уже есть в строке, которую run прочитал внутри транзакции
+   * (изменение, скрытие, удаление) — так action не делает лишний запрос к базе
+   * после того, как транзакция уже закрылась.
+   */
+  paths?: (input: TInput, output: TOutput) => string[];
   entityId?: (input: TInput, output: TOutput) => string | undefined;
   run: (input: TInput, tx: Prisma.TransactionClient) => Promise<TOutput>;
 };
@@ -52,8 +66,12 @@ export function panelAction<TInput, TOutput>(options: Options<TInput, TOutput>) 
     try {
       data = await prisma.$transaction((tx) => options.run(parsed.data, tx));
     } catch (error: unknown) {
-      // Гость и администратор не должны видеть внутренности ошибки базы,
-      // но в журнале сервера она нужна целиком.
+      if (error instanceof ActionError) {
+        return { ok: false, errors: { form: error.message } };
+      }
+
+      // Гость и администратор не должны видеть внутренности неожиданной ошибки
+      // базы, но в журнале сервера она нужна целиком.
       console.error(`Действие ${options.action} не выполнено:`, error);
       return {
         ok: false,
@@ -71,7 +89,7 @@ export function panelAction<TInput, TOutput>(options: Options<TInput, TOutput>) 
     });
 
     // 5. Сброс кэша. Без него правка не доедет до гостя
-    revalidateEntity(options.entity, options.paths?.(parsed.data) ?? []);
+    revalidateEntity(options.entity, options.paths?.(parsed.data, data) ?? []);
 
     return { ok: true, data };
   };

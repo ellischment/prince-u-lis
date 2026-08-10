@@ -1,0 +1,308 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 720px;
+  margin-top: 16px;
+}
+
+.error {
+  margin: 0;
+  padding: 12px 16px;
+  background: rgba(200, 50, 74, 0.16);
+  border: 1px solid var(--rose);
+  border-radius: 12px;
+}
+
+.readinessRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.readinessLabel {
+  color: var(--cream);
+  font-size: 14px;
+}
+
+.readinessList {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.readinessBlocked {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: clamp(18px, 2vw, 21px);
+}
+
+.sectionNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  color: var(--cream);
+  font-size: 13.5px;
+}
+
+.input,
+.textarea {
+  padding: 11px 14px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 15px;
+  width: 100%;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.input:focus-visible,
+.textarea:focus-visible {
+  border-color: var(--cream);
+}
+
+.hint {
+  color: var(--fox-soft);
+  font-size: 12.5px;
+}
+
+.row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--paper);
+  font-size: 14.5px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.tagOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--paper);
+  font-size: 14px;
+}
+
+.addButton,
+.removeLast {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.addButton:hover,
+.removeLast:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.stepInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.savedNote {
+  color: var(--cream);
+  font-size: 13.5px;
+}
+
+.dangerZone {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.deleteLink {
+  color: var(--rose);
+  font-size: 13.5px;
+}
+
+.deleteLink:hover {
+  text-decoration: underline;
+}
+
+.confirmBox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: rgba(200, 50, 74, 0.1);
+  border: 1px solid var(--rose);
+  border-radius: 14px;
+  max-width: 52ch;
+}
+
+.confirmButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.extra {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+  margin-top: 32px;
+}
+
+.hint {
+  color: var(--muted);
+}
+
+.mediaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mediaThumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mediaVideoTag {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card2);
+  border-radius: 8px;
+  color: var(--cream);
+  font-size: 12px;
+}
+
+.mediaUrl {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.uploadRow,
+.videoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.uploadButton {
+  padding: 10px 18px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--paper);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.uploadButton:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.videoRow .input {
+  flex-grow: 1;
+  min-width: 220px;
+}
+
+.runsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.runRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  color: var(--paper);
+  font-size: 14px;
+}
+
+.runButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.hiddenTag {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.runForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+}

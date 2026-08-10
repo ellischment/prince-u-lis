@@ -16,6 +16,16 @@ export type CategoryDisplay = (typeof CATEGORY_DISPLAYS)[number];
 export const TASK_TAGS = ["duo", "kids", "gift", "self", "company", "practice"] as const;
 export type TaskTag = (typeof TASK_TAGS)[number];
 
+// Подписи кнопок анкеты «Чем займёмся»: Приложение_1_ТЗ раздел 2.1.
+export const TASK_TAG_LABELS: Record<TaskTag, string> = {
+  duo: "Иду вдвоём",
+  kids: "Иду с ребёнком",
+  gift: "Ищу подарок",
+  self: "Хочу для себя",
+  company: "Идём компанией",
+  practice: "Уже умею",
+};
+
 export const REQUEST_TYPES = [
   "booking",
   "free_time",
