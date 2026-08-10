@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -1012,8 +1013,54 @@ async function seedTexts(): Promise<void> {
   }
 }
 
+/**
+ * Пользователи панели. Пароли только из переменных окружения: в коде их быть не должно.
+ * Существующие записи обновляются, а не пересоздаются, иначе повторный запуск seed
+ * оборвёт живые сессии и сменит идентификаторы в журнале действий.
+ */
+async function seedUsers(): Promise<void> {
+  const accounts = [
+    {
+      role: "owner",
+      email: process.env.SEED_OWNER_EMAIL,
+      password: process.env.SEED_OWNER_PASSWORD,
+      envName: "SEED_OWNER_EMAIL и SEED_OWNER_PASSWORD",
+    },
+    {
+      role: "admin",
+      email: process.env.SEED_ADMIN_EMAIL,
+      password: process.env.SEED_ADMIN_PASSWORD,
+      envName: "SEED_ADMIN_EMAIL и SEED_ADMIN_PASSWORD",
+    },
+  ];
+
+  for (const account of accounts) {
+    if (!account.email || !account.password) {
+      throw new Error(
+        `Не заданы ${account.envName}. Заполните их в .env, иначе в панель нельзя будет войти.`,
+      );
+    }
+
+    if (account.password.length < 10) {
+      throw new Error(
+        `Пароль в ${account.envName} короче десяти символов. Требование SPEC.md раздел 16.`,
+      );
+    }
+
+    const email = account.email.toLowerCase();
+    const passwordHash = await bcrypt.hash(account.password, 12);
+
+    await prisma.user.upsert({
+      where: { email },
+      update: { passwordHash, role: account.role, active: true },
+      create: { email, passwordHash, role: account.role, active: true },
+    });
+  }
+}
+
 async function main(): Promise<void> {
   await clear();
+  await seedUsers();
 
   const categoryIds = await seedCategories();
   const lessonIds = await seedLessons(categoryIds);
@@ -1043,6 +1090,7 @@ async function main(): Promise<void> {
     события: await prisma.event.count(),
     отзывы: await prisma.review.count(),
     расписание: await prisma.scheduleSlot.count(),
+    пользователи: await prisma.user.count(),
   };
 
   console.log("База заполнена:", counts);
