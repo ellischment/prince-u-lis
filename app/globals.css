@@ -25,7 +25,8 @@
 
   --r: 20px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --wrap: 1200px;
+  /* Сверено с princ-i-lis-site-4-2-2.html: .wrap{max-width:1160px}. */
+  --wrap: 1160px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

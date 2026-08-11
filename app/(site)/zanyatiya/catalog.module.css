@@ -39,13 +39,15 @@
   padding-bottom: 62px;
 }
 
-@media (min-width: 640px) {
+/* Точки перехода сверены с princ-i-lis-site-4-2-2.html: .cards переходит
+   на 2 колонки до 920px и на 1 колонку до 560px. */
+@media (min-width: 560px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 920px) {
   .grid {
     grid-template-columns: repeat(3, 1fr);
   }
