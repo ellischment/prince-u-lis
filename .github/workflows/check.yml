@@ -13,6 +13,11 @@ jobs:
       ENCRYPTION_KEY: "ci-key-ci-key-ci-key-ci-key-32ch"
       CRON_SECRET: "ci-cron-secret-16"
       NEXT_PUBLIC_SITE_URL: "https://ci.example.invalid"
+      # Только для сквозного сценария входа в панель, не боевые значения.
+      SEED_OWNER_EMAIL: "owner@ci.example.invalid"
+      SEED_OWNER_PASSWORD: "ci-owner-password-not-real"
+      SEED_ADMIN_EMAIL: "admin@ci.example.invalid"
+      SEED_ADMIN_PASSWORD: "ci-admin-password-not-real"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,14 +33,26 @@ jobs:
       - name: Миграция базы
         run: npx prisma migrate deploy
 
+      # До сборки: /zanyatiya/[slug] предгенерируется статически по данным
+      # из базы (generateStaticParams), без сида сборка даст ноль страниц
+      # занятий, и сквозной сценарий ниже не найдёт «Гончарный круг».
+      - name: Сид базы
+        run: npm run seed
+
       - name: Типы
         run: npx next typegen && npx tsc --noEmit
 
       - name: Линтер
         run: npm run lint
 
-      - name: Тесты
+      - name: Модульные тесты
         run: npm run test:unit
 
       - name: Сборка
         run: npm run build
+
+      - name: Браузер для сквозных тестов
+        run: npx playwright install --with-deps chromium
+
+      - name: Сквозные тесты
+        run: npm run test:e2e

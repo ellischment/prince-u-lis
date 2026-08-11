@@ -10,8 +10,9 @@
     "seed": "tsx prisma/seed.ts",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
+    "test": "npm run test:unit && next build && npm run test:e2e",
     "backup": "sh scripts/backup.sh",
-    "check": "next typegen && tsc --noEmit && npm run lint && vitest run && next build"
+    "check": "next typegen && tsc --noEmit && npm run lint && npm run test"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -28,7 +28,9 @@ export function parsePrice(text: string): ParsedPrice {
  * выдуманное значение приводит к санкциям поисковика.
  */
 export function parseDuration(text: string): string | null {
-  const hours = text.match(/(\d+)\s*час/i);
+  // Без (?<![.,]) «1,5 часа» отдаёт «5 часа»: \d+ находит «5» после запятой и
+  // засчитывает её как отдельный час, а ветка halfHour ниже до неё не доходит.
+  const hours = text.match(/(?<![.,])(\d+)\s*час/i);
   const minutes = text.match(/(\d+)\s*мин/i);
 
   const halfHour = /полтора|1[.,]5/i.test(text);

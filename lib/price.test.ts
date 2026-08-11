@@ -24,6 +24,10 @@ describe("parsePrice", () => {
   it("слово «отдых» не считается предлогом «от»", () => {
     expect(parsePrice("отдых 1000 ₽").isFrom).toBe(false);
   });
+
+  it("уточнение после числа не мешает разбору («за двоих», «за час»)", () => {
+    expect(parsePrice("7 000 ₽ за двоих")).toEqual({ amount: 7000, isFrom: false });
+  });
 });
 
 describe("parseDuration", () => {
@@ -41,5 +45,14 @@ describe("parseDuration", () => {
 
   it("непонятную строку не выдумывает", () => {
     expect(parseDuration("по договорённости")).toBeNull();
+  });
+
+  it("полтора часа цифрой через запятую", () => {
+    // До правки regex «час» цеплял «5» из «1,5» как отдельный час и отдавал PT5H.
+    expect(parseDuration("1,5 часа")).toBe("PT1H30M");
+  });
+
+  it("полтора часа цифрой через точку", () => {
+    expect(parseDuration("1.5 часа")).toBe("PT1H30M");
   });
 });

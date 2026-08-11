@@ -1,0 +1,63 @@
+#!/bin/sh
+# Две проверки перед коммитом (PLAN.md шаг 1.3).
+#
+# Чтобы включить у себя: git config core.hooksPath .githooks
+# (в этой рабочей копии уже включено копией в .git/hooks/pre-commit).
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+
+# --- 1. Секреты: жёсткий стоп ---
+
+if printf '%s\n' "$staged_files" | grep -qx '\.env'; then
+  echo "Коммит отклонён: .env в индексе. Секреты не попадают в git (DEPLOY.md р. B5)." >&2
+  exit 1
+fi
+
+# Только добавленные строки, .githooks исключён — иначе этот же файл всегда
+# бьёт сам себя словами из этого комментария.
+added_lines=$(git diff --cached -U0 -- . ':(exclude).githooks' | grep -E '^\+' | grep -vE '^\+\+\+')
+
+# Утечка — секрет, которого не должно быть в репозитории, а не само слово
+# token/secret/password: оно легально встречается в именах переменных
+# (SEED_OWNER_PASSWORD) и в обычном коде (process.env.SEED_OWNER_PASSWORD —
+# длинная строка без пробелов, но это идентификатор, а не значение). Граница —
+# похоже ли то, что стоит СРАЗУ ПОСЛЕ = или : (а не где угодно в строке) на
+# настоящий секрет.
+#
+# Грубые, но рабочие признаки: (1) явный тестовый плейсхолдер рядом со словом
+# — пропускаем без вопросов; иначе (2) сам паттерн требует, чтобы в пределах
+# ~30 символов после слова-триггера шёл = или :, а сразу за ним — 16+ подряд
+# символов base64/JWT-алфавита (буквы, цифры, +/_.=-, точка нужна отдельно —
+# у JWT сегменты через неё). Без = или : сразу после слова — это не значение
+# (комментарий, `process.env.X`, имя ключа), пропускаем.
+entropy_pattern="(token|secret|password)[^=:]{0,30}[=:][[:space:]]*[\"']?[A-Za-z0-9+/_.=-]{16,}"
+
+suspicious=""
+old_ifs=$IFS
+IFS='
+'
+for line in $added_lines; do
+  printf '%s' "$line" | grep -qiE 'token|secret|password' || continue
+  printf '%s' "$line" | grep -qiE 'not-real|changeme|change-me|example|placeholder|ci-owner|ci-admin|=[[:space:]]*(null|"")[[:space:]]*$' && continue
+  printf '%s' "$line" | grep -qiE "$entropy_pattern" || continue
+  suspicious="$suspicious$line
+"
+done
+IFS=$old_ifs
+
+if [ -n "$suspicious" ]; then
+  echo "Коммит отклонён: похоже на настоящий секрет в добавленных строках (DEPLOY.md р. B5):" >&2
+  printf '%s' "$suspicious" >&2
+  echo "Если это ложное срабатывание (тестовый плейсхолдер без своей метки), проверьте вручную." >&2
+  exit 1
+fi
+
+# --- 2. STATE.md: мягкое предупреждение, не блок ---
+
+if printf '%s\n' "$staged_files" | grep -qE '^(lib|app|components|prisma)/'; then
+  if ! printf '%s\n' "$staged_files" | grep -qx 'STATE.md'; then
+    echo "Предупреждение: меняется код (lib/app/components/prisma), а STATE.md не в этом коммите." >&2
+  fi
+fi
+
+exit 0
