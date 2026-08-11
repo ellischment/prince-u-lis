@@ -19,13 +19,18 @@
   cursor: not-allowed;
 }
 
+/* Кремовая заливка, а не оранжевая: в обоих макетах (site-4-2-2 и admin-4-2-2)
+   основная кнопка это .btn{background:var(--cream)}, а оранжевая .btn.fox там
+   модификатор. Текст тёмный: белый по кремовому нечитаем. Тот же приём уже
+   работает у активного чипса (Chip.module.css .active).
+   Заливка сплошная: перелива и свечения на наведении нет намеренно. */
 .primary {
-  background: var(--fox);
-  color: #fff;
+  background: var(--cream);
+  color: var(--deep);
 }
 
 .primary:hover:not(:disabled) {
-  background: #c65f26;
+  background: var(--gold-soft);
 }
 
 .ghost {
