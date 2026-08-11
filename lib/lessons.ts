@@ -5,6 +5,8 @@
 import { TAGS, cachedRead } from "./cache";
 import { prisma } from "./db";
 
+// format нужен всюду, где строится ссылка на занятие: адрес курса считается
+// по формату (lib/courses.ts lessonHref), а не хранится отдельным полем.
 export const getHomeLessons = cachedRead(
   ["home-lessons"],
   [TAGS.lessons, TAGS.categories],
@@ -13,7 +15,7 @@ export const getHomeLessons = cachedRead(
       where: { visible: true },
       orderBy: { sort: "asc" },
       take: 6,
-      include: { direction: true },
+      include: { direction: true, format: true },
     }),
 );
 
@@ -92,11 +94,18 @@ export const getSimilarLessons = cachedRead(
       where: { visible: true, directionId, id: { not: lessonId } },
       orderBy: { sort: "asc" },
       take: 3,
-      include: { direction: true },
+      include: { direction: true, format: true },
     }),
 );
 
-/** Адреса всех видимых занятий: нужны для карты сайта и статической сборки. */
+/**
+ * Адреса всех видимых занятий вместе с форматом: нужны для карты сайта и
+ * статической сборки. Формат отдаётся, чтобы вызывающий отделил курсы, у
+ * которых свой раздел, от остальных занятий.
+ */
 export const getLessonSlugs = cachedRead(["lesson-slugs"], [TAGS.lessons], async () =>
-  prisma.lesson.findMany({ where: { visible: true }, select: { slug: true } }),
+  prisma.lesson.findMany({
+    where: { visible: true },
+    select: { slug: true, format: { select: { slug: true } } },
+  }),
 );

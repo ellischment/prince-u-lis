@@ -13,6 +13,17 @@ export type CategoryKind = (typeof CATEGORY_KINDS)[number];
 export const CATEGORY_DISPLAYS = ["showcase", "cards"] as const;
 export type CategoryDisplay = (typeof CATEGORY_DISPLAYS)[number];
 
+/**
+ * Адрес формата «Курсы» в справочнике категорий. Курс это занятие с этим
+ * форматом, отдельной сущности нет: SPEC.md раздел 9a.
+ *
+ * Значение завязано на seed (`fmt:course` кладётся со slug `kursy`). Если
+ * студия переименует адрес формата в справочнике, курсы перестанут узнаваться
+ * и уедут из раздела. Замечено и записано в STATE.md как незакрытый вопрос
+ * сверки справочника с seed, здесь не «чинится» догадкой.
+ */
+export const COURSE_FORMAT_SLUG = "kursy";
+
 export const TASK_TAGS = ["duo", "kids", "gift", "self", "company", "practice"] as const;
 export type TaskTag = (typeof TASK_TAGS)[number];
 

@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/Button";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
 import { Section } from "@/components/Section";
+import { lessonHref } from "@/lib/courses";
 import { filterLessons } from "@/lib/filters";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
 import styles from "./catalog.module.css";
@@ -122,7 +123,7 @@ export default async function CatalogPage({ searchParams }: PageProps<"/zanyatiy
                 <Card
                   key={lesson.id}
                   title={lesson.title}
-                  href={`/zanyatiya/${lesson.slug}`}
+                  href={lessonHref(lesson)}
                   eyebrow={lesson.direction.title}
                   price={lesson.price}
                 >

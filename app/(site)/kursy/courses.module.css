@@ -1,0 +1,48 @@
+.grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+
+/* Точки перехода те же, что у каталога занятий: сверено с
+   princ-i-lis-site-4-2-2.html. */
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 920px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.start {
+  color: var(--cream);
+}
+
+/* Набор ещё не открыт: пометка спокойная, карточка из витрины не пропадает. */
+.noRun {
+  color: var(--muted);
+}
+
+.empty {
+  max-width: 60ch;
+  color: var(--muted);
+}
+
+.note {
+  max-width: 60ch;
+  color: var(--muted);
+  padding-bottom: 62px;
+}

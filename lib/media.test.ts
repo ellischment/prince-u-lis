@@ -4,17 +4,29 @@
 // не мок, иначе проверка типа по содержимому ничего не докажет.
 
 import { describe, it, expect, afterEach } from "vitest";
-import { unlink } from "node:fs/promises";
+import { readdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { processUploadedImage, MediaValidationError } from "./media";
 
 const written: string[] = [];
 
+// Удаляются все версии по ширине, а не только возвращённая. processUploadedImage
+// пишет 400/800/1600 и отдаёт лишь одну из них: убирая по возвращённому пути,
+// тест оставлял младшие версии мусором в public/uploads (поймано на git status).
 afterEach(async () => {
-  await Promise.all(
-    written.splice(0).map((p) => unlink(path.join(process.cwd(), "public", p)).catch(() => {})),
-  );
+  for (const relative of written.splice(0)) {
+    const absolute = path.join(process.cwd(), "public", relative);
+    const dir = path.dirname(absolute);
+    const base = path.basename(absolute).replace(/-\d+\.webp$/, "");
+
+    const siblings = await readdir(dir).catch(() => [] as string[]);
+    await Promise.all(
+      siblings
+        .filter((name) => name.startsWith(base))
+        .map((name) => unlink(path.join(dir, name)).catch(() => {})),
+    );
+  }
 });
 
 async function pngBuffer(): Promise<Buffer> {

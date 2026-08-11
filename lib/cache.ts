@@ -74,6 +74,15 @@ export function revalidateEntity(entity: Entity, paths: string[] = []): void {
  * директивы use cache, но она требует включить cacheComponents, а это меняет модель
  * рендеринга всего приложения. Решение вынесено в STATE.md: переход трогает только
  * этот файл, вызывающий код останется прежним.
+ *
+ * ВАЖНО, тип здесь врёт про Date. unstable_cache сериализует результат в JSON,
+ * поэтому при попадании в кэш поля Date приезжают строками, хотя TResult обещает
+ * Date. Пока значение просто выводят на страницу, это незаметно. Как только по
+ * дате считают (сравнение, getTime, toISOString), код падает на боевой сборке
+ * с «getTime is not a function», причём только при пререндере: на первом живом
+ * рендере данные ещё не прошли через кэш и остаются настоящими Date.
+ * Кто читает даты через cachedRead, восстанавливает их сразу после чтения.
+ * Пример: reviveRuns в lib/courses.ts.
  */
 export function cachedRead<TArgs extends unknown[], TResult>(
   keyParts: string[],

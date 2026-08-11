@@ -1,22 +1,21 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
-import { Container } from "@/components/Container";
-import { Gallery } from "@/components/Gallery";
-import { Section } from "@/components/Section";
-import { StickyPrice } from "@/components/StickyPrice";
+import { notFound, permanentRedirect } from "next/navigation";
+import { LessonArticle } from "@/components/LessonArticle";
+import { COURSE_FORMAT_SLUG } from "@/lib/constants";
+import { isCourse } from "@/lib/courses";
 import { getLessonBySlug, getLessonSlugs, getSimilarLessons } from "@/lib/lessons";
 import { parseDuration, parsePrice } from "@/lib/price";
-import styles from "./lesson.module.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
 // Страница занятия статическая с тегами по ARCHITECTURE.md раздел 3.
 // Занятие, добавленное после сборки, отрисуется при первом заходе.
+// Курсы отсюда исключены: у них свой адрес /kursy/[slug], см. ARCHITECTURE р. 4.
 export async function generateStaticParams() {
   const lessons = await getLessonSlugs();
-  return lessons.map((lesson) => ({ slug: lesson.slug }));
+  return lessons
+    .filter((lesson) => lesson.format.slug !== COURSE_FORMAT_SLUG)
+    .map((lesson) => ({ slug: lesson.slug }));
 }
 
 export async function generateMetadata({
@@ -45,6 +44,16 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
 
   // Скрытое или несуществующее занятие: 404, а не пустая страница.
   if (!lesson) notFound();
+
+  // Курс канонично живёт на /kursy/[slug]: ARCHITECTURE.md раздел 4.
+  // Редирект считается по формату на момент запроса, а не хранится в таблице
+  // Redirect: у той своя работа, переименование адреса. Иначе смена формата в
+  // панели оставила бы редирект висеть на старом месте.
+  // Код ответа 308 (permanentRedirect в Next отдаёт именно его), поисковики
+  // трактуют его как 301. Обратной стороны у правила нет намеренно:
+  // /kursy/[slug] для не-курса отдаёт 404, а не встречный редирект, иначе смена
+  // формата плюс жёстко закэшированный браузером 308 дают вечную петлю.
+  if (isCourse(lesson)) permanentRedirect(`/kursy/${lesson.slug}`);
 
   const similar = await getSimilarLessons(lesson.id, lesson.directionId);
 
@@ -97,112 +106,7 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <Section>
-        <p className={styles.eyebrow}>{lesson.direction.title}</p>
-        <h1>{lesson.title}</h1>
-        <p className={styles.intro}>{lesson.intro}</p>
-
-        <dl className={styles.facts}>
-          <div className={styles.fact}>
-            <dt>Длительность</dt>
-            <dd>{lesson.duration}</dd>
-          </div>
-          <div className={styles.fact}>
-            <dt>Уровень</dt>
-            <dd>{lesson.level}</dd>
-          </div>
-          <div className={styles.fact}>
-            <dt>Формат</dt>
-            <dd>{lesson.formatText}</dd>
-          </div>
-        </dl>
-
-        <div className={styles.gallery}>
-          <Gallery items={lesson.media} title={lesson.title} />
-        </div>
-
-        <div className={styles.priceBox}>
-          <div>
-            <p className={styles.priceValue}>{lesson.price}</p>
-            <p className={styles.priceNote}>
-              Это заявка, а не бронь. Мы перезвоним и подтвердим время.
-            </p>
-          </div>
-          <Button aria-label={`Записаться: ${lesson.title}`}>Записаться</Button>
-        </div>
-      </Section>
-
-      {lesson.fits.length > 0 ? (
-        <Section title="Подойдёт, если" tone="navy">
-          <ul className={styles.fits}>
-            {lesson.fits.map((fit) => (
-              <li key={fit.id}>{fit.text}</li>
-            ))}
-          </ul>
-        </Section>
-      ) : null}
-
-      {lesson.notForBeginnersText ? (
-        <Section title="Не умеете рисовать">
-          <p className={styles.text}>{lesson.notForBeginnersText}</p>
-        </Section>
-      ) : null}
-
-      {lesson.steps.length > 0 ? (
-        <Section title="Как проходит" tone="navy" id="kak-prohodit">
-          <ol className={styles.steps}>
-            {lesson.steps.map((step, index) => (
-              <li key={step.id} className={styles.step}>
-                <span className={styles.stepNumber} aria-hidden="true">
-                  {index + 1}
-                </span>
-                <div>
-                  <h3 className={styles.stepTitle}>{step.title}</h3>
-                  <p className={styles.text}>{step.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </Section>
-      ) : null}
-
-      {lesson.includes.length > 0 ? (
-        <Section title="Что входит">
-          <ul className={styles.includes}>
-            {lesson.includes.map((item) => (
-              <li key={item.id}>{item.text}</li>
-            ))}
-          </ul>
-          {lesson.note ? <p className={styles.note}>{lesson.note}</p> : null}
-        </Section>
-      ) : null}
-
-      {similar.length > 0 ? (
-        <Section title="Ещё по теме" tone="navy">
-          <div className={styles.similar}>
-            {similar.map((item) => (
-              <Card
-                key={item.id}
-                title={item.title}
-                href={`/zanyatiya/${item.slug}`}
-                eyebrow={item.direction.title}
-                price={item.price}
-              >
-                <p>{item.intro}</p>
-              </Card>
-            ))}
-          </div>
-        </Section>
-      ) : null}
-
-      <Container>
-        <div className={styles.priceRepeat}>
-          <p className={styles.priceValue}>{lesson.price}</p>
-          <Button aria-label={`Записаться: ${lesson.title}`}>Записаться</Button>
-        </div>
-      </Container>
-
-      <StickyPrice price={lesson.price} title={lesson.title} />
+      <LessonArticle lesson={lesson} similar={similar} />
     </main>
   );
 }

@@ -1,0 +1,57 @@
+.runs {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+}
+
+.run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.when {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date {
+  color: var(--cream);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.details {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.note {
+  color: var(--fox-soft);
+  font-size: 13.5px;
+}
+
+/* Открытых наборов нет: вместо списка объяснение и другая кнопка.
+   FEATURES.md раздел 1.8a. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 60ch;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.empty p {
+  color: var(--muted);
+}

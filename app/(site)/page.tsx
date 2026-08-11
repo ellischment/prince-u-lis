@@ -2,6 +2,7 @@ import { Button, ButtonLink } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Container } from "@/components/Container";
 import { Section } from "@/components/Section";
+import { lessonHref } from "@/lib/courses";
 import { getHomeLessons } from "@/lib/lessons";
 import { getHeroTexts } from "@/lib/site-texts";
 import styles from "./page.module.css";
@@ -52,7 +53,7 @@ export default async function HomePage() {
               <Card
                 key={lesson.id}
                 title={lesson.title}
-                href={`/zanyatiya/${lesson.slug}`}
+                href={lessonHref(lesson)}
                 eyebrow={lesson.direction.title}
                 price={lesson.price}
               >
