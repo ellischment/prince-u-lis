@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/Button";
+import { Badge, Table } from "@/components/admin/Panel";
 import { prisma } from "@/lib/db";
 import { ReadinessBar } from "./ReadinessBar";
 import styles from "./list.module.css";
@@ -57,19 +58,29 @@ export default async function LessonsListPage({
           {query ? `По запросу «${query}» ничего не нашлось.` : "Занятий пока нет."}
         </p>
       ) : (
-        <ul className={styles.list}>
+        <Table head={["Название", "Направление", "Цена", "Готовность"]} label="Список занятий">
           {lessons.map((lesson) => (
-            <li key={lesson.id} className={styles.row}>
-              <Link href={`/admin/lessons/${lesson.id}`} className={styles.title}>
-                {lesson.title}
-                {!lesson.visible ? <span className={styles.hiddenTag}>скрыто</span> : null}
-              </Link>
-              <span className={styles.direction}>{lesson.direction.title}</span>
-              <span className={styles.price}>{lesson.price}</span>
-              <ReadinessBar percent={lesson.readiness} />
-            </li>
+            <tr key={lesson.id}>
+              <td>
+                <Link href={`/admin/lessons/${lesson.id}`} className={styles.title}>
+                  {lesson.title}
+                </Link>
+                {/* Скрытое занятие помечается словом, а не только цветом. */}
+                {!lesson.visible ? (
+                  <>
+                    {" "}
+                    <Badge tone="warn">скрыто</Badge>
+                  </>
+                ) : null}
+              </td>
+              <td className={styles.direction}>{lesson.direction.title}</td>
+              <td className={styles.price}>{lesson.price}</td>
+              <td>
+                <ReadinessBar percent={lesson.readiness} />
+              </td>
+            </tr>
           ))}
-        </ul>
+        </Table>
       )}
     </>
   );

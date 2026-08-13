@@ -1,0 +1,131 @@
+/* Словарь компонентов панели. Источник: princ-i-lis-admin-4-2-2.html.
+   У панели он свой: настоящие таблицы, карточки-панели с пояснением,
+   статусные метки. Облегчённые Card и Chip сайта здесь не используются. */
+
+/* .panel из макета: карточка-панель с рамкой, заголовком и пояснением. */
+.panel {
+  padding: 18px;
+  margin-bottom: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.panelTitle {
+  color: var(--paper);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Пояснительный текст под заголовком: в панели он несёт смысл, а не украшает,
+   поэтому вынесен в словарь, а не оставлен на усмотрение раздела. */
+.hint {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Область прокрутки вокруг таблицы. В макете этого нет: он узкие экраны для
+   таблиц не решает вовсе. Но Definition of Done требует 320px без
+   горизонтальной прокрутки страницы, а таблица из четырёх столбцов туда не
+   влезает. Прокрутка внутри блока это решает: страница не едет, таблица
+   листается. Блок получает tabindex и подпись в разметке, иначе с клавиатуры
+   до содержимого не добраться. */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.tableWrap:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+
+/* Таблица. В макете это настоящий <table>, а не сетка из div:
+   у табличных данных должны быть заголовки столбцов, иначе они
+   недоступны с экранным диктором. */
+.table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(237, 202, 157, 0.07);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover td {
+  background: rgba(237, 202, 157, 0.03);
+}
+
+/* Статусная метка. Варианты повторяют макет один в один. */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.owner {
+  background: rgba(237, 202, 157, 0.15);
+  color: var(--cream);
+}
+
+.info {
+  background: rgba(169, 214, 232, 0.12);
+  color: #a9d6e8;
+}
+
+.ok {
+  background: rgba(95, 191, 138, 0.14);
+  color: var(--ok);
+}
+
+.warn {
+  background: rgba(232, 161, 58, 0.15);
+  color: var(--warn);
+}
+
+.bad {
+  background: rgba(226, 96, 108, 0.14);
+  color: var(--bad);
+}
+
+/* Переключатель-пилюля: выбранный вариант заливается кремовым. */
+.pill {
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12.5px;
+  transition: 0.18s var(--ease);
+}
+
+.pill:hover {
+  border-color: var(--line2);
+  color: var(--paper);
+}
+
+.pillOn {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--navy);
+  font-weight: 700;
+}
