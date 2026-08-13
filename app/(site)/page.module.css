@@ -1,9 +1,46 @@
+/* Первый экран во всю высоту (решение заказчика: «на полный экран»).
+   Шапка sticky высотой 88px стоит над hero в потоке, поэтому вычитаем её,
+   чтобы экран заполнялся ровно, без прокрутки под шапку. Большой верхний
+   отступ оставляет полосу вверху, где висит гирлянда, НАД текстом. */
 .hero {
-  padding-block: 72px;
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100svh - 88px);
+  display: flex;
+  align-items: center;
+  padding: 150px 0 64px;
   background:
     radial-gradient(circle at 15% 10%, rgba(217, 110, 48, 0.18), transparent 45%),
     radial-gradient(circle at 85% 0%, rgba(143, 184, 216, 0.14), transparent 40%),
     var(--deep);
+}
+
+/* z-index выше переднего слоя гирлянды (.front = 2 в Garland.module.css):
+   текст первого экрана всегда поверх гирлянды и читаем. Гирлянда остаётся
+   видна в пустотах вокруг текста и над медальоном — декоративно, но не крышей
+   поверх заголовка. FEATURES 1.14: слой «поверх» допустим только при читаемом
+   тексте, здесь это гарантировано стекингом, а не подбором на глаз. */
+.heroInner {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 48px;
+  align-items: center;
+  text-align: left;
+}
+
+/* Заголовок первого экрана крупнее обычного H1: site-4-2-2 .hero h1
+   {font-size:clamp(38px,5.2vw,64px)}. Обычный глобальный H1 (до 46px) для
+   hero мелок. */
+.heroInner h1 {
+  font-size: clamp(38px, 5.2vw, 64px);
+  margin-bottom: 20px;
+  text-wrap: balance;
 }
 
 .eyebrow {
@@ -27,13 +64,191 @@
   margin-top: 28px;
 }
 
+.hand {
+  margin-top: 24px;
+  font-size: 16px;
+}
+
+.scene {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 430px;
+  margin: 6px auto 0;
+  width: 100%;
+}
+
+.halo {
+  position: absolute;
+  inset: -8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 162, 75, 0.14), transparent 62%);
+  z-index: -1;
+}
+
+.medallion {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #2b4a3d, #16261f);
+  border: 2px solid var(--gold);
+  box-shadow:
+    0 0 0 10px rgba(201, 162, 75, 0.12),
+    0 0 0 11px rgba(143, 184, 216, 0.25),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+}
+
+.medallionMark {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 60px;
+  color: rgba(234, 217, 172, 0.35);
+}
+
+/* ---------- полоса доверия ---------- */
+.trust {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding: 34px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.trustItem {
+  text-align: center;
+}
+
+.trustFact {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 34px;
+  color: var(--cream);
+  display: block;
+}
+
+.trustNote {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------- анкета ---------- */
+.quiz {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(155deg, var(--card2), var(--navy));
+  border: 1px solid var(--line);
+  border-radius: calc(var(--r) + 6px);
+  padding: 40px;
+}
+
+.quizBody {
+  position: relative;
+  z-index: 2;
+}
+
+.quizIntro {
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 26px;
+}
+
+.qopts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.hint {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: rgba(201, 162, 75, 0.1);
+  border: 1px solid var(--line2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hint p {
+  font-size: 14.5px;
+  color: var(--paper);
+}
+
+/* ---------- каталог занятий ---------- */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 34px 0 28px;
+}
+
+/* Одна строка с горизонтальной прокруткой, как .dirs в site-4-2-2
+   (display:flex; overflow-x:auto), а не перенос на несколько строк.
+   Чипсы — ссылки, фокусируются и прокручиваются вместе с фокусом. */
+.filterRow {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 9px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  transition: opacity 0.18s var(--ease);
+}
+
+.filterRow > * {
+  flex: 0 0 auto;
+}
+
+.filterRowDimmed {
+  opacity: 0.5;
+}
+
 .grid {
   display: grid;
   gap: 18px;
   grid-template-columns: 1fr;
 }
 
-/* Точки перехода сверены с princ-i-lis-site-4-2-2.html, см. catalog.module.css. */
+.catalogHint {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 60ch;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.catalogHint p {
+  color: var(--muted);
+}
+
+/* ---------- контакты ---------- */
+.contacts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.contactItem h3 {
+  font-size: 18px;
+  margin-bottom: 6px;
+  color: var(--paper);
+}
+
+.contactItem p,
+.contactItem a {
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+.contactItem a:hover {
+  color: var(--cream);
+}
+
 @media (min-width: 560px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
@@ -46,8 +261,38 @@
   }
 }
 
+@media (max-width: 860px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .scene {
+    max-width: 280px;
+    margin-inline: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .trust,
+  .contacts {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    text-align: left;
+  }
+
+  .trustItem {
+    text-align: left;
+  }
+}
+
 @media (max-width: 560px) {
   .hero {
-    padding-block: 48px;
+    min-height: calc(100svh - 64px);
+    padding: 120px 0 48px;
+  }
+
+  .quiz {
+    padding: 26px;
   }
 }

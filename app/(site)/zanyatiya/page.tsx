@@ -56,7 +56,7 @@ export default async function CatalogPage({ searchParams }: PageProps<"/zanyatiy
   const isEmpty = !isCoworking && visible.length === 0;
 
   return (
-    <main>
+    <main id="main">
       <a className="skip-link" href="#spisok">
         Перейти к списку занятий
       </a>

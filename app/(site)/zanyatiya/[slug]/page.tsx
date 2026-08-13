@@ -96,7 +96,7 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
   };
 
   return (
-    <main>
+    <main id="main">
       <a className="skip-link" href="#kak-prohodit">
         Перейти к описанию занятия
       </a>

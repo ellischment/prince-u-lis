@@ -20,8 +20,11 @@
   margin-bottom: 28px;
 }
 
+/* Размер как .sec-title в site-4-2-2 (clamp(30px,4.4vw,46px)), а не как
+   обычный глобальный H2 (до 38px): заголовки секций сайта крупнее. */
 .title {
   margin: 0;
+  font-size: clamp(30px, 4.4vw, 46px);
 }
 
 .subtitle {

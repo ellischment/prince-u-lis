@@ -1,0 +1,60 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--paper);
+  opacity: 0.5;
+  animation: twinkle ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.shooting {
+  position: absolute;
+  top: 14%;
+  left: 65%;
+  width: 90px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--paper));
+  border-radius: 999px;
+  transform: rotate(148deg);
+  transform-origin: right center;
+  opacity: 0;
+  animation: shoot 12s linear infinite;
+  animation-delay: 4s;
+}
+
+@keyframes shoot {
+  0%,
+  92% {
+    opacity: 0;
+    transform: rotate(148deg) translateX(0);
+  }
+  93% {
+    opacity: 1;
+    transform: rotate(148deg) translateX(0);
+  }
+  97% {
+    opacity: 0;
+    transform: rotate(148deg) translateX(-160px);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(148deg) translateX(-160px);
+  }
+}

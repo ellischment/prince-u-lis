@@ -1,0 +1,36 @@
+.option {
+  display: block;
+  min-height: 104px;
+  padding: 26px 22px;
+  border-radius: 16px;
+  background: rgba(234, 217, 172, 0.04);
+  border: 1px solid var(--line);
+  text-align: left;
+  transition: 0.22s var(--ease);
+}
+
+.option:hover {
+  border-color: var(--gold);
+  background: rgba(201, 162, 75, 0.1);
+  transform: translateY(-3px);
+}
+
+.active {
+  border-color: var(--gold);
+  background: rgba(201, 162, 75, 0.1);
+}
+
+.title {
+  display: block;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 25px;
+  line-height: 1.1;
+  color: var(--paper);
+  margin-bottom: 5px;
+}
+
+.note {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+}

@@ -1,68 +1,303 @@
+import type { ReactNode } from "react";
 import { Button, ButtonLink } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
+import { Garland } from "@/components/Garland";
 import { Section } from "@/components/Section";
+import { Snow } from "@/components/Snow";
+import { Stars } from "@/components/Stars";
+import { TaskOption } from "@/components/TaskOption";
+import { TASK_TAGS, TASK_TAG_LABELS, type TaskTag } from "@/lib/constants";
 import { lessonHref } from "@/lib/courses";
-import { getHomeLessons } from "@/lib/lessons";
-import { getHeroTexts } from "@/lib/site-texts";
+import { filterLessons } from "@/lib/filters";
+import { getBlocksOrder, type HomeBlock } from "@/lib/home-blocks";
+import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
+import { getHeroTexts, getSeason, getTrustItems } from "@/lib/site-texts";
+import { getGarland } from "@/lib/appearance-read";
+import { STUDIO_ADDRESS, STUDIO_PHONE, STUDIO_PHONE_HREF, formatStudioHours } from "@/lib/studio";
+import { getStudioHours } from "@/lib/studio-hours";
 import styles from "./page.module.css";
 
-// Временная главная страница этапа 0: показывает, что связка база — страница работает.
-// Полный набор блоков и порядок из blocksOrder делаются на шаге 2.1.
+const ANY_DIRECTION = "vse";
+const ANY_FORMAT = "lyuboy";
 
-export default async function HomePage() {
-  const [hero, lessons] = await Promise.all([getHeroTexts(), getHomeLessons()]);
+/** Короткая подсказка с переходом под тремя кнопками анкеты: FEATURES.md раздел 1.2. */
+const TASK_HINTS: Partial<Record<TaskTag, { text: string; href: string; label: string }>> = {
+  duo: {
+    text: "Идёте вдвоём? Присмотритесь к формату «Свидание».",
+    href: "/otprazdnovat",
+    label: "Отпраздновать",
+  },
+  gift: {
+    text: "Не знаете, что выбрать? Есть сертификат на занятие.",
+    href: "/kupit",
+    label: "Сертификаты",
+  },
+  practice: {
+    text: "Уже умеете и ищете просто место и печь? Это коворкинг, не занятие.",
+    href: "/zanyatiya?napravlenie=kovorking",
+    label: "О коворкинге",
+  },
+};
 
-  return (
-    <main>
-      <a className="skip-link" href="#soderzhanie">
-        Перейти к содержанию
-      </a>
+/** Адрес главной с изменённым фильтром. Ссылки работают и без JavaScript. */
+function homeHref(params: { task?: string; direction?: string; format?: string }): string {
+  const search = new URLSearchParams();
+  if (params.task) search.set("zadacha", params.task);
+  if (params.direction && params.direction !== ANY_DIRECTION) {
+    search.set("napravlenie", params.direction);
+  }
+  if (params.format && params.format !== ANY_FORMAT) search.set("format", params.format);
 
-      <section className={styles.hero}>
+  const query = search.toString();
+  return query ? `/?${query}#catalog` : "/#catalog";
+}
+
+export default async function HomePage({ searchParams }: PageProps<"/">) {
+  const params = await searchParams;
+
+  const [hero, trust, season, blocks, lessons, filters, hours, garland] = await Promise.all([
+    getHeroTexts(),
+    getTrustItems(),
+    getSeason(),
+    getBlocksOrder(),
+    getCatalogLessons(),
+    getLessonFilters(),
+    getStudioHours(),
+    getGarland(),
+  ]);
+
+  const taskParam = typeof params.zadacha === "string" ? params.zadacha : undefined;
+  const task = (TASK_TAGS as readonly string[]).includes(taskParam ?? "")
+    ? (taskParam as TaskTag)
+    : undefined;
+  const directionSlug =
+    typeof params.napravlenie === "string" ? params.napravlenie : ANY_DIRECTION;
+  const formatSlug = typeof params.format === "string" ? params.format : ANY_FORMAT;
+
+  const direction = filters.directions.find((item) => item.slug === directionSlug);
+  const format = filters.formats.find((item) => item.slug === formatSlug);
+
+  // Коворкинг это не занятие, а услуга: FEATURES.md раздел 1.3, то же правило,
+  // что и в каталоге /zanyatiya.
+  const isCoworking = !task && directionSlug === "kovorking";
+
+  const visible = isCoworking
+    ? []
+    : filterLessons(
+        lessons.map((lesson) => ({ ...lesson, tags: lesson.taskTags.map((tag) => tag.tag) })),
+        { task, direction: direction?.id, format: format?.id },
+      );
+
+  const isEmpty = !isCoworking && visible.length === 0;
+  const hint = task ? TASK_HINTS[task] : undefined;
+  const hoursText = formatStudioHours(hours);
+
+  const visibleBlocks = new Set(blocks.filter((b) => b.visible).map((b) => b.id));
+  const order = blocks.map((b) => b.id);
+  const showBlock = (id: HomeBlock) => visibleBlocks.has(id);
+
+  const sections: Record<HomeBlock, ReactNode> = {
+    hero: (
+      <section className={styles.hero} key="hero">
+        <Stars shooting />
+        {season === "flags" ? <Garland strands={garland} /> : null}
+        {season === "winter" ? <Snow /> : null}
         <Container>
-          <p className={styles.eyebrow}>{hero.subtitle}</p>
-          <h1>{hero.title}</h1>
-          <p className={styles.lead}>
-            Керамика, живопись и витраж в центре Москвы. Занятия с нуля, курсы, праздники и
-            коворкинг для тех, кто уже умеет.
-          </p>
-          <p className="hand">{hero.hand}</p>
-          <div className={styles.actions}>
-            <Button>Записаться</Button>
-            <ButtonLink href="/styleguide" variant="ghost">
-              Дизайн-система
-            </ButtonLink>
+          <div className={styles.heroInner}>
+            <div className={styles.heroGrid}>
+              <div>
+                <p className={styles.eyebrow}>{hero.subtitle}</p>
+                <h1>{hero.title}</h1>
+                <p className={styles.lead}>{hero.lead}</p>
+                <div className={styles.actions}>
+                  <ButtonLink href="/#catalog">Выбрать занятие</ButtonLink>
+                  {/* Форма записи — шаг 4.1, кнопка пока неактивна. */}
+                  <Button variant="ghost" aria-label="Записаться">
+                    Записаться
+                  </Button>
+                </div>
+                <p className={`${styles.hand} hand`}>{hero.hand}</p>
+              </div>
+              <div className={styles.scene}>
+                <div className={styles.halo} aria-hidden="true" />
+                <div className={styles.medallion}>
+                  <span className={styles.medallionMark} aria-hidden="true">
+                    ✳
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </Container>
       </section>
+    ),
 
-      <div id="soderzhanie">
-        <Section
-          title="Занятия"
-          subtitle="Витрина: полный список открывается ссылкой"
-          tone="navy"
-          action={
-            <ButtonLink href="/zanyatiya" variant="ghost">
-              Все занятия
-            </ButtonLink>
-          }
-        >
-          <div className={styles.grid}>
-            {lessons.map((lesson) => (
-              <Card
-                key={lesson.id}
-                title={lesson.title}
-                href={lessonHref(lesson)}
-                eyebrow={lesson.direction.title}
-                price={lesson.price}
-              >
-                <p>{lesson.intro}</p>
-              </Card>
-            ))}
+    trust: (
+      <Section key="trust" tone="deep">
+        <div className={styles.trust}>
+          {trust.map((item, i) => (
+            <div className={styles.trustItem} key={i}>
+              <b className={styles.trustFact}>{item.fact}</b>
+              <span className={styles.trustNote}>{item.note}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
+    ),
+
+    catalog: (
+      <div id="catalog" key="catalog">
+        <Section title="Чем займёмся?" tone="navy">
+          <div className={styles.quiz}>
+            <Stars count={16} />
+            <div className={styles.quizBody}>
+              <p className={styles.quizIntro}>Нажмите то, что про вас. Остальное подберём сами.</p>
+              <div className={styles.qopts} role="group" aria-label="Повод визита">
+                {TASK_TAGS.map((tag) => (
+                  <TaskOption
+                    key={tag}
+                    href={task === tag ? homeHref({ direction: directionSlug, format: formatSlug }) : homeHref({ task: tag, format: formatSlug })}
+                    active={task === tag}
+                    title={TASK_TAG_LABELS[tag]}
+                    note={taskNote(tag)}
+                  />
+                ))}
+              </div>
+
+              {hint ? (
+                <div className={styles.hint}>
+                  <p>{hint.text}</p>
+                  <ButtonLink href={hint.href} variant="ghost" small>
+                    {hint.label}
+                  </ButtonLink>
+                </div>
+              ) : null}
+            </div>
           </div>
         </Section>
+
+        <Section
+          title={task ? "Вот что вам подойдёт" : "Занятия"}
+          action={<ButtonLink href="/zanyatiya" variant="ghost">Все занятия</ButtonLink>}
+        >
+          <div className={styles.filters}>
+            <div
+              className={`${styles.filterRow} ${task ? styles.filterRowDimmed : ""}`}
+              role="group"
+              aria-label="Направление"
+            >
+              <ChipLink href={homeHref({ format: formatSlug })} active={!direction && !task}>
+                Все
+              </ChipLink>
+              {filters.directions.map((item) => (
+                <ChipLink
+                  key={item.id}
+                  href={homeHref({ direction: item.slug, format: formatSlug })}
+                  active={!task && item.slug === directionSlug}
+                >
+                  {item.title}
+                </ChipLink>
+              ))}
+            </div>
+
+            <div className={styles.filterRow} role="group" aria-label="Формат">
+              <ChipLink
+                href={homeHref({ task, direction: directionSlug })}
+                active={!format}
+              >
+                Любой
+              </ChipLink>
+              {filters.formats.map((item) => (
+                <ChipLink
+                  key={item.id}
+                  href={homeHref({ task, direction: directionSlug, format: item.slug })}
+                  active={item.slug === formatSlug}
+                >
+                  {item.title}
+                </ChipLink>
+              ))}
+            </div>
+          </div>
+
+          {isCoworking ? (
+            <div className={styles.catalogHint}>
+              <p>
+                Коворкинг это не занятие, а доступ в мастерскую со своим замыслом: рабочее место,
+                инструмент и обжиг. Оплата по часам или абонементом.
+              </p>
+              <ButtonLink href="/kupit">Смотреть тарифы</ButtonLink>
+            </div>
+          ) : null}
+
+          {isEmpty ? (
+            <div className={styles.catalogHint}>
+              <p>На это сочетание занятий пока нет. Снимите один из фильтров, и подходящее найдётся.</p>
+              <ButtonLink href={homeHref({ format: formatSlug })} variant="ghost">
+                Показать все занятия
+              </ButtonLink>
+            </div>
+          ) : null}
+
+          {visible.length > 0 ? (
+            <div className={styles.grid}>
+              {visible.map((lesson) => (
+                <Card
+                  key={lesson.id}
+                  title={lesson.title}
+                  href={lessonHref(lesson)}
+                  eyebrow={lesson.direction.title}
+                  price={lesson.price}
+                >
+                  <p>{lesson.intro}</p>
+                </Card>
+              ))}
+            </div>
+          ) : null}
+        </Section>
       </div>
+    ),
+
+    contacts: (
+      <Section key="contacts" id="kontakty" title="Контакты" tone="navy">
+        <div className={styles.contacts}>
+          <div className={styles.contactItem}>
+            <h3>Адрес</h3>
+            <p>{STUDIO_ADDRESS}, Москва</p>
+          </div>
+          <div className={styles.contactItem}>
+            <h3>Часы работы</h3>
+            <p>{hoursText || "уточняется"}</p>
+          </div>
+          <div className={styles.contactItem}>
+            <h3>Телефон</h3>
+            <a href={STUDIO_PHONE_HREF}>{STUDIO_PHONE}</a>
+          </div>
+        </div>
+      </Section>
+    ),
+  };
+
+  return (
+    <main id="main">
+      <a className="skip-link" href="#catalog">
+        Перейти к содержанию
+      </a>
+      {order.filter(showBlock).map((id) => sections[id])}
     </main>
   );
+}
+
+/** Короткая подпись под кнопкой анкеты: подбор по SPEC.md раздел 5, таблица «Анкета». */
+function taskNote(tag: TaskTag): string {
+  const notes: Record<TaskTag, string> = {
+    duo: "парные занятия и свидания",
+    kids: "детские и семейные форматы",
+    gift: "сертификат или занятие в подарок",
+    self: "круг, лепка, живопись, витраж",
+    company: "корпоратив, семейная встреча, класс",
+    practice: "коворкинг для тех, кто справится сам",
+  };
+  return notes[tag];
 }

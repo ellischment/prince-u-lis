@@ -1,0 +1,181 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Фон на --deep, как шапка в site-4-2-2 (там rgba(12,26,46,.92), т.е. deep),
+     а не на --navy: навайная полоса читалась как чужой цвет поверх deep-hero.
+     Через color-mix от токена, а не сырым rgba, чтобы не разъезжаться с палитрой.
+     Позиция оставлена sticky (в макете fixed): на многостраничном сайте fixed
+     прячет контент под шапку на всех маршрутах, а видимый дефект был в цвете. */
+  background: color-mix(in srgb, var(--deep) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.row {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: height 0.22s var(--ease);
+}
+
+.slim .row {
+  height: 64px;
+}
+
+.logo {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 21px;
+  letter-spacing: 0.14em;
+  color: var(--paper);
+  flex-shrink: 0;
+  transition: font-size 0.22s var(--ease);
+}
+
+.slim .logo {
+  font-size: 18px;
+}
+
+.dot {
+  color: var(--gold);
+  margin: 0 2px;
+}
+
+.nav {
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.nav a:hover {
+  color: var(--paper);
+}
+
+.slim .nav {
+  display: none;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.phone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.phoneIcon {
+  display: none;
+}
+
+.burger {
+  display: none;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--paper);
+  flex-shrink: 0;
+}
+
+.mobileMenu {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .nav {
+    display: none;
+  }
+
+  .burger {
+    display: flex;
+  }
+
+  .mobileMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 24px 20px;
+    background: var(--navy);
+    border-top: 1px solid var(--line);
+  }
+
+  .mobileMenu a {
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+    color: var(--paper);
+  }
+
+  .mobileMenu[hidden] {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .phoneText {
+    display: none;
+  }
+
+  .phone {
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--cream) 10%, transparent);
+  }
+
+  .phoneIcon {
+    display: block;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .row {
+    padding: 0 16px;
+    gap: 8px;
+  }
+}
+
+/* 320px — самый тесный случай Definition of Done: логотип, телефон, кнопка
+   и бургер должны поместиться одновременно (FEATURES.md раздел 1.1). Обычной
+   small-кнопки уже не хватает, поэтому у .book специфичность поднята
+   дублированием класса — так правило гарантированно перебивает Button.module.css
+   независимо от порядка подключения модулей в сборке. */
+@media (max-width: 420px) {
+  .row {
+    padding: 0 12px;
+    gap: 6px;
+  }
+
+  .logo {
+    font-size: 15px;
+    letter-spacing: 0.08em;
+  }
+
+  .phone,
+  .burger {
+    width: 34px;
+    height: 34px;
+  }
+
+  .book.book {
+    padding: 7px 12px;
+    font-size: 11.5px;
+  }
+}

@@ -5,10 +5,19 @@
   margin-bottom: 28px;
 }
 
+/* Одна строка с горизонтальной прокруткой, как .dirs в site-4-2-2
+   (display:flex; overflow-x:auto), а не перенос на несколько строк. */
 .row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 9px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.row > * {
+  flex: 0 0 auto;
 }
 
 .grid {

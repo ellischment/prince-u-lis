@@ -72,7 +72,9 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   position: absolute;
   left: 16px;
   top: -80px;
-  z-index: 100;
+  /* Выше шапки сайта (position: sticky, z-index: 100, components/Header.module.css):
+     иначе сфокусированная ссылка красится под шапкой и невидима на клавиатуре. */
+  z-index: 200;
   padding: 12px 20px;
   background: var(--cream);
   color: var(--deep);

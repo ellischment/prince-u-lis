@@ -1,5 +1,6 @@
 #!/bin/sh
-# Две проверки перед коммитом (PLAN.md шаг 1.3).
+# Проверки перед коммитом. Всё на конвейерах grep, без построчных циклов:
+# на Windows Git Bash порождение процесса на строку делает хук минутным.
 #
 # Чтобы включить у себя: git config core.hooksPath .githooks
 # (в этой рабочей копии уже включено копией в .git/hooks/pre-commit).
@@ -13,41 +14,24 @@ if printf '%s\n' "$staged_files" | grep -qx '\.env'; then
   exit 1
 fi
 
-# Только добавленные строки, .githooks исключён — иначе этот же файл всегда
-# бьёт сам себя словами из этого комментария.
+# Только добавленные строки, .githooks исключён — иначе этот файл бьёт сам себя
+# словами из своих же комментариев.
 added_lines=$(git diff --cached -U0 -- . ':(exclude).githooks' | grep -E '^\+' | grep -vE '^\+\+\+')
 
 # Утечка — секрет, которого не должно быть в репозитории, а не само слово
-# token/secret/password: оно легально встречается в именах переменных
-# (SEED_OWNER_PASSWORD) и в обычном коде (process.env.SEED_OWNER_PASSWORD —
-# длинная строка без пробелов, но это идентификатор, а не значение). Граница —
-# похоже ли то, что стоит СРАЗУ ПОСЛЕ = или : (а не где угодно в строке) на
-# настоящий секрет.
-#
-# Грубые, но рабочие признаки: (1) явный тестовый плейсхолдер рядом со словом
-# — пропускаем без вопросов; иначе (2) сам паттерн требует, чтобы в пределах
-# ~30 символов после слова-триггера шёл = или :, а сразу за ним — 16+ подряд
-# символов base64/JWT-алфавита (буквы, цифры, +/_.=-, точка нужна отдельно —
-# у JWT сегменты через неё). Без = или : сразу после слова — это не значение
-# (комментарий, `process.env.X`, имя ключа), пропускаем.
+# token/secret/password (оно легально в именах переменных и в process.env.X).
+# Признак: сразу после = или : идёт 16+ символов base64/JWT-алфавита. Явные
+# тестовые плейсхолдеры отсеиваются вторым grep -v. Три grep в конвейере дают ту
+# же логику «И», что прежний построчный цикл, но без тысяч процессов.
 entropy_pattern="(token|secret|password)[^=:]{0,30}[=:][[:space:]]*[\"']?[A-Za-z0-9+/_.=-]{16,}"
-
-suspicious=""
-old_ifs=$IFS
-IFS='
-'
-for line in $added_lines; do
-  printf '%s' "$line" | grep -qiE 'token|secret|password' || continue
-  printf '%s' "$line" | grep -qiE 'not-real|changeme|change-me|example|placeholder|ci-owner|ci-admin|=[[:space:]]*(null|"")[[:space:]]*$' && continue
-  printf '%s' "$line" | grep -qiE "$entropy_pattern" || continue
-  suspicious="$suspicious$line
-"
-done
-IFS=$old_ifs
+suspicious=$(printf '%s\n' "$added_lines" \
+  | grep -iE 'token|secret|password' \
+  | grep -viE 'not-real|changeme|change-me|example|placeholder|ci-owner|ci-admin|=[[:space:]]*(null|"")[[:space:]]*$' \
+  | grep -iE "$entropy_pattern")
 
 if [ -n "$suspicious" ]; then
   echo "Коммит отклонён: похоже на настоящий секрет в добавленных строках (DEPLOY.md р. B5):" >&2
-  printf '%s' "$suspicious" >&2
+  printf '%s\n' "$suspicious" >&2
   echo "Если это ложное срабатывание (тестовый плейсхолдер без своей метки), проверьте вручную." >&2
   exit 1
 fi
@@ -58,6 +42,41 @@ if printf '%s\n' "$staged_files" | grep -qE '^(lib|app|components|prisma)/'; the
   if ! printf '%s\n' "$staged_files" | grep -qx 'STATE.md'; then
     echo "Предупреждение: меняется код (lib/app/components/prisma), а STATE.md не в этом коммите." >&2
   fi
+fi
+
+# --- 3. Дизайн-замок (DESIGN-LOCK.md): цвет и шкала ---
+#
+# Токены цвета определяются только в токен-файлах, поэтому сырой hex там
+# разрешён и они исключены из проверки. Везде ещё сплошной цвет — через var(--*).
+# Градиенты, тени и flood-цвета исключены: канон site-4-2-2 сам держит там
+# не-токенные оттенки, блок запретил бы точную копию макета.
+added_style=$(git diff --cached -U0 -- '*.css' '*.tsx' \
+  ':(exclude)app/globals.css' \
+  ':(exclude)app/admin/admin.module.css' \
+  ':(exclude)lib/appearance.ts' \
+  ':(exclude)DESIGN-LOCK.md' \
+  | grep -E '^\+' | grep -vE '^\+\+\+')
+
+hex_hits=$(printf '%s\n' "$added_style" \
+  | grep -viE 'gradient\(|flood|shadow' \
+  | grep -E '#[0-9A-Fa-f]{3,8}')
+
+if [ -n "$hex_hits" ]; then
+  echo "Коммит отклонён: сырой hex вне токен-файлов (DESIGN-LOCK.md). Через var(--*):" >&2
+  printf '%s\n' "$hex_hits" >&2
+  echo "Если это градиент/тень с оттенком макета — добавьте gradient/shadow/flood в строку или токен в globals.css." >&2
+  exit 1
+fi
+
+# Новые px мимо сетки 4px — мягкое предупреждение, не блок.
+px_values=$(printf '%s\n' "$added_style" \
+  | grep -oE '[0-9]+px' \
+  | awk -F px '{ if ($1 % 4 != 0) print $1"px" }' \
+  | sort -u | tr '\n' ' ')
+
+if [ -n "$px_values" ]; then
+  echo "Предупреждение (DESIGN-LOCK.md): новые px вне сетки 4px: $px_values" >&2
+  echo "Сверьте с макетом 4-2-2 на 320/390/1440, прежде чем принимать." >&2
 fi
 
 exit 0

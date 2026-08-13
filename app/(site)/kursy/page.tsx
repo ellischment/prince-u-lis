@@ -16,7 +16,7 @@ export default async function CoursesPage() {
   const courses = await getCourses();
 
   return (
-    <main>
+    <main id="main">
       <a className="skip-link" href="#kursy">
         Перейти к списку курсов
       </a>

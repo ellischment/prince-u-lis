@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isButtonColorKey, validateGarland } from "@/lib/appearance";
 
 // Одна схема на поле, используется и на клиенте, и на сервере.
 export const heroTextsSchema = z.object({
@@ -20,3 +21,29 @@ export const heroTextsSchema = z.object({
 });
 
 export type HeroTextsInput = z.infer<typeof heroTextsSchema>;
+
+// Цвет кнопок: только ключ из разрешённого AAA-набора (lib/appearance.ts).
+// Оранжевый в набор не входит, поэтому сюда не пройдёт.
+export const buttonColorSchema = z.object({
+  color: z.string().refine(isButtonColorKey, "Недопустимый цвет кнопок"),
+});
+
+// Гирлянда приходит строкой JSON (форма собирает нити из ползунков). Строгая
+// проверка отклоняет битую конфигурацию, а не сохраняет молча дефолт.
+export const garlandSchema = z.object({
+  strands: z.string().transform((raw, ctx) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Конфигурация гирлянды не читается" });
+      return z.NEVER;
+    }
+    const strands = validateGarland(parsed);
+    if (!strands) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Значения гирлянды вне допустимых пределов" });
+      return z.NEVER;
+    }
+    return strands;
+  }),
+});

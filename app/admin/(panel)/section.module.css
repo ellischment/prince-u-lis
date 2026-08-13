@@ -4,6 +4,13 @@
   margin-top: 12px;
 }
 
+.subhead {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  color: var(--cream);
+}
+
 .denied {
   max-width: 60ch;
   margin-top: 16px;

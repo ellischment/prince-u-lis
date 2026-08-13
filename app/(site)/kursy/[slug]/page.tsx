@@ -131,7 +131,7 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
   );
 
   return (
-    <main>
+    <main id="main">
       <a className="skip-link" href="#potoki">
         Перейти к ближайшим потокам
       </a>
