@@ -27,7 +27,10 @@ const COLORS = [
   "var(--rose)",
 ];
 
-const NARROW_AT = 560;
+// Единственный порог, как в site-4-2-2 (narrow = W < 920): ниже него узкая
+// композиция (segN + коэффициенты), выше — десктопная. Промежуточного «планшета»
+// в макете нет — планшет идёт по узкому режиму.
+const NARROW_AT = 920;
 const RESIZE_DEBOUNCE = 180;
 
 /**
@@ -225,23 +228,22 @@ function StrandSvg({ strand, width, reducedMotion, filterId }: { strand: Strand;
   );
 }
 
-const TABLET_AT = 920;
-
 /**
- * Масштаб по ширинам. fw и fh множатся одним коэффициентом, чтобы флажок не
- * искажался (оставался правильным треугольником). step тоже уменьшается —
- * расстояние между флажками становится меньше на узких экранах.
- * y — высоты и провис, flag — размер флажка, step — шаг.
+ * Узкая версия нити — как в site-4-2-2 (drawBunting при narrow): берётся ОТДЕЛЬНЫЙ
+ * диапазон segN, высоты и провис ×0.62, флажки и подгиб ×0.74, шаг ×0.78.
+ * Это не масштаб десктопа, а своя композиция для планшета/телефона.
  */
-function scaleStrand(strand: Strand, y: number, flag: number, step: number): Strand {
+function narrowStrand(strand: Strand): Strand {
   return {
     ...strand,
-    yL: strand.yL * y,
-    yR: strand.yR * y,
-    sag: strand.sag * y,
-    fw: strand.fw * flag,
-    fh: strand.fh * flag,
-    step: strand.step * step,
+    seg: strand.segN,
+    yL: strand.yL * 0.62,
+    yR: strand.yR * 0.62,
+    sag: strand.sag * 0.62,
+    fw: strand.fw * 0.74,
+    fh: strand.fh * 0.74,
+    fold: strand.fold * 0.74,
+    step: strand.step * 0.78,
   };
 }
 
@@ -250,8 +252,8 @@ export function Garland({
   previewWidth,
 }: {
   strands?: GarlandStrand[];
-  /** Режим предпросмотра в панели: фиксированная ширina и БЕЗ адаптивного
-   *  масштабирования — показывает десктоп-композицию, которую и настраивают. */
+  /** Ширина для предпросмотра в панели. Ниже 920 покажет узкую композицию
+   *  (segN), выше — десктопную: тот же порог, что и на сайте. */
   previewWidth?: number;
 }) {
   const winWidth = useWindowWidth();
@@ -260,20 +262,12 @@ export function Garland({
 
   if (width === 0) return null;
 
-  let strands: Strand[];
-  if (previewWidth !== undefined) {
-    strands = source;
-  } else if (width < NARROW_AT) {
-    // Узкий экран: третья нить (слой «за содержимым») убирается, остаются две.
-    // Коэффициенты ровно как в FEATURES.md раздел 1.14: высоты и провис ×0.62,
-    // флажки ×0.78, шаг ×0.74 — утверждённый вид, а не подобранный на глаз.
-    strands = source.filter((strand) => strand.layer === 1).map((s) => scaleStrand(s, 0.62, 0.78, 0.74));
-  } else if (width < TABLET_AT) {
-    // Планшет: все нити, флажки умеренно мельче — на всю ширину полноразмерные крупны.
-    strands = source.map((s) => scaleStrand(s, 0.82, 0.72, 0.84));
-  } else {
-    strands = source;
-  }
+  // Два режима, как в макете. Узкий: задняя нить (слой 0) убирается, остальные
+  // берут узкую композицию segN с коэффициентами планшета/телефона.
+  const strands: Strand[] =
+    width < NARROW_AT
+      ? source.filter((strand) => strand.layer === 1).map(narrowStrand)
+      : source;
 
   const back = strands.filter((strand) => strand.layer === 0);
   const front = strands.filter((strand) => strand.layer === 1);

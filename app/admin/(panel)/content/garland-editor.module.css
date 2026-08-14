@@ -57,6 +57,51 @@
   background: radial-gradient(circle at 40% 35%, var(--green), var(--deep));
 }
 
+.previewTabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.previewTab {
+  background: none;
+  border: 1px solid var(--line2);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: 0.18s var(--ease);
+}
+
+.previewTabActive {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--deep);
+  font-weight: 600;
+}
+
+/* Узкая сцена: рамка «телефон» по центру, содержимое в одну колонку,
+   медальон над текстом — как первый экран на телефоне. */
+.stageNarrow {
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stageNarrow .stageContent {
+  grid-template-columns: 1fr;
+  align-items: start;
+  padding: 28px 18px 0;
+}
+
+.stageNarrow .stageMedallion {
+  order: -1;
+  margin: 0 0 10px;
+  width: 96px;
+  height: 96px;
+}
+
 .presets {
   display: flex;
   gap: 6px;

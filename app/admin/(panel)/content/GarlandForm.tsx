@@ -9,15 +9,18 @@ import { saveGarland, type ContentState } from "./actions";
 import styles from "./content.module.css";
 import ed from "./garland-editor.module.css";
 
-// Ширина сцены предпросмотра: гирлянда рисуется как на десктопе (без адаптивного
-// масштабирования), а сцена сжимает viewBox по ширине блока.
-const PREVIEW_WIDTH = 1100;
+// Ширины предпросмотра: десктоп (>920 → десктопная композиция) и узкий
+// (<920 → узкая композиция segN с коэффициентами планшета/телефона).
+const PREVIEW_DESKTOP = 1100;
+const PREVIEW_NARROW = 380;
 
 // Пресеты из garland-lab.html, переведённые в модель (seg вместо x0/x1).
+// segN по умолчанию равен seg (узкий диапазон совпадает с десктопным, пока не
+// задан отдельно).
 function strand(p: Partial<GarlandStrand> & Pick<GarlandStrand, "seg" | "yL" | "yR" | "sag">): GarlandStrand {
   return {
     step: 52, fw: 44, fh: 50, tilt: 72, jitter: 14, fold: 6, cord: 14, shift: 0,
-    asym: 0, shape: 0, layer: 0, opacity: 93, shadow: 0, speed: 100, ...p,
+    asym: 0, shape: 0, layer: 0, opacity: 93, shadow: 0, speed: 100, segN: p.seg, ...p,
   };
 }
 
@@ -38,8 +41,8 @@ const PRESETS: Record<string, GarlandStrand[]> = {
   ],
 };
 
-type SegKey = "seg0" | "seg1";
-type NumericKey = Exclude<keyof GarlandStrand, "seg">;
+type SegKey = "seg0" | "seg1" | "segN0" | "segN1";
+type NumericKey = Exclude<keyof GarlandStrand, "seg" | "segN">;
 type Control = { key: NumericKey | SegKey; label: string; min: number; max: number };
 type Group = { group: string; controls: Control[] };
 
@@ -53,6 +56,8 @@ const GROUPS: Group[] = [
       { key: "asym", label: "Смещение провиса", min: -60, max: 60 },
       { key: "seg0", label: "Начало, %", min: 0, max: 100 },
       { key: "seg1", label: "Конец, %", min: 0, max: 100 },
+      { key: "segN0", label: "Начало узк., %", min: 0, max: 100 },
+      { key: "segN1", label: "Конец узк., %", min: 0, max: 100 },
     ],
   },
   {
@@ -85,12 +90,16 @@ const SHAPES = ["треуг.", "хвост", "скругл."];
 function readControl(s: GarlandStrand, key: Control["key"]): number {
   if (key === "seg0") return Math.round(s.seg[0] * 100);
   if (key === "seg1") return Math.round(s.seg[1] * 100);
+  if (key === "segN0") return Math.round(s.segN[0] * 100);
+  if (key === "segN1") return Math.round(s.segN[1] * 100);
   return s[key];
 }
 
 function patchControl(s: GarlandStrand, key: Control["key"], value: number): Partial<GarlandStrand> {
   if (key === "seg0") return { seg: [value / 100, s.seg[1]] };
   if (key === "seg1") return { seg: [s.seg[0], value / 100] };
+  if (key === "segN0") return { segN: [value / 100, s.segN[1]] };
+  if (key === "segN1") return { segN: [s.segN[0], value / 100] };
   return { [key]: value } as Partial<GarlandStrand>;
 }
 
@@ -112,6 +121,7 @@ function Submit() {
 export function GarlandForm({ current }: { current: GarlandStrand[] }) {
   const [state, formAction] = useActionState<ContentState, FormData>(saveGarland, {});
   const [strands, setStrands] = useState<GarlandStrand[]>(current);
+  const [narrowPreview, setNarrowPreview] = useState(false);
 
   function update(index: number, patch: Partial<GarlandStrand>) {
     setStrands((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
@@ -142,9 +152,29 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
         </p>
       ) : null}
 
+      {/* Переключатель ширины предпросмотра. */}
+      <div className={ed.previewTabs} role="group" aria-label="Ширина предпросмотра">
+        <button
+          type="button"
+          className={`${ed.previewTab} ${narrowPreview ? "" : ed.previewTabActive}`}
+          onClick={() => setNarrowPreview(false)}
+          aria-pressed={!narrowPreview}
+        >
+          Десктоп
+        </button>
+        <button
+          type="button"
+          className={`${ed.previewTab} ${narrowPreview ? ed.previewTabActive : ""}`}
+          onClick={() => setNarrowPreview(true)}
+          aria-pressed={narrowPreview}
+        >
+          Планшет и телефон
+        </button>
+      </div>
+
       {/* Живой предпросмотр: тот же компонент, что и на сайте. */}
-      <div className={ed.stage}>
-        <Garland strands={strands} previewWidth={PREVIEW_WIDTH} />
+      <div className={`${ed.stage} ${narrowPreview ? ed.stageNarrow : ""}`}>
+        <Garland strands={strands} previewWidth={narrowPreview ? PREVIEW_NARROW : PREVIEW_DESKTOP} />
         <div className={ed.stageContent}>
           <div className={ed.stageText}>
             <div className={ed.stageEyebrow}>Художественная студия · Москва</div>

@@ -66,7 +66,11 @@ export function isButtonColorKey(value: unknown): value is ButtonColorKey {
 // ---------- Композиция гирлянды ----------
 
 export type GarlandStrand = {
+  /** Диапазон нити по ширине на десктопе (доли 0..1). */
   seg: [number, number];
+  /** Отдельный диапазон для узкого экрана (<920): своя композиция, а не
+   *  просто уменьшенный десктоп. Как segN в site-4-2-2. */
+  segN: [number, number];
   yL: number;
   yR: number;
   sag: number;
@@ -91,9 +95,9 @@ export type GarlandStrand = {
  *  умолчанию: панель переопределяет её, но при пустой/битой настройке берётся
  *  ровно это, а не выдуманное. */
 export const DEFAULT_STRANDS: GarlandStrand[] = [
-  { seg: [0, 0.34], yL: 71, yR: -1, sag: 65, step: 52, fw: 49, fh: 43, tilt: 92, jitter: 35, fold: 1, cord: 15, shift: 0, asym: 0, shape: 0, layer: 1, opacity: 93, shadow: 45, speed: 100 },
-  { seg: [0.39, 1], yL: -55, yR: 200, sag: 142, step: 53, fw: 45, fh: 46, tilt: 100, jitter: 16, fold: 0, cord: 14, shift: 3, asym: 5, shape: 0, layer: 1, opacity: 93, shadow: 100, speed: 51 },
-  { seg: [0, 0.68], yL: 170, yR: -6, sag: 66, step: 57, fw: 54, fh: 47, tilt: 100, jitter: 16, fold: 0, cord: 16, shift: 3, asym: 3, shape: 0, layer: 0, opacity: 93, shadow: 100, speed: 100 },
+  { seg: [0, 0.34], segN: [0, 0.46], yL: 71, yR: -1, sag: 65, step: 52, fw: 49, fh: 43, tilt: 92, jitter: 35, fold: 1, cord: 15, shift: 0, asym: 0, shape: 0, layer: 1, opacity: 93, shadow: 45, speed: 100 },
+  { seg: [0.39, 1], segN: [0.52, 1], yL: -55, yR: 200, sag: 142, step: 53, fw: 45, fh: 46, tilt: 100, jitter: 16, fold: 0, cord: 14, shift: 3, asym: 5, shape: 0, layer: 1, opacity: 93, shadow: 100, speed: 51 },
+  { seg: [0, 0.68], segN: [0, 0.68], yL: 170, yR: -6, sag: 66, step: 57, fw: 54, fh: 47, tilt: 100, jitter: 16, fold: 0, cord: 16, shift: 3, asym: 3, shape: 0, layer: 0, opacity: 93, shadow: 100, speed: 100 },
 ];
 
 const NUM = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
@@ -109,6 +113,10 @@ function isStrand(value: unknown): value is GarlandStrand {
     s.seg.length === 2 &&
     inRange(s.seg[0], 0, 1) &&
     inRange(s.seg[1], 0, 1) &&
+    Array.isArray(s.segN) &&
+    s.segN.length === 2 &&
+    inRange(s.segN[0], 0, 1) &&
+    inRange(s.segN[1], 0, 1) &&
     inRange(s.yL, -140, 340) &&
     inRange(s.yR, -140, 340) &&
     inRange(s.sag, 0, 200) &&
