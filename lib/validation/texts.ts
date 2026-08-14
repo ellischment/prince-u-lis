@@ -28,6 +28,22 @@ export const buttonColorSchema = z.object({
   color: z.string().refine(isButtonColorKey, "Недопустимый цвет кнопок"),
 });
 
+// Подписи кнопок анкеты «Чем займёмся». Ключи задач фиксированы (завязаны на
+// фильтрацию), меняются только подписи, 1–40 символов.
+const quizLabel = z
+  .string()
+  .trim()
+  .min(1, "Название не может быть пустым")
+  .max(40, "Название длиннее 40 символов не поместится на кнопке");
+export const quizLabelsSchema = z.object({
+  duo: quizLabel,
+  kids: quizLabel,
+  gift: quizLabel,
+  self: quizLabel,
+  company: quizLabel,
+  practice: quizLabel,
+});
+
 // Гирлянда приходит строкой JSON (форма собирает нити из ползунков). Строгая
 // проверка отклоняет битую конфигурацию, а не сохраняет молча дефолт.
 export const garlandSchema = z.object({

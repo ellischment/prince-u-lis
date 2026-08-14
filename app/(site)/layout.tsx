@@ -13,17 +13,16 @@ import { getButtonColor } from "@/lib/appearance-read";
 // вторым по Tab — он пропускает не шапку, а фильтры внутри main.
 
 /** Стиль-обёртка добавляет переменные кнопок, которых нет в типе CSSProperties. */
-type ButtonVars = CSSProperties & Record<"--btn-bg" | "--btn-fg" | "--btn-bg-hover", string>;
+type ButtonVars = CSSProperties & Record<"--btn-bg" | "--btn-fg", string>;
 
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
-  // Цвет кнопок из панели (раздел «Контент и оформление»). Сервер уже проверил
-  // AAA и выбрал текст, здесь только раскладываем токены в переменные. Значения
-  // вида var(--gold-soft) резолвятся у самой кнопки в Button.module.css.
+  // Цвет кнопок из панели (раздел «Контент и оформление»). Сервер выбрал фон и
+  // текст по макету, здесь только раскладываем токены в переменные. Наведение
+  // затемняет заливку в Button.module.css, отдельного токена не нужно.
   const button = await getButtonColor();
   const buttonVars: ButtonVars = {
     "--btn-bg": `var(--${button.bg})`,
     "--btn-fg": `var(--${button.fg})`,
-    "--btn-bg-hover": `var(--${button.hover})`,
   };
 
   return (

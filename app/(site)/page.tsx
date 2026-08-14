@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { Button, ButtonLink } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ChipLink } from "@/components/Chip";
@@ -8,12 +9,12 @@ import { Section } from "@/components/Section";
 import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
 import { TaskOption } from "@/components/TaskOption";
-import { TASK_TAGS, TASK_TAG_LABELS, type TaskTag } from "@/lib/constants";
+import { TASK_TAGS, type TaskTag } from "@/lib/constants";
 import { lessonHref } from "@/lib/courses";
 import { filterLessons } from "@/lib/filters";
 import { getBlocksOrder, type HomeBlock } from "@/lib/home-blocks";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
-import { getHeroTexts, getSeason, getTrustItems } from "@/lib/site-texts";
+import { getHeroTexts, getQuizLabels, getSeason, getTrustItems } from "@/lib/site-texts";
 import { getGarland } from "@/lib/appearance-read";
 import { STUDIO_ADDRESS, STUDIO_PHONE, STUDIO_PHONE_HREF, formatStudioHours } from "@/lib/studio";
 import { getStudioHours } from "@/lib/studio-hours";
@@ -57,16 +58,18 @@ function homeHref(params: { task?: string; direction?: string; format?: string }
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
 
-  const [hero, trust, season, blocks, lessons, filters, hours, garland] = await Promise.all([
-    getHeroTexts(),
-    getTrustItems(),
-    getSeason(),
-    getBlocksOrder(),
-    getCatalogLessons(),
-    getLessonFilters(),
-    getStudioHours(),
-    getGarland(),
-  ]);
+  const [hero, trust, season, blocks, lessons, filters, hours, garland, quizLabels] =
+    await Promise.all([
+      getHeroTexts(),
+      getTrustItems(),
+      getSeason(),
+      getBlocksOrder(),
+      getCatalogLessons(),
+      getLessonFilters(),
+      getStudioHours(),
+      getGarland(),
+      getQuizLabels(),
+    ]);
 
   const taskParam = typeof params.zadacha === "string" ? params.zadacha : undefined;
   const task = (TASK_TAGS as readonly string[]).includes(taskParam ?? "")
@@ -107,7 +110,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <Container>
           <div className={styles.heroInner}>
             <div className={styles.heroGrid}>
-              <div>
+              <div className={styles.heroText}>
                 <p className={styles.eyebrow}>{hero.subtitle}</p>
                 <h1>{hero.title}</h1>
                 <p className={styles.lead}>{hero.lead}</p>
@@ -120,12 +123,19 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 </div>
                 <p className={`${styles.hand} hand`}>{hero.hand}</p>
               </div>
+              {/* Медальон ниже гирлянды по слоям: гирлянда драпируется поверх него
+                  (FEATURES 1.14), а текст слева остаётся над гирляндой и читаем. */}
               <div className={styles.scene}>
                 <div className={styles.halo} aria-hidden="true" />
                 <div className={styles.medallion}>
-                  <span className={styles.medallionMark} aria-hidden="true">
-                    ✳
-                  </span>
+                  <Image
+                    src="/medallion.jpg"
+                    alt="Маленький принц и лис — иллюстрация студии"
+                    fill
+                    priority
+                    sizes="(max-width: 860px) 280px, 430px"
+                    className={styles.medallionImage}
+                  />
                 </div>
               </div>
             </div>
@@ -160,7 +170,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                     key={tag}
                     href={task === tag ? homeHref({ direction: directionSlug, format: formatSlug }) : homeHref({ task: tag, format: formatSlug })}
                     active={task === tag}
-                    title={TASK_TAG_LABELS[tag]}
+                    title={quizLabels[tag]}
                     note={taskNote(tag)}
                   />
                 ))}

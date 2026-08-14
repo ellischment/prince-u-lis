@@ -15,15 +15,21 @@
     var(--deep);
 }
 
-/* z-index выше переднего слоя гирлянды (.front = 2 в Garland.module.css):
-   текст первого экрана всегда поверх гирлянды и читаем. Гирлянда остаётся
-   видна в пустотах вокруг текста и над медальоном — декоративно, но не крышей
-   поверх заголовка. FEATURES 1.14: слой «поверх» допустим только при читаемом
-   тексте, здесь это гарантировано стекингом, а не подбором на глаз. */
+/* heroInner без своего z-index (auto): не создаёт контекст наложения, поэтому
+   его дети — текст и медальон — соревнуются по слою прямо с гирляндой (сиблинг
+   в той же секции). Так текст можно поднять ПОВЕРХ гирлянды, а медальон увести
+   ПОД неё. */
 .heroInner {
   position: relative;
-  z-index: 5;
   width: 100%;
+}
+
+/* Текст первого экрана всегда над гирляндой (.front = 2 в Garland.module.css)
+   и читаем: FEATURES 1.14 разрешает слой «поверх» только при читаемом тексте,
+   здесь это гарантировано стекингом, а не подбором на глаз. */
+.heroText {
+  position: relative;
+  z-index: 5;
 }
 
 .heroGrid {
@@ -69,8 +75,11 @@
   font-size: 16px;
 }
 
+/* Медальон под передним слоем гирлянды (z-index 1 < .front 2): гирлянда
+   драпируется поверх иллюстрации, как в FEATURES 1.14. */
 .scene {
   position: relative;
+  z-index: 1;
   aspect-ratio: 1;
   max-width: 430px;
   margin: 6px auto 0;
@@ -86,23 +95,20 @@
 }
 
 .medallion {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #2b4a3d, #16261f);
+  overflow: hidden;
   border: 2px solid var(--gold);
   box-shadow:
     0 0 0 10px rgba(201, 162, 75, 0.12),
     0 0 0 11px rgba(143, 184, 216, 0.25),
     0 30px 80px rgba(0, 0, 0, 0.55);
-  display: grid;
-  place-items: center;
 }
 
-.medallionMark {
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 60px;
-  color: rgba(234, 217, 172, 0.35);
+.medallionImage {
+  object-fit: cover;
 }
 
 /* ---------- полоса доверия ---------- */

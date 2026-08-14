@@ -12,14 +12,16 @@
   border-bottom: 1px solid var(--line);
 }
 
+/* Шире контентного --wrap (как .hrow max-width:1340 в site-4-2-2): десяти
+   пунктам меню нужно место, чтобы не разъезжаться в два ряда. */
 .row {
-  max-width: var(--wrap);
+  max-width: 1340px;
   margin: 0 auto;
   padding: 0 24px;
   height: 88px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
   transition: height 0.22s var(--ease);
 }
 
@@ -30,7 +32,7 @@
 .logo {
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: 21px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   color: var(--paper);
   flex-shrink: 0;
   transition: font-size 0.22s var(--ease);
@@ -48,8 +50,9 @@
 .nav {
   flex: 1;
   display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap: 16px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
   font-size: 14px;
   color: var(--muted);
 }
@@ -97,7 +100,9 @@
   display: none;
 }
 
-@media (max-width: 960px) {
+/* Меню прячется в бургер, пока десять пунктов не помещаются в один ряд.
+   Порог 1200px: ниже него полное меню разъезжается на две строки. */
+@media (max-width: 1200px) {
   .nav {
     display: none;
   }

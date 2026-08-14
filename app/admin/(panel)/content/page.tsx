@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DEFAULT_BUTTON_KEY, isButtonColorKey, parseGarland, type ButtonColorKey } from "@/lib/appearance";
+import { parseQuizLabels } from "@/lib/site-texts";
 import { HeroForm } from "./HeroForm";
 import { ButtonColorForm } from "./ButtonColorForm";
 import { GarlandForm } from "./GarlandForm";
+import { QuizLabelsForm } from "./QuizLabelsForm";
 import styles from "../section.module.css";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +44,15 @@ export default async function ContentPage() {
   const rows = await prisma.siteText.findMany({
     where: {
       key: {
-        in: ["hero.title", "hero.subtitle", "hero.lead", "hero.hand", "buttonColor", "garland"],
+        in: [
+          "hero.title",
+          "hero.subtitle",
+          "hero.lead",
+          "hero.hand",
+          "buttonColor",
+          "garland",
+          "quizLabels",
+        ],
       },
     },
   });
@@ -50,6 +60,7 @@ export default async function ContentPage() {
 
   const buttonKey = readButtonKey(byKey.get("buttonColor"));
   const garland = parseGarland(byKey.get("garland"));
+  const quizLabels = parseQuizLabels(byKey.get("quizLabels"));
   // Гирлянда — тонкая настройка вида, только владельцу (tech как владелец).
   const canEditGarland = user.role === "owner" || user.role === "tech";
 
@@ -74,10 +85,16 @@ export default async function ContentPage() {
       </p>
       <HeroForm hero={hero} />
 
+      <h2 className={styles.subhead}>Кнопки анкеты «Чем займёмся»</h2>
+      <p className={styles.note}>
+        Подписи шести кнопок анкеты на главной. Что подбирает кнопка, не меняется.
+      </p>
+      <QuizLabelsForm current={quizLabels} />
+
       <h2 className={styles.subhead}>Цвет кнопок</h2>
       <p className={styles.note}>
         Основные кнопки на всём сайте. Цвет подбирается из палитры так, чтобы текст оставался
-        читаемым (контраст AAA).
+        читаемым (контраст AA).
       </p>
       <ButtonColorForm current={buttonKey} />
 

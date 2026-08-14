@@ -4,7 +4,7 @@
 
 import { TAGS, cachedRead } from "./cache";
 import { prisma } from "./db";
-import { SEASONS, type Season } from "./constants";
+import { SEASONS, TASK_TAGS, TASK_TAG_LABELS, type Season, type TaskTag } from "./constants";
 
 export type HeroTexts = {
   title: string;
@@ -108,4 +108,35 @@ function readSeason(value: string | undefined): Season {
 export const getSeason = cachedRead(["season"], [TAGS.texts, TAGS.home], async () => {
   const row = await prisma.siteText.findUnique({ where: { key: "season" } });
   return readSeason(row?.value);
+});
+
+export type QuizLabels = Record<TaskTag, string>;
+
+/**
+ * Названия кнопок анкеты «Чем займёмся». КЛЮЧИ задач фиксированы (они завязаны
+ * на фильтрацию занятий по LessonTaskTag), меняется только видимая подпись.
+ * Настройка `quizLabels` (SiteText, JSON вида {tag: подпись}). Пустая/битая
+ * подпись заменяется дефолтом из TASK_TAG_LABELS, а не выкидывает кнопку.
+ */
+export function parseQuizLabels(raw: string | undefined): QuizLabels {
+  const base: QuizLabels = { ...TASK_TAG_LABELS };
+  if (raw === undefined) return base;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      const obj = parsed as Record<string, unknown>;
+      for (const tag of TASK_TAGS) {
+        const value = obj[tag];
+        if (typeof value === "string" && value.trim().length > 0) base[tag] = value;
+      }
+    }
+    return base;
+  } catch {
+    return base;
+  }
+}
+
+export const getQuizLabels = cachedRead(["quiz-labels"], [TAGS.texts, TAGS.home], async () => {
+  const row = await prisma.siteText.findUnique({ where: { key: "quizLabels" } });
+  return parseQuizLabels(row?.value);
 });

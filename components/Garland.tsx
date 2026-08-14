@@ -211,16 +211,23 @@ function StrandSvg({ strand, width, reducedMotion, filterId }: { strand: Strand;
   );
 }
 
-/** Масштаб на узком экране: FEATURES.md раздел 1.14, третья нить скрывается. */
-function scaleForNarrow(strand: Strand): Strand {
+const TABLET_AT = 920;
+
+/**
+ * Масштаб по ширинам. fw и fh множатся одним коэффициентом, чтобы флажок не
+ * искажался (оставался правильным треугольником). step тоже уменьшается —
+ * расстояние между флажками становится меньше на узких экранах.
+ * y — высоты и провис, flag — размер флажка, step — шаг.
+ */
+function scaleStrand(strand: Strand, y: number, flag: number, step: number): Strand {
   return {
     ...strand,
-    yL: strand.yL * 0.62,
-    yR: strand.yR * 0.62,
-    sag: strand.sag * 0.62,
-    fw: strand.fw * 0.78,
-    fh: strand.fh * 0.78,
-    step: strand.step * 0.74,
+    yL: strand.yL * y,
+    yR: strand.yR * y,
+    sag: strand.sag * y,
+    fw: strand.fw * flag,
+    fh: strand.fh * flag,
+    step: strand.step * step,
   };
 }
 
@@ -230,10 +237,17 @@ export function Garland({ strands: source = DEFAULT_STRANDS }: { strands?: Garla
 
   if (width === 0) return null;
 
-  const narrow = width < NARROW_AT;
-  const strands = narrow
-    ? source.filter((strand) => strand.layer === 1).map(scaleForNarrow)
-    : source;
+  let strands: Strand[];
+  if (width < NARROW_AT) {
+    // Узкий экран: третья нить (слой «за содержимым») убирается, остаются две,
+    // флажки заметно мельче и плотнее. FEATURES.md раздел 1.14.
+    strands = source.filter((strand) => strand.layer === 1).map((s) => scaleStrand(s, 0.62, 0.66, 0.64));
+  } else if (width < TABLET_AT) {
+    // Планшет: все нити, но флажки мельче — на всю ширину полноразмерные слишком крупны.
+    strands = source.map((s) => scaleStrand(s, 0.82, 0.66, 0.82));
+  } else {
+    strands = source;
+  }
 
   const back = strands.filter((strand) => strand.layer === 0);
   const front = strands.filter((strand) => strand.layer === 1);

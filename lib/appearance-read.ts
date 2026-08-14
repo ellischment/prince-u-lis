@@ -31,7 +31,7 @@ export const getButtonColor = cachedRead(
         // оставляем дефолт
       }
     }
-    return resolveButtonColor(key) ?? resolveButtonColor(DEFAULT_BUTTON_KEY)!;
+    return resolveButtonColor(key);
   },
 );
 

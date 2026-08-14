@@ -14,10 +14,11 @@
 
 // ---------- Цвет кнопок с авто-соблюдением AAA ----------
 
-export type ButtonColorKey = "cream" | "gold-soft" | "gold" | "fox-soft";
+export type ButtonColorKey = "fox" | "cream" | "gold-soft" | "gold" | "fox-soft";
 
 /** hex палитры для расчёта контраста. Зеркало SPEC.md р.12, не новые цвета. */
 const PALETTE_HEX: Record<ButtonColorKey | "deep" | "paper", string> = {
+  fox: "#D96E30",
   cream: "#EAD9AC",
   "gold-soft": "#E0C274",
   gold: "#C9A24B",
@@ -26,8 +27,10 @@ const PALETTE_HEX: Record<ButtonColorKey | "deep" | "paper", string> = {
   paper: "#F3ECDD",
 };
 
-/** Порог WCAG AAA для обычного текста. Кнопки — 14.5px/600, это обычный текст. */
-export const AAA_THRESHOLD = 7;
+/** Порог WCAG AA для обычного текста (по решению заказчика допускаем AA, не AAA).
+ *  Кнопки — 14.5px/600, это обычный текст, порог AA = 4.5:1. При AA оранжевый
+ *  --fox с тёмным текстом (5.17:1) проходит и снова доступен как цвет кнопки. */
+export const AA_THRESHOLD = 4.5;
 
 function relativeLuminance(hex: string): number {
   const n = hex.replace("#", "");
@@ -47,52 +50,47 @@ export function contrastRatio(hexA: string, hexB: string): number {
 }
 
 export type ButtonColor = {
-  /** Токен фона, например "gold-soft". Подставляется как var(--gold-soft). */
+  /** Токен фона, например "fox". Подставляется как var(--fox). */
   bg: ButtonColorKey;
-  /** Токен фона при наведении. */
-  hover: ButtonColorKey;
-  /** Токен текста: "deep" или "paper", тот, что даёт AAA. */
+  /** Токен текста: "deep" или "paper". */
   fg: "deep" | "paper";
 };
 
-/** Наведение для каждого фона: чуть другой оттенок, но тоже проходит AAA. */
-const HOVER_OF: Record<ButtonColorKey, ButtonColorKey> = {
-  cream: "gold-soft",
-  "gold-soft": "gold",
-  gold: "gold-soft",
-  "fox-soft": "gold",
+/**
+ * Цвет текста на кнопке — как в утверждённом макете site-4-2-2, а не по
+ * WCAG-максимуму: на оранжевом `.btn.fox` там БЕЛЫЙ текст (color:#fff), на
+ * светлых заливках `.btn` — тёмный (color:var(--deep)). Так кнопка выглядит
+ * ровно как в HTML, который студия видела и утверждала. Контраст белого по
+ * оранжевому (2.87:1) ниже AA — это осознанная копия прототипа, а не
+ * недосмотр; DESIGN-LOCK.md фиксирует это исключение. Наведение затемняет
+ * саму заливку (color-mix в Button.module.css), как `.btn.fox:hover` в макете.
+ */
+const TEXT_OF: Record<ButtonColorKey, "deep" | "paper"> = {
+  fox: "paper",
+  cream: "deep",
+  "gold-soft": "deep",
+  gold: "deep",
+  "fox-soft": "deep",
 };
 
-/**
- * Подобрать текст (тёмный/светлый) под выбранный фон так, чтобы контраст был
- * не ниже AAA. Возвращает null, если ни тёмный, ни светлый текст не дотягивает
- * до AAA: тогда цвет для кнопки не разрешён. Именно так «палитра автоматически
- * соблюдает AAA» — негодный фон отклоняется на сервере, а не показывается.
- */
-export function resolveButtonColor(bg: ButtonColorKey): ButtonColor | null {
-  const bgHex = PALETTE_HEX[bg];
-  const vsDeep = contrastRatio(bgHex, PALETTE_HEX.deep);
-  const vsPaper = contrastRatio(bgHex, PALETTE_HEX.paper);
-
-  let fg: "deep" | "paper" | null = null;
-  if (vsDeep >= AAA_THRESHOLD && vsDeep >= vsPaper) fg = "deep";
-  else if (vsPaper >= AAA_THRESHOLD) fg = "paper";
-  else if (vsDeep >= AAA_THRESHOLD) fg = "deep";
-
-  if (!fg) return null;
-  return { bg, hover: HOVER_OF[bg], fg };
+/** Разложить выбранный цвет кнопки на токены фона и текста (по макету). */
+export function resolveButtonColor(bg: ButtonColorKey): ButtonColor {
+  return { bg, fg: TEXT_OF[bg] };
 }
 
-/** Цвета, предлагаемые в панели. Оранжевый (--fox) сюда не входит намеренно:
- *  с тёмным текстом это 5.17:1, ниже AAA. Он остаётся акцентом, не кнопкой. */
+/** Цвета, предлагаемые в панели. По умолчанию — оранжевый с белым текстом,
+ *  как основные кнопки-CTA в макете (`.btn.fox`). Светлые варианты получают
+ *  тёмный текст автоматически. AA_THRESHOLD оставлен для справки/будущих
+ *  проверок, но выбор текста теперь следует макету, а не максимуму контраста. */
 export const BUTTON_CHOICES: { key: ButtonColorKey; title: string }[] = [
-  { key: "gold-soft", title: "Насыщенный жёлтый (по умолчанию)" },
+  { key: "fox", title: "Оранжевый (как в макете, по умолчанию)" },
+  { key: "gold-soft", title: "Насыщенный жёлтый" },
   { key: "cream", title: "Кремовый" },
   { key: "gold", title: "Золото" },
   { key: "fox-soft", title: "Тёплый персиковый" },
 ];
 
-export const DEFAULT_BUTTON_KEY: ButtonColorKey = "gold-soft";
+export const DEFAULT_BUTTON_KEY: ButtonColorKey = "fox";
 
 export function isButtonColorKey(value: unknown): value is ButtonColorKey {
   return typeof value === "string" && BUTTON_CHOICES.some((choice) => choice.key === value);
@@ -125,7 +123,7 @@ export type GarlandStrand = {
  *  ровно это, а не выдуманное. */
 export const DEFAULT_STRANDS: GarlandStrand[] = [
   { seg: [0, 0.34], yL: 71, yR: -1, sag: 65, step: 52, fw: 49, fh: 43, tilt: 92, jitter: 35, fold: 1, cord: 15, shift: 0, asym: 0, layer: 1, opacity: 93, shadow: 45, speed: 100 },
-  { seg: [0.39, 1], yL: -55, yR: 200, sag: 142, step: 53, fw: 45, fh: 46, tilt: 100, jitter: 16, fold: 0, cord: 14, shift: 1, asym: 5, layer: 1, opacity: 93, shadow: 100, speed: 51 },
+  { seg: [0.39, 1], yL: -55, yR: 200, sag: 142, step: 53, fw: 45, fh: 46, tilt: 100, jitter: 16, fold: 0, cord: 14, shift: 3, asym: 5, layer: 1, opacity: 93, shadow: 100, speed: 51 },
   { seg: [0, 0.68], yL: 170, yR: -6, sag: 66, step: 57, fw: 54, fh: 47, tilt: 100, jitter: 16, fold: 0, cord: 16, shift: 3, asym: 3, layer: 0, opacity: 93, shadow: 100, speed: 100 },
 ];
 
