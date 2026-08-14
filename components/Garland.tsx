@@ -138,6 +138,20 @@ function computeStrand(strand: Strand, width: number, reducedMotion: boolean) {
   return { path, flags, x0, x1, yAtX0: yAt(x0), yAtX1: yAt(x1), startVisible, endVisible, shadowStrength };
 }
 
+/** Контур флажка по форме: 0 треугольник, 1 ласточкин хвост, 2 скруглённый.
+ *  Портировано из garland-lab.html (shapePath). */
+function flagPath(shape: number, w: number, h: number, fold: number): string {
+  const hw = (w / 2).toFixed(1);
+  const top = (-fold).toFixed(1);
+  if (shape >= 2) {
+    return `M-${hw} ${top} L${hw} ${top} Q${(w * 0.22).toFixed(1)} ${(h * 0.72).toFixed(1)} 0 ${h.toFixed(1)} Q-${(w * 0.22).toFixed(1)} ${(h * 0.72).toFixed(1)} -${hw} ${top} Z`;
+  }
+  if (shape >= 1) {
+    return `M-${hw} ${top} L${hw} ${top} L${(w * 0.26).toFixed(1)} ${h.toFixed(1)} L0 ${(h * 0.66).toFixed(1)} L-${(w * 0.26).toFixed(1)} ${h.toFixed(1)} Z`;
+  }
+  return `M-${hw} ${top} L${hw} ${top} L0 ${h.toFixed(1)} Z`;
+}
+
 function StrandSvg({ strand, width, reducedMotion, filterId }: { strand: Strand; width: number; reducedMotion: boolean; filterId: string }) {
   const { path, flags, yAtX0, yAtX1, x0, x1, startVisible, endVisible, shadowStrength } = computeStrand(
     strand,
@@ -170,7 +184,7 @@ function StrandSvg({ strand, width, reducedMotion, filterId }: { strand: Strand;
           <g key={flag.key} transform={`translate(${flag.x.toFixed(1)} ${flag.y.toFixed(1)}) rotate(${flag.angle.toFixed(2)})`}>
             <g filter={hasShadow ? `url(#${filterId})` : undefined}>
               <path
-                d={`M-${hw} ${top} L${hw} ${top} L0 ${flag.h.toFixed(1)} Z`}
+                d={flagPath(strand.shape, flag.w, flag.h, strand.fold)}
                 fill={flag.color}
                 opacity={(strand.opacity / 100).toFixed(2)}
               />
@@ -231,14 +245,25 @@ function scaleStrand(strand: Strand, y: number, flag: number, step: number): Str
   };
 }
 
-export function Garland({ strands: source = DEFAULT_STRANDS }: { strands?: GarlandStrand[] }) {
-  const width = useWindowWidth();
+export function Garland({
+  strands: source = DEFAULT_STRANDS,
+  previewWidth,
+}: {
+  strands?: GarlandStrand[];
+  /** Режим предпросмотра в панели: фиксированная ширina и БЕЗ адаптивного
+   *  масштабирования — показывает десктоп-композицию, которую и настраивают. */
+  previewWidth?: number;
+}) {
+  const winWidth = useWindowWidth();
   const reducedMotion = useReducedMotion();
+  const width = previewWidth ?? winWidth;
 
   if (width === 0) return null;
 
   let strands: Strand[];
-  if (width < NARROW_AT) {
+  if (previewWidth !== undefined) {
+    strands = source;
+  } else if (width < NARROW_AT) {
     // Узкий экран: третья нить (слой «за содержимым») убирается, остаются две.
     // Коэффициенты ровно как в FEATURES.md раздел 1.14: высоты и провис ×0.62,
     // флажки ×0.78, шаг ×0.74 — утверждённый вид, а не подобранный на глаз.

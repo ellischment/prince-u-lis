@@ -1,0 +1,154 @@
+/* Живой предпросмотр гирлянды в панели. Сцена повторяет первый экран сайта в
+   уменьшенном виде: тот же градиент, надзаголовок, заголовок и медальон,
+   а поверх — тот же компонент Garland, что и на сайте, поэтому предпросмотр
+   совпадает с результатом. */
+.stage {
+  position: relative;
+  overflow: hidden;
+  height: 300px;
+  border-radius: 16px;
+  border: 1px solid var(--line2);
+  background:
+    radial-gradient(60% 80% at 72% -8%, color-mix(in srgb, var(--card2) 70%, transparent), transparent 60%),
+    var(--deep);
+  margin-bottom: 16px;
+}
+
+.stageContent {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+  align-items: center;
+  padding: 40px 28px 0;
+}
+
+/* Текст поверх переднего слоя гирлянды (.front = 2), как на сайте. */
+.stageText {
+  position: relative;
+  z-index: 5;
+}
+
+.stageEyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+  margin-bottom: 8px;
+}
+
+.stageTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--paper);
+}
+
+/* Медальон под передним слоем гирлянды (z-index 1 < .front 2). */
+.stageMedallion {
+  position: relative;
+  z-index: 1;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  margin-left: auto;
+  border: 2px solid var(--gold);
+  background: radial-gradient(circle at 40% 35%, var(--green), var(--deep));
+}
+
+.presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.presetButton {
+  background: none;
+  border: 1px solid var(--line2);
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: 0.18s var(--ease);
+}
+
+.presetButton:hover {
+  color: var(--cream);
+  border-color: var(--gold);
+}
+
+.strand {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.strandHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.strandHead h4 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold-soft);
+  margin: 0;
+}
+
+.remove {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--line2);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.remove:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.groupLabel {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 12px 0 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.slider {
+  display: grid;
+  grid-template-columns: 108px 1fr 52px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.slider span:first-child {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--gold);
+}
+
+.value {
+  font-size: 11.5px;
+  text-align: right;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}

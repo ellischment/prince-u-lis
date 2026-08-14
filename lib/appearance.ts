@@ -16,39 +16,6 @@
 
 export type ButtonColorKey = "fox" | "cream" | "gold-soft" | "gold" | "fox-soft";
 
-/** hex палитры для расчёта контраста. Зеркало SPEC.md р.12, не новые цвета. */
-const PALETTE_HEX: Record<ButtonColorKey | "deep" | "paper", string> = {
-  fox: "#D96E30",
-  cream: "#EAD9AC",
-  "gold-soft": "#E0C274",
-  gold: "#C9A24B",
-  "fox-soft": "#E8935C",
-  deep: "#0C1A2E",
-  paper: "#F3ECDD",
-};
-
-/** Порог WCAG AA для обычного текста (по решению заказчика допускаем AA, не AAA).
- *  Кнопки — 14.5px/600, это обычный текст, порог AA = 4.5:1. При AA оранжевый
- *  --fox с тёмным текстом (5.17:1) проходит и снова доступен как цвет кнопки. */
-export const AA_THRESHOLD = 4.5;
-
-function relativeLuminance(hex: string): number {
-  const n = hex.replace("#", "");
-  const toLin = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
-  const r = toLin(parseInt(n.slice(0, 2), 16) / 255);
-  const g = toLin(parseInt(n.slice(2, 4), 16) / 255);
-  const b = toLin(parseInt(n.slice(4, 6), 16) / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-/** Контраст двух цветов по формуле WCAG. Считается, не берётся на глаз. */
-export function contrastRatio(hexA: string, hexB: string): number {
-  const l1 = relativeLuminance(hexA);
-  const l2 = relativeLuminance(hexB);
-  const [hi, lo] = l1 >= l2 ? [l1, l2] : [l2, l1];
-  return (hi + 0.05) / (lo + 0.05);
-}
-
 export type ButtonColor = {
   /** Токен фона, например "fox". Подставляется как var(--fox). */
   bg: ButtonColorKey;
@@ -112,6 +79,8 @@ export type GarlandStrand = {
   cord: number;
   shift: number;
   asym: number;
+  /** Форма флажка: 0 треугольник, 1 ласточкин хвост, 2 скруглённый. */
+  shape: 0 | 1 | 2;
   layer: 0 | 1;
   opacity: number;
   shadow: number;
@@ -122,9 +91,9 @@ export type GarlandStrand = {
  *  умолчанию: панель переопределяет её, но при пустой/битой настройке берётся
  *  ровно это, а не выдуманное. */
 export const DEFAULT_STRANDS: GarlandStrand[] = [
-  { seg: [0, 0.34], yL: 71, yR: -1, sag: 65, step: 52, fw: 49, fh: 43, tilt: 92, jitter: 35, fold: 1, cord: 15, shift: 0, asym: 0, layer: 1, opacity: 93, shadow: 45, speed: 100 },
-  { seg: [0.39, 1], yL: -55, yR: 200, sag: 142, step: 53, fw: 45, fh: 46, tilt: 100, jitter: 16, fold: 0, cord: 14, shift: 3, asym: 5, layer: 1, opacity: 93, shadow: 100, speed: 51 },
-  { seg: [0, 0.68], yL: 170, yR: -6, sag: 66, step: 57, fw: 54, fh: 47, tilt: 100, jitter: 16, fold: 0, cord: 16, shift: 3, asym: 3, layer: 0, opacity: 93, shadow: 100, speed: 100 },
+  { seg: [0, 0.34], yL: 71, yR: -1, sag: 65, step: 52, fw: 49, fh: 43, tilt: 92, jitter: 35, fold: 1, cord: 15, shift: 0, asym: 0, shape: 0, layer: 1, opacity: 93, shadow: 45, speed: 100 },
+  { seg: [0.39, 1], yL: -55, yR: 200, sag: 142, step: 53, fw: 45, fh: 46, tilt: 100, jitter: 16, fold: 0, cord: 14, shift: 3, asym: 5, shape: 0, layer: 1, opacity: 93, shadow: 100, speed: 51 },
+  { seg: [0, 0.68], yL: 170, yR: -6, sag: 66, step: 57, fw: 54, fh: 47, tilt: 100, jitter: 16, fold: 0, cord: 16, shift: 3, asym: 3, shape: 0, layer: 0, opacity: 93, shadow: 100, speed: 100 },
 ];
 
 const NUM = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
@@ -152,6 +121,7 @@ function isStrand(value: unknown): value is GarlandStrand {
     inRange(s.cord, 4, 50) &&
     inRange(s.shift, 0, 5) &&
     inRange(s.asym, -60, 60) &&
+    (s.shape === 0 || s.shape === 1 || s.shape === 2) &&
     (s.layer === 0 || s.layer === 1) &&
     inRange(s.opacity, 30, 100) &&
     inRange(s.shadow, 0, 100) &&
