@@ -263,11 +263,14 @@ export function Garland({
   if (width === 0) return null;
 
   // Два режима, как в макете. Узкий: задняя нить (слой 0) убирается, остальные
-  // берут узкую композицию segN с коэффициентами планшета/телефона.
-  const strands: Strand[] =
-    width < NARROW_AT
-      ? source.filter((strand) => strand.layer === 1).map(narrowStrand)
-      : source;
+  // берут узкую композицию segN с коэффициентами планшета/телефона. Но если
+  // передних нитей нет (композиция целиком в слое 0 — так делают пресеты
+  // редактора), прятать нечего: показываем все нити, иначе экран будет пустым.
+  let strands: Strand[] = source;
+  if (width < NARROW_AT) {
+    const front = source.filter((strand) => strand.layer === 1);
+    strands = (front.length > 0 ? front : source).map(narrowStrand);
+  }
 
   const back = strands.filter((strand) => strand.layer === 0);
   const front = strands.filter((strand) => strand.layer === 1);
