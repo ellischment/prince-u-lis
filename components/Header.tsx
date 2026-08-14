@@ -36,7 +36,7 @@ export function Header() {
   useEffect(() => {
     if (!menuOpen) return;
     function onResize() {
-      if (window.innerWidth > 1200) setMenuOpen(false);
+      if (window.innerWidth > 1180) setMenuOpen(false);
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);

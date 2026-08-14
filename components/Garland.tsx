@@ -239,12 +239,13 @@ export function Garland({ strands: source = DEFAULT_STRANDS }: { strands?: Garla
 
   let strands: Strand[];
   if (width < NARROW_AT) {
-    // Узкий экран: третья нить (слой «за содержимым») убирается, остаются две,
-    // флажки заметно мельче и плотнее. FEATURES.md раздел 1.14.
-    strands = source.filter((strand) => strand.layer === 1).map((s) => scaleStrand(s, 0.62, 0.66, 0.64));
+    // Узкий экран: третья нить (слой «за содержимым») убирается, остаются две.
+    // Коэффициенты ровно как в FEATURES.md раздел 1.14: высоты и провис ×0.62,
+    // флажки ×0.78, шаг ×0.74 — утверждённый вид, а не подобранный на глаз.
+    strands = source.filter((strand) => strand.layer === 1).map((s) => scaleStrand(s, 0.62, 0.78, 0.74));
   } else if (width < TABLET_AT) {
-    // Планшет: все нити, но флажки мельче — на всю ширину полноразмерные слишком крупны.
-    strands = source.map((s) => scaleStrand(s, 0.82, 0.66, 0.82));
+    // Планшет: все нити, флажки умеренно мельче — на всю ширину полноразмерные крупны.
+    strands = source.map((s) => scaleStrand(s, 0.82, 0.72, 0.84));
   } else {
     strands = source;
   }

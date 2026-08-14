@@ -17,11 +17,11 @@
    места на один ряд. */
 .row {
   max-width: none;
-  padding: 0 clamp(16px, 3vw, 48px);
+  padding: 0 clamp(16px, 2vw, 32px);
   height: 88px;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
   transition: height 0.22s var(--ease);
 }
 
@@ -32,9 +32,10 @@
 .logo {
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: 21px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.07em;
   color: var(--paper);
   flex-shrink: 0;
+  white-space: nowrap;
   transition: font-size 0.22s var(--ease);
 }
 
@@ -47,17 +48,28 @@
   margin: 0 2px;
 }
 
+/* Компактно, как nav.main в site-4-2-2: gap:1px, ссылки с маленькими
+   паддингами и шрифтом 13px. Именно поэтому десять пунктов помещаются в
+   один ряд до 1180px без горизонтальной прокрутки. */
 .nav {
   display: flex;
-  gap: 16px;
+  gap: 1px;
+  margin-left: 4px;
   flex-wrap: nowrap;
   white-space: nowrap;
-  font-size: 14px;
   color: var(--muted);
+}
+
+.nav a {
+  font-size: 13px;
+  padding: 8px 7px;
+  border-radius: 9px;
+  transition: 0.2s var(--ease);
 }
 
 .nav a:hover {
   color: var(--paper);
+  background: color-mix(in srgb, var(--cream) 7%, transparent);
 }
 
 .slim .nav {
@@ -103,9 +115,9 @@
   display: none;
 }
 
-/* Меню прячется в бургер, пока десять пунктов не помещаются в один ряд.
-   Порог 1200px: ниже него полное меню разъезжается на две строки. */
-@media (max-width: 1200px) {
+/* Меню прячется в бургер, как в site-4-2-2 (@media max-width:1180px:
+   nav.main{display:none}). Ниже этого десять пунктов не помещаются в ряд. */
+@media (max-width: 1180px) {
   .nav {
     display: none;
   }
@@ -165,14 +177,15 @@
    small-кнопки уже не хватает, поэтому у .book специфичность поднята
    дублированием класса — так правило гарантированно перебивает Button.module.css
    независимо от порядка подключения модулей в сборке. */
+/* Значения из site-4-2-2 @media max-width:420px. */
 @media (max-width: 420px) {
   .row {
     padding: 0 12px;
-    gap: 6px;
+    gap: 8px;
   }
 
   .logo {
-    font-size: 15px;
+    font-size: 17px;
     letter-spacing: 0.08em;
   }
 
@@ -183,7 +196,31 @@
   }
 
   .book.book {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Значения из site-4-2-2 @media max-width:360px. */
+@media (max-width: 360px) {
+  .row {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .logo {
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .phone,
+  .burger {
+    width: 32px;
+    height: 32px;
+  }
+
+  .book.book {
     padding: 7px 12px;
-    font-size: 11.5px;
+    font-size: 12.5px;
   }
 }
