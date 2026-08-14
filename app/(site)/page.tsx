@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { Button, ButtonLink } from "@/components/Button";
+import { ButtonLink } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
@@ -116,10 +116,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 <p className={styles.lead}>{hero.lead}</p>
                 <div className={styles.actions}>
                   <ButtonLink href="/#catalog">Выбрать занятие</ButtonLink>
-                  {/* Форма записи — шаг 4.1, кнопка пока неактивна. */}
-                  <Button variant="ghost" aria-label="Записаться">
-                    Записаться
-                  </Button>
+                  <ButtonLink href="/raspisanie" variant="ghost">
+                    Расписание
+                  </ButtonLink>
                 </div>
                 <p className={`${styles.hand} hand`}>{hero.hand}</p>
               </div>

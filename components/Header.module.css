@@ -12,12 +12,12 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* Шире контентного --wrap (как .hrow max-width:1340 в site-4-2-2): десяти
-   пунктам меню нужно место, чтобы не разъезжаться в два ряда. */
+/* Во всю ширину с симметричными отступами: логотип у левого края, телефон и
+   кнопка у правого — так шапка выглядит ровно, а десяти пунктам меню хватает
+   места на один ряд. */
 .row {
-  max-width: 1340px;
-  margin: 0 auto;
-  padding: 0 24px;
+  max-width: none;
+  padding: 0 clamp(16px, 3vw, 48px);
   height: 88px;
   display: flex;
   align-items: center;
@@ -48,7 +48,6 @@
 }
 
 .nav {
-  flex: 1;
   display: flex;
   gap: 16px;
   flex-wrap: nowrap;
@@ -65,11 +64,15 @@
   display: none;
 }
 
+/* margin-left:auto прижимает телефон и кнопку к правому краю на всех ширинах:
+   на десктопе — после меню, на планшете и телефоне (меню в бургере) — вместо
+   левого прилипания к логотипу. */
 .tools {
   display: flex;
   align-items: center;
   gap: 14px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .phone {

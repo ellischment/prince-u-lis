@@ -68,13 +68,13 @@ export default async function ContentPage() {
   // страницей. Своего инпута в форме ниже у него пока нет — это часть
   // шага 2.2, здесь только чтение, чтобы объект соответствовал HeroTexts.
   const hero = {
-    title: readValue(byKey.get("hero.title"), "Мастерская, где делают руками"),
-    subtitle: readValue(byKey.get("hero.subtitle"), "Студия «Принц и Лис»"),
+    title: readValue(byKey.get("hero.title"), "Там, где рождается творчество"),
+    subtitle: readValue(byKey.get("hero.subtitle"), "Художественная студия · Москва"),
     lead: readValue(
       byKey.get("hero.lead"),
-      "Керамика, живопись и витраж в центре Москвы. Занятия с нуля, курсы, праздники и коворкинг для тех, кто уже умеет.",
+      "Керамика, живопись и витраж под ночным небом Маленького принца. Здесь не нужно уметь рисовать: приходите с пустыми руками, уходите со своей кружкой, картиной или витражом.",
     ),
-    hand: readValue(byKey.get("hero.hand"), "приходите как есть, фартук найдётся"),
+    hand: readValue(byKey.get("hero.hand"), "«зорко одно лишь сердце»... и немного глины"),
   };
 
   return (

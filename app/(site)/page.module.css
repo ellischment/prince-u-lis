@@ -7,8 +7,11 @@
   overflow: hidden;
   min-height: calc(100svh - 88px);
   display: flex;
-  align-items: center;
-  padding: 150px 0 64px;
+  align-items: flex-start;
+  /* Верхний отступ уводит текст НИЖЕ полосы гирлянды: иначе оранжевый флажок
+     ложится на оранжевый надзаголовок. Выравнивание по верху, а не по центру,
+     чтобы на высоком экране текст не подтягивался обратно в зону гирлянды. */
+  padding: 180px 0 64px;
   background:
     radial-gradient(circle at 15% 10%, rgba(217, 110, 48, 0.18), transparent 45%),
     radial-gradient(circle at 85% 0%, rgba(143, 184, 216, 0.14), transparent 40%),
