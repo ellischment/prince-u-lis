@@ -33,6 +33,13 @@
   border-color: var(--cream);
 }
 
+/* Описание первого экрана — многострочное поле. */
+.textarea {
+  min-height: 108px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .hint {
   color: var(--fox-soft);
   font-size: 13.5px;
@@ -112,4 +119,48 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* Порядок блоков главной */
+.blockRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.blockName {
+  color: var(--paper);
+  font-size: 15px;
+}
+
+.blockToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.blockToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--gold);
+}
+
+/* Даты автозимы: два коротких поля ММ-ДД в ряд */
+.dateRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dateRow .field {
+  flex: 1 1 140px;
+}
+
+.dateInput {
+  max-width: 160px;
 }

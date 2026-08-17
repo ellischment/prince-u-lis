@@ -976,20 +976,14 @@ async function seedTexts(): Promise<void> {
     },
     { key: "season", value: "flags" },
     {
+      // Форма {id, visible} — как читает lib/home-blocks.ts (HOME_BLOCKS).
+      // Только уже построенные блоки; будущие дописываются на своих шагах.
       key: "blocksOrder",
       value: [
-        "hero",
-        "trust",
-        "quiz",
-        "lessons",
-        "schedule",
-        "masters",
-        "works",
-        "events",
-        "blog",
-        "reviews",
-        "booking",
-        "contacts",
+        { id: "hero", visible: true },
+        { id: "trust", visible: true },
+        { id: "catalog", visible: true },
+        { id: "contacts", visible: true },
       ],
     },
     { key: "partnership.replyTime", value: "Отвечаем в течение двух рабочих дней" },

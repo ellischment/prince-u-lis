@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { isButtonColorKey, validateGarland } from "@/lib/appearance";
+import { validateBlocksOrder } from "@/lib/home-blocks";
+import { SEASONS } from "@/lib/constants";
 
 // Одна схема на поле, используется и на клиенте, и на сервере.
 export const heroTextsSchema = z.object({
@@ -13,6 +15,11 @@ export const heroTextsSchema = z.object({
     .trim()
     .min(3, "Надзаголовок слишком короткий")
     .max(80, "Надзаголовок длиннее 80 символов"),
+  lead: z
+    .string()
+    .trim()
+    .min(10, "Описание слишком короткое")
+    .max(400, "Описание длиннее 400 символов не поместится на первом экране"),
   hand: z
     .string()
     .trim()
@@ -44,6 +51,29 @@ export const quizLabelsSchema = z.object({
   practice: quizLabel,
 });
 
+// Полоса доверия: ровно три факта, каждый с крупной частью и пояснением
+// (FEATURES.md раздел 2.9). Поля плоские (fact0..fact2/note0..note2), чтобы
+// ошибка валидации ложилась прямо на своё поле формы (panelAction кладёт
+// ошибку по пути issue.path.join(".")).
+const trustFact = z
+  .string()
+  .trim()
+  .min(1, "Факт не может быть пустым")
+  .max(40, "Факт длиннее 40 символов не поместится");
+const trustNote = z
+  .string()
+  .trim()
+  .min(1, "Пояснение не может быть пустым")
+  .max(120, "Пояснение длиннее 120 символов");
+export const trustItemsSchema = z.object({
+  fact0: trustFact,
+  note0: trustNote,
+  fact1: trustFact,
+  note1: trustNote,
+  fact2: trustFact,
+  note2: trustNote,
+});
+
 // Гирлянда приходит строкой JSON (форма собирает нити из ползунков). Строгая
 // проверка отклоняет битую конфигурацию, а не сохраняет молча дефолт.
 export const garlandSchema = z.object({
@@ -61,5 +91,57 @@ export const garlandSchema = z.object({
       return z.NEVER;
     }
     return strands;
+  }),
+});
+
+// Оформление: режим (флажки/зима/без) и необязательное окно автозимы.
+// Даты — «день-месяц» MM-DD, задаются обе или ни одной. Формат и календарную
+// корректность дня проверяет regex (01-12 месяц, 01-31 день).
+const MMDD_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+export const seasonSchema = z
+  .object({
+    mode: z
+      .string()
+      .refine((v) => (SEASONS as readonly string[]).includes(v), "Недопустимый режим оформления"),
+    winterFrom: z.string().trim(),
+    winterTo: z.string().trim(),
+  })
+  .superRefine((val, ctx) => {
+    const fromSet = val.winterFrom.length > 0;
+    const toSet = val.winterTo.length > 0;
+    if (fromSet !== toSet) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [toSet ? "winterFrom" : "winterTo"],
+        message: "Заполните обе даты автозимы или очистите обе",
+      });
+      return;
+    }
+    if (fromSet && !MMDD_RE.test(val.winterFrom)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["winterFrom"], message: "Дата в формате ММ-ДД, например 12-01" });
+    }
+    if (toSet && !MMDD_RE.test(val.winterTo)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["winterTo"], message: "Дата в формате ММ-ДД, например 02-28" });
+    }
+  });
+
+// Порядок и видимость блоков главной приходят строкой JSON (форма собирает их
+// из перетаскиваемого списка). Строгая проверка отклоняет битый/подменённый
+// ввод, а не сохраняет молча.
+export const blocksOrderSchema = z.object({
+  order: z.string().transform((raw, ctx) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Порядок блоков не читается" });
+      return z.NEVER;
+    }
+    const order = validateBlocksOrder(parsed);
+    if (!order) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Недопустимый список блоков" });
+      return z.NEVER;
+    }
+    return order;
   }),
 });

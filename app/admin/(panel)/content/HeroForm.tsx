@@ -58,6 +58,18 @@ export function HeroForm({ hero }: { hero: HeroTexts }) {
       </label>
 
       <label className={styles.field}>
+        <span className={styles.label}>Описание</span>
+        <textarea
+          className={`${styles.input} ${styles.textarea}`}
+          name="lead"
+          defaultValue={hero.lead}
+          maxLength={400}
+          rows={3}
+        />
+        {state.errors?.lead ? <span className={styles.hint}>{state.errors.lead}</span> : null}
+      </label>
+
+      <label className={styles.field}>
         <span className={styles.label}>Рукописная строка</span>
         <input className={styles.input} name="hand" defaultValue={hero.hand} maxLength={80} />
         {state.errors?.hand ? <span className={styles.hint}>{state.errors.hand}</span> : null}

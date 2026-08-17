@@ -1,7 +1,16 @@
 "use server";
 
 import { panelAction } from "@/lib/action";
-import { buttonColorSchema, garlandSchema, heroTextsSchema, quizLabelsSchema } from "@/lib/validation/texts";
+import {
+  blocksOrderSchema,
+  buttonColorSchema,
+  garlandSchema,
+  heroTextsSchema,
+  quizLabelsSchema,
+  seasonSchema,
+  trustItemsSchema,
+} from "@/lib/validation/texts";
+import type { TrustItem } from "@/lib/site-texts";
 
 export type ContentState = {
   ok?: boolean;
@@ -18,6 +27,7 @@ const saveHero = panelAction({
     const rows = [
       { key: "hero.title", value: input.title },
       { key: "hero.subtitle", value: input.subtitle },
+      { key: "hero.lead", value: input.lead },
       { key: "hero.hand", value: input.hand },
     ];
 
@@ -40,6 +50,7 @@ export async function saveHeroTexts(
   const result = await saveHero({
     title: String(formData.get("title") ?? ""),
     subtitle: String(formData.get("subtitle") ?? ""),
+    lead: String(formData.get("lead") ?? ""),
     hand: String(formData.get("hand") ?? ""),
   });
 
@@ -48,6 +59,104 @@ export async function saveHeroTexts(
   }
 
   return { ok: true };
+}
+
+// Полоса доверия — контент, доступно всем троим ролям.
+const saveTrust = panelAction({
+  roles: ["admin", "owner", "tech"],
+  schema: trustItemsSchema,
+  entity: "siteText",
+  action: "texts.trust.save",
+  run: async (input, tx) => {
+    const items: TrustItem[] = [
+      { fact: input.fact0, note: input.note0 },
+      { fact: input.fact1, note: input.note1 },
+      { fact: input.fact2, note: input.note2 },
+    ];
+    await tx.siteText.upsert({
+      where: { key: "trust.items" },
+      update: { value: JSON.stringify(items) },
+      create: { key: "trust.items", value: JSON.stringify(items) },
+    });
+    return { saved: items.length };
+  },
+});
+
+export async function saveTrustItems(
+  _prev: ContentState,
+  formData: FormData,
+): Promise<ContentState> {
+  const result = await saveTrust({
+    fact0: String(formData.get("fact0") ?? ""),
+    note0: String(formData.get("note0") ?? ""),
+    fact1: String(formData.get("fact1") ?? ""),
+    note1: String(formData.get("note1") ?? ""),
+    fact2: String(formData.get("fact2") ?? ""),
+    note2: String(formData.get("note2") ?? ""),
+  });
+  return result.ok ? { ok: true } : { ok: false, errors: result.errors };
+}
+
+// Порядок и видимость блоков главной — контент, доступно всем троим ролям.
+const saveBlocks = panelAction({
+  roles: ["admin", "owner", "tech"],
+  schema: blocksOrderSchema,
+  entity: "siteText",
+  action: "texts.blocksOrder.save",
+  run: async (input, tx) => {
+    await tx.siteText.upsert({
+      where: { key: "blocksOrder" },
+      update: { value: JSON.stringify(input.order) },
+      create: { key: "blocksOrder", value: JSON.stringify(input.order) },
+    });
+    return { count: input.order.length };
+  },
+});
+
+export async function saveBlocksOrder(
+  _prev: ContentState,
+  formData: FormData,
+): Promise<ContentState> {
+  const result = await saveBlocks({ order: String(formData.get("order") ?? "") });
+  return result.ok ? { ok: true } : { ok: false, errors: result.errors };
+}
+
+// Оформление (режим + окно автозимы) — контент, доступно всем троим ролям.
+const saveSeasonConfig = panelAction({
+  roles: ["admin", "owner", "tech"],
+  schema: seasonSchema,
+  entity: "siteText",
+  action: "texts.season.save",
+  run: async (input, tx) => {
+    await tx.siteText.upsert({
+      where: { key: "season" },
+      update: { value: JSON.stringify(input.mode) },
+      create: { key: "season", value: JSON.stringify(input.mode) },
+    });
+
+    if (input.winterFrom && input.winterTo) {
+      const window = { from: input.winterFrom, to: input.winterTo };
+      await tx.siteText.upsert({
+        where: { key: "season.winter" },
+        update: { value: JSON.stringify(window) },
+        create: { key: "season.winter", value: JSON.stringify(window) },
+      });
+    } else {
+      // Окно очищено: убираем настройку, а не храним пустую.
+      await tx.siteText.deleteMany({ where: { key: "season.winter" } });
+    }
+
+    return { mode: input.mode };
+  },
+});
+
+export async function saveSeason(_prev: ContentState, formData: FormData): Promise<ContentState> {
+  const result = await saveSeasonConfig({
+    mode: String(formData.get("mode") ?? ""),
+    winterFrom: String(formData.get("winterFrom") ?? ""),
+    winterTo: String(formData.get("winterTo") ?? ""),
+  });
+  return result.ok ? { ok: true } : { ok: false, errors: result.errors };
 }
 
 // Цвет кнопок доступен всем троим ролям («позволим ребятам перекрашивать»).

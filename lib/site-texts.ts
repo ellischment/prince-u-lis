@@ -4,6 +4,7 @@
 
 import { TAGS, cachedRead } from "./cache";
 import { prisma } from "./db";
+import { moscowDateKey } from "./time";
 import { SEASONS, TASK_TAGS, TASK_TAG_LABELS, type Season, type TaskTag } from "./constants";
 
 export type HeroTexts = {
@@ -64,7 +65,7 @@ const TRUST_DEFAULTS: TrustItem[] = [
   { fact: "С вещью", note: "домой уже после первого визита" },
 ];
 
-function readTrustItems(value: string | undefined): TrustItem[] {
+export function parseTrustItems(value: string | undefined): TrustItem[] {
   if (value === undefined) return TRUST_DEFAULTS;
 
   try {
@@ -90,26 +91,96 @@ function readTrustItems(value: string | undefined): TrustItem[] {
 
 export const getTrustItems = cachedRead(["trust-items"], [TAGS.texts, TAGS.home], async () => {
   const row = await prisma.siteText.findUnique({ where: { key: "trust.items" } });
-  return readTrustItems(row?.value);
+  return parseTrustItems(row?.value);
 });
 
-function readSeason(value: string | undefined): Season {
+/** Ручной режим оформления из настройки `season`. Терпим к формату: и JSON
+ *  (`"winter"`), и значение как есть (старый сид) читаются одинаково. */
+export function parseSeasonMode(value: string | undefined): Season {
+  const isSeason = (v: unknown): v is Season =>
+    typeof v === "string" && (SEASONS as readonly string[]).includes(v);
   if (value === undefined) return "flags";
   try {
     const parsed: unknown = JSON.parse(value);
-    return typeof parsed === "string" && (SEASONS as readonly string[]).includes(parsed)
-      ? (parsed as Season)
-      : "flags";
+    if (isSeason(parsed)) return parsed;
   } catch {
-    return "flags";
+    // Значение записано не как JSON: проверяем строку как есть ниже.
+  }
+  return isSeason(value) ? value : "flags";
+}
+
+/** Окно автовключения зимы: день-месяц начала и конца, формат `MM-DD`.
+ *  Настройка `season.winter`. Отсутствие/битый формат — окна нет (null). */
+export type WinterWindow = { from: string; to: string };
+
+const MMDD_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+export function parseWinterWindow(value: string | undefined): WinterWindow | null {
+  if (value === undefined) return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (
+      parsed !== null &&
+      typeof parsed === "object" &&
+      typeof (parsed as WinterWindow).from === "string" &&
+      typeof (parsed as WinterWindow).to === "string" &&
+      MMDD_RE.test((parsed as WinterWindow).from) &&
+      MMDD_RE.test((parsed as WinterWindow).to)
+    ) {
+      return { from: (parsed as WinterWindow).from, to: (parsed as WinterWindow).to };
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 
-/** Режим оформления. Настройка `season`, шаг 2.2 добавит переключатель в панели. */
-export const getSeason = cachedRead(["season"], [TAGS.texts, TAGS.home], async () => {
-  const row = await prisma.siteText.findUnique({ where: { key: "season" } });
-  return readSeason(row?.value);
-});
+/**
+ * Сегодняшний день-месяц (МСК, `MM-DD`) внутри зимнего окна. Окно может
+ * переходить через Новый год: если `from > to` (например 12-01…02-28),
+ * попадание — это `mmdd >= from` ИЛИ `mmdd <= to`. Строки `MM-DD` фиксированной
+ * ширины, поэтому лексикографическое сравнение совпадает с календарным.
+ */
+export function isWithinWinterWindow(from: string, to: string, mmdd: string): boolean {
+  if (from <= to) return mmdd >= from && mmdd <= to;
+  return mmdd >= from || mmdd <= to;
+}
+
+export type SeasonSettings = { mode: Season; winter: WinterWindow | null };
+
+// Настройки сезона из базы кэшируются по тегам (сбрасываются правкой панели).
+// Саму проверку даты в кэш класть нельзя: результат тогда «замёрзнет» на день
+// сохранения. Поэтому дату сверяет getSeason ниже, уже вне кэша.
+const getSeasonSettings = cachedRead(
+  ["season"],
+  [TAGS.texts, TAGS.home],
+  async (): Promise<SeasonSettings> => {
+    const rows = await prisma.siteText.findMany({
+      where: { key: { in: ["season", "season.winter"] } },
+    });
+    const byKey = new Map(rows.map((row) => [row.key, row.value]));
+    return {
+      mode: parseSeasonMode(byKey.get("season")),
+      winter: parseWinterWindow(byKey.get("season.winter")),
+    };
+  },
+);
+
+/** Действующий режим оформления. Если задано зимнее окно и сегодня (МСК) в него
+ *  попадает — зима включается сама, поверх ручного режима (FEATURES.md 2.9). */
+export async function getSeason(): Promise<Season> {
+  const { mode, winter } = await getSeasonSettings();
+  if (winter && isWithinWinterWindow(winter.from, winter.to, moscowDateKey().slice(5))) {
+    return "winter";
+  }
+  return mode;
+}
+
+/** Настройки сезона для формы панели: ручной режим и окно автозимы (или null).
+ *  Панель читает базу напрямую, поэтому парсеры зовём без кэша. */
+export function readSeasonSettings(mode: string | undefined, winter: string | undefined): SeasonSettings {
+  return { mode: parseSeasonMode(mode), winter: parseWinterWindow(winter) };
+}
 
 export type QuizLabels = Record<TaskTag, string>;
 

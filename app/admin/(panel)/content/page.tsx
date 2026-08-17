@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DEFAULT_BUTTON_KEY, isButtonColorKey, parseGarland, type ButtonColorKey } from "@/lib/appearance";
-import { parseQuizLabels } from "@/lib/site-texts";
+import { parseQuizLabels, parseTrustItems, readSeasonSettings } from "@/lib/site-texts";
+import { parseBlocksOrder } from "@/lib/home-blocks";
 import { HeroForm } from "./HeroForm";
+import { TrustForm } from "./TrustForm";
+import { BlocksForm } from "./BlocksForm";
+import { SeasonForm } from "./SeasonForm";
 import { ButtonColorForm } from "./ButtonColorForm";
 import { GarlandForm } from "./GarlandForm";
 import { QuizLabelsForm } from "./QuizLabelsForm";
@@ -49,6 +53,10 @@ export default async function ContentPage() {
           "hero.subtitle",
           "hero.lead",
           "hero.hand",
+          "trust.items",
+          "blocksOrder",
+          "season",
+          "season.winter",
           "buttonColor",
           "garland",
           "quizLabels",
@@ -61,6 +69,9 @@ export default async function ContentPage() {
   const buttonKey = readButtonKey(byKey.get("buttonColor"));
   const garland = parseGarland(byKey.get("garland"));
   const quizLabels = parseQuizLabels(byKey.get("quizLabels"));
+  const trust = parseTrustItems(byKey.get("trust.items"));
+  const blocks = parseBlocksOrder(byKey.get("blocksOrder"));
+  const seasonSettings = readSeasonSettings(byKey.get("season"), byKey.get("season.winter"));
   // Гирлянда — тонкая настройка вида, только владельцу (tech как владелец).
   const canEditGarland = user.role === "owner" || user.role === "tech";
 
@@ -81,9 +92,27 @@ export default async function ContentPage() {
     <>
       <h1>Контент и оформление</h1>
       <p className={styles.note}>
-        Первый экран главной страницы. Остальные блоки раздела появятся на шаге 2.2.
+        Тексты и оформление главной страницы. Любая правка сразу видна на сайте.
       </p>
       <HeroForm hero={hero} />
+
+      <h2 className={styles.subhead}>Полоса доверия</h2>
+      <p className={styles.note}>
+        Три факта под первым экраном: крупная часть и пояснение к ней.
+      </p>
+      <TrustForm items={trust} />
+
+      <h2 className={styles.subhead}>Порядок блоков главной</h2>
+      <p className={styles.note}>
+        Перетаскиванием (или кнопками) меняется порядок, галочкой — показ блока на сайте.
+      </p>
+      <BlocksForm current={blocks} />
+
+      <h2 className={styles.subhead}>Оформление первого экрана</h2>
+      <p className={styles.note}>
+        Флажки, зима или без украшений. Можно задать даты, когда зима включается сама.
+      </p>
+      <SeasonForm settings={seasonSettings} />
 
       <h2 className={styles.subhead}>Кнопки анкеты «Чем займёмся»</h2>
       <p className={styles.note}>
