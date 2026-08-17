@@ -33,6 +33,40 @@
 
 html { scroll-behavior: smooth; }
 
+/* Тонкий скроллбар в цвет тёмной темы вместо дефолтного «виндового» на белом
+   фоне (он резал глаз на рядах фильтров и на странице). Стандартные свойства
+   наследуются на все контейнеры прокрутки (Firefox, Chrome 121+); вебкит-
+   псевдоэлементы — для остальных Chromium/Safari. Цвета только из палитры. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line2) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Без кнопок-стрелок по краям — чистая тонкая полоса, как в макете. */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line2);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
 body {
   background: var(--deep);
   color: var(--paper);
