@@ -6,6 +6,7 @@
 import { TAGS, cachedRead } from "./cache";
 import { COURSE_FORMAT_SLUG } from "./constants";
 import { prisma } from "./db";
+import { coverInclude } from "./lessons";
 import { startOfTodayMoscow } from "./time";
 
 /** Курс ли это. Проверяется по адресу формата, а не по названию: названия студия меняет. */
@@ -71,7 +72,9 @@ const readCourses = cachedRead(["courses"], [TAGS.lessons, TAGS.categories], asy
   prisma.lesson.findMany({
     where: { visible: true, format: { slug: COURSE_FORMAT_SLUG } },
     orderBy: { sort: "asc" },
-    include: courseInclude,
+    // Обложка карточки витрины (первое фото). Страница курса (getCourseBySlug)
+    // берёт полную галерею отдельно, поэтому coverInclude только здесь.
+    include: { ...courseInclude, ...coverInclude },
   }),
 );
 

@@ -9,7 +9,7 @@ import { prisma } from "./db";
 // по формату (lib/courses.ts lessonHref), а не хранится отдельным полем.
 // Обложка карточки — первое изображение галереи по порядку (FEATURES 1.4,
 // макет .card .ph). Нет фото — карточка покажет буквенную заглушку.
-const coverInclude = {
+export const coverInclude = {
   media: { where: { kind: "image" }, orderBy: { sort: "asc" }, take: 1 },
 } as const;
 
@@ -100,7 +100,7 @@ export const getSimilarLessons = cachedRead(
       where: { visible: true, directionId, id: { not: lessonId } },
       orderBy: { sort: "asc" },
       take: 3,
-      include: { direction: true, format: true },
+      include: { direction: true, format: true, ...coverInclude },
     }),
 );
 

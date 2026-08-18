@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
-import { Card } from "./Card";
 import { Container } from "./Container";
+import { LessonCard } from "./LessonCard";
 import { Gallery, type GalleryItem } from "./Gallery";
 import { Section } from "./Section";
 import { StickyPrice } from "./StickyPrice";
@@ -39,10 +39,12 @@ export type SimilarForArticle = {
   id: string;
   title: string;
   slug: string;
-  intro: string;
   price: string;
+  duration: string;
+  level: string;
   direction: { title: string };
   format: { slug: string };
+  media: { path: string | null; alt: string | null }[];
 };
 
 type Props = {
@@ -141,17 +143,16 @@ export function LessonArticle({ lesson, similar, afterHero }: Props) {
         <Section title="Ещё по теме" tone="navy">
           <div className={styles.similar}>
             {similar.map((item) => (
-              <Card
+              <LessonCard
                 key={item.id}
                 title={item.title}
                 // Адрес считается по формату: курс в списке похожих ведёт
                 // на /kursy, а не на редирект с /zanyatiya.
                 href={lessonHref(item)}
-                eyebrow={item.direction.title}
                 price={item.price}
-              >
-                <p>{item.intro}</p>
-              </Card>
+                meta={[item.duration, item.level].filter(Boolean).join(" · ")}
+                cover={item.media[0] ?? null}
+              />
             ))}
           </div>
         </Section>

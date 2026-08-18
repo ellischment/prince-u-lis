@@ -18,24 +18,6 @@
   }
 }
 
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-top: 10px;
-  color: var(--muted);
-  font-size: 13.5px;
-}
-
-.start {
-  color: var(--cream);
-}
-
-/* Набор ещё не открыт: пометка спокойная, карточка из витрины не пропадает. */
-.noRun {
-  color: var(--muted);
-}
-
 .empty {
   max-width: 60ch;
   color: var(--muted);

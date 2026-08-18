@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Card } from "@/components/Card";
+import { LessonCard } from "@/components/LessonCard";
 import { Container } from "@/components/Container";
 import { Section } from "@/components/Section";
 import { formatRunDate, getCourses, nearestRun, sessionsLabel } from "@/lib/courses";
@@ -41,29 +41,21 @@ export default async function CoursesPage() {
               // Ближайший будущий поток. Стартовавший вчера сюда не попадает:
               // FEATURES.md раздел 1.8a.
               const run = nearestRun(course.runs);
+              // Мета в одну строку по канону карточки: число встреч и дата старта
+              // (SPEC.md раздел 9a). Потоков нет — пометка про набор.
+              const meta = run
+                ? `${sessionsLabel(run.sessionsCount)} · старт ${formatRunDate(run.startDate)}`
+                : "набор скоро откроется";
 
               return (
-                <Card
+                <LessonCard
                   key={course.id}
                   title={course.title}
                   href={`/kursy/${course.slug}`}
-                  eyebrow={course.direction.title}
                   price={course.price}
-                >
-                  <p>{course.intro}</p>
-                  <p className={styles.meta}>
-                    {run ? (
-                      <>
-                        <span>{sessionsLabel(run.sessionsCount)}</span>
-                        <span className={styles.start}>старт {formatRunDate(run.startDate)}</span>
-                      </>
-                    ) : (
-                      /* Все потоки прошли или их не заводили: карточка остаётся,
-                         меняется только пометка. FEATURES.md раздел 1.8a. */
-                      <span className={styles.noRun}>набор скоро откроется</span>
-                    )}
-                  </p>
-                </Card>
+                  meta={meta}
+                  cover={course.media[0] ?? null}
+                />
               );
             })}
           </div>
