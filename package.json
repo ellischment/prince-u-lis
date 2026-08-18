@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
     "amo:probe": "tsx scripts/amo-probe.ts",
+    "check:env": "tsx scripts/check-env.ts",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test": "npm run test:unit && next build && npm run test:e2e",
