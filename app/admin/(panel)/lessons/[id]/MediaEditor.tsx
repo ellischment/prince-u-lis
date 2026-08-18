@@ -18,13 +18,36 @@ export function MediaEditor({
   const [items, setItems] = useState(initialMedia);
   const [pending, startTransition] = useTransition();
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [notices, setNotices] = useState<string[]>([]);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoError, setVideoError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
+  // Обложка — первое изображение по порядку (lib/lessons.ts coverInclude).
+  // Видео обложкой не бывает, поэтому ищем первый кадр kind=image.
+  const coverId = items.find((item) => item.kind === "image")?.id ?? null;
+
+  // Некритичная проверка пригодности к обложке 4:3. Правила и пороги — в
+  // docs/foto-pamyatka.md. Не блокирует загрузку, только подсказывает.
+  function coverNotice(name: string, width?: number, height?: number): string | null {
+    if (!width || !height) return null;
+    if (width < 1200) {
+      return `${name}: ширина ${width}px — для обложки лучше от 1200px, иначе в карточке будет мыло`;
+    }
+    const ratio = width / height;
+    if (ratio < 1.15) {
+      return `${name}: кадр вертикальный (${width}×${height}px) — обложка 4:3 срежет верх и низ`;
+    }
+    if (ratio > 1.9) {
+      return `${name}: кадр очень широкий (${width}×${height}px) — обложка 4:3 срежет бока`;
+    }
+    return null;
+  }
+
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploadError(null);
+    setNotices([]);
 
     startTransition(async () => {
       for (const file of Array.from(files)) {
@@ -40,6 +63,9 @@ export function MediaEditor({
           setUploadError(data.error ?? "Не удалось загрузить файл");
           continue;
         }
+
+        const notice = coverNotice(file.name, data.width, data.height);
+        if (notice) setNotices((current) => [...current, notice]);
 
         setItems((current) => [
           ...current,
@@ -120,8 +146,10 @@ export function MediaEditor({
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>Галерея</h2>
       <p className={styles.sectionNote}>
-        Первое изображение в списке идёт крупным на странице занятия. Порядок меняется
-        перетаскиванием.
+        Первое изображение — обложка: оно идёт крупным на странице занятия и в карточке
+        каталога, где обрезается по центру до формата 4:3. Для обложки берите горизонтальное
+        фото шириной от 1200px. Порядок меняется перетаскиванием — перетащите нужный кадр на
+        первое место. Подробнее в памятке docs/foto-pamyatka.md.
       </p>
 
       {items.length > 0 ? (
@@ -143,6 +171,7 @@ export function MediaEditor({
               ) : (
                 <span className={styles.mediaVideoTag}>видео</span>
               )}
+              {item.id === coverId ? <span className={styles.coverBadge}>Обложка</span> : null}
               <span className={styles.mediaUrl}>{item.url ?? item.path}</span>
               <button
                 type="button"
@@ -173,6 +202,16 @@ export function MediaEditor({
         </label>
         {uploadError ? <span className={styles.hint}>{uploadError}</span> : null}
       </div>
+
+      {notices.length > 0 ? (
+        <ul className={styles.notices}>
+          {notices.map((notice) => (
+            <li key={notice} className={styles.hint}>
+              {notice}
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <div className={styles.videoRow}>
         <input

@@ -231,6 +231,16 @@
   font-size: 12px;
 }
 
+.coverBadge {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--card2);
+  color: var(--cream);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
 .mediaUrl {
   flex-grow: 1;
   min-width: 0;
@@ -238,6 +248,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--muted);
+  font-size: 12.5px;
+}
+
+.notices {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 12.5px;
 }
 
