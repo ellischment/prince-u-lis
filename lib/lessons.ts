@@ -7,6 +7,12 @@ import { prisma } from "./db";
 
 // format нужен всюду, где строится ссылка на занятие: адрес курса считается
 // по формату (lib/courses.ts lessonHref), а не хранится отдельным полем.
+// Обложка карточки — первое изображение галереи по порядку (FEATURES 1.4,
+// макет .card .ph). Нет фото — карточка покажет буквенную заглушку.
+const coverInclude = {
+  media: { where: { kind: "image" }, orderBy: { sort: "asc" }, take: 1 },
+} as const;
+
 export const getHomeLessons = cachedRead(
   ["home-lessons"],
   [TAGS.lessons, TAGS.categories],
@@ -15,7 +21,7 @@ export const getHomeLessons = cachedRead(
       where: { visible: true },
       orderBy: { sort: "asc" },
       take: 6,
-      include: { direction: true, format: true },
+      include: { direction: true, format: true, ...coverInclude },
     }),
 );
 
@@ -27,7 +33,7 @@ export const getCatalogLessons = cachedRead(
     prisma.lesson.findMany({
       where: { visible: true },
       orderBy: { sort: "asc" },
-      include: { direction: true, format: true, taskTags: true },
+      include: { direction: true, format: true, taskTags: true, ...coverInclude },
     }),
 );
 

@@ -2,7 +2,7 @@
 // Теги кэша и сброс. Карта соответствия в ARCHITECTURE.md раздел 3.
 // Правило: каждое серверное действие панели заканчивается сбросом.
 
-import { revalidatePath, unstable_cache, updateTag } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache, updateTag } from "next/cache";
 
 export const TAGS = {
   home: "home",
@@ -64,6 +64,21 @@ export function revalidateEntity(entity: Entity, paths: string[] = []): void {
   if (!tags) throw new Error(`Нет карты сброса для сущности ${entity}`);
 
   for (const tag of tags) updateTag(tag);
+  for (const path of paths) revalidatePath(path);
+}
+
+/**
+ * Сброс кэша из Route Handler (загрузка медиа `/api/media/upload`). `updateTag`
+ * там запрещён — он только для Server Actions (Next 16). Поэтому revalidateTag,
+ * который в Next 16 требует профиль: «max» помечает данные устаревшими, свежие
+ * подтянутся на следующем заходе. Для действий панели по-прежнему
+ * revalidateEntity (updateTag, немедленно).
+ */
+export function revalidateEntityFromRoute(entity: Entity, paths: string[] = []): void {
+  const tags = MAP[entity];
+  if (!tags) throw new Error(`Нет карты сброса для сущности ${entity}`);
+
+  for (const tag of tags) revalidateTag(tag, "max");
   for (const path of paths) revalidatePath(path);
 }
 

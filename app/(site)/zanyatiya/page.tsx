@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Card } from "@/components/Card";
+import { LessonCard } from "@/components/LessonCard";
 import { ButtonLink } from "@/components/Button";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
@@ -120,15 +120,14 @@ export default async function CatalogPage({ searchParams }: PageProps<"/zanyatiy
           {visible.length > 0 ? (
             <div className={styles.grid}>
               {visible.map((lesson) => (
-                <Card
+                <LessonCard
                   key={lesson.id}
                   title={lesson.title}
                   href={lessonHref(lesson)}
-                  eyebrow={lesson.direction.title}
                   price={lesson.price}
-                >
-                  <p>{lesson.intro}</p>
-                </Card>
+                  meta={[lesson.duration, lesson.level].filter(Boolean).join(" · ")}
+                  cover={lesson.media[0] ?? null}
+                />
               ))}
             </div>
           ) : null}

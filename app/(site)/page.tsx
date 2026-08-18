@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { ButtonLink } from "@/components/Button";
-import { Card } from "@/components/Card";
+import { LessonCard } from "@/components/LessonCard";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
 import { Garland } from "@/components/Garland";
@@ -253,15 +253,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           {visible.length > 0 ? (
             <div className={styles.grid}>
               {visible.map((lesson) => (
-                <Card
+                <LessonCard
                   key={lesson.id}
                   title={lesson.title}
                   href={lessonHref(lesson)}
-                  eyebrow={lesson.direction.title}
                   price={lesson.price}
-                >
-                  <p>{lesson.intro}</p>
-                </Card>
+                  meta={[lesson.duration, lesson.level].filter(Boolean).join(" · ")}
+                  cover={lesson.media[0] ?? null}
+                />
               ))}
             </div>
           ) : null}

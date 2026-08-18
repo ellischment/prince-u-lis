@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { writeAudit } from "@/lib/audit";
 import { AccessError, requireUser } from "@/lib/auth";
-import { revalidateEntity } from "@/lib/cache";
+import { revalidateEntityFromRoute } from "@/lib/cache";
 import { prisma } from "@/lib/db";
 import { MediaValidationError, processUploadedImage } from "@/lib/media";
 import { lessonReadiness } from "@/lib/readiness";
@@ -90,7 +90,7 @@ export async function POST(request: Request): Promise<Response> {
     payload: { mediaId: media.id, kind: "image" },
   });
 
-  revalidateEntity("lesson", [`/zanyatiya/${lesson.slug}`]);
+  revalidateEntityFromRoute("lesson", [`/zanyatiya/${lesson.slug}`]);
 
   return NextResponse.json({
     id: media.id,

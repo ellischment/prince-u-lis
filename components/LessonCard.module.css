@@ -1,0 +1,80 @@
+/* Карточка занятия. Сверено с princ-i-lis-site-4-2-2.html:
+   .card стр.137-138, .ph стр.139-140, .cbody/.card h4/.meta/.price стр.141-144. */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition:
+    transform 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--line2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+.link {
+  display: block;
+  color: inherit;
+}
+
+.ph {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  /* Плейсхолдерный градиент из макета: сырой hex разрешён в gradient (DESIGN-LOCK). */
+  background: linear-gradient(150deg, #1d3457, #0f2036);
+  display: grid;
+  place-items: center;
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.mark {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 40px;
+  color: var(--gold);
+  opacity: 0.4;
+}
+
+.body {
+  padding: 16px 18px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--paper);
+}
+
+.meta {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.price {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cream);
+}
+
+.link:hover .title {
+  color: var(--cream);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+}
