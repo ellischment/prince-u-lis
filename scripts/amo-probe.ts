@@ -59,7 +59,12 @@ async function api(pathname: string): Promise<ApiResult> {
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
     const res = await fetch(base + pathname, {
-      headers: { Authorization: `Bearer ${bearer}`, "Content-Type": "application/json" },
+      // User-Agent обязателен: без него amoCRM API отвечает 401 (её особенность).
+      headers: {
+        Authorization: `Bearer ${bearer}`,
+        "Content-Type": "application/json",
+        "User-Agent": "princ-i-lis-probe/1.0",
+      },
       signal: controller.signal,
     });
     const rate =

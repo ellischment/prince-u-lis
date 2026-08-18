@@ -50,7 +50,11 @@ async function ping(url: string): Promise<{ status: number; body: unknown }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    // User-Agent обязателен: без него amoCRM API отвечает 401 (её особенность).
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "princ-i-lis-check/1.0" },
+    });
     const body = await res.json().catch(() => null);
     return { status: res.status, body };
   } catch (error) {
@@ -135,7 +139,8 @@ async function main(): Promise<void> {
       const name = (r.body as { name?: string })?.name ?? "?";
       say("amoCRM /account", "ok", `ключ принят, аккаунт «${name}»`);
     } else if (r.status === 401) {
-      say("amoCRM /account", "warn", "401 — ключ не принят. Проверь, что это долгосрочный ключ внешней интеграции и он не отозван");
+      const hint = JSON.stringify(r.body ?? {}).slice(0, 200);
+      say("amoCRM /account", "warn", `401 — ключ не принят. Ответ сервера: ${hint}`);
     } else {
       say("amoCRM /account", "warn", `HTTP ${r.status} — не удалось. Проверь поддомен и ключ`);
     }
@@ -161,8 +166,12 @@ async function main(): Promise<void> {
         }
       }
     } else {
-      const desc = (me.body as { description?: string })?.description ?? "";
-      say("Telegram getMe", "warn", `ключ бота не принят: ${desc}`);
+      const code = (me.body as { error_code?: number })?.error_code;
+      const desc =
+        (me.body as { description?: string })?.description ??
+        (me.body as { error?: string })?.error ??
+        "нет ответа";
+      say("Telegram getMe", "warn", `ключ бота не принят (HTTP ${me.status}${code ? ", код " + code : ""}): ${desc}`);
     }
   }
 }
