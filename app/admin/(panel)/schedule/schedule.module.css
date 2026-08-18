@@ -1,0 +1,200 @@
+/* Общие поля времени/выбора в тёмной теме панели. */
+.timeInput,
+.dateInput,
+.timesInput,
+.select {
+  padding: 10px 12px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 10px;
+  color: var(--paper);
+  font: inherit;
+  font-size: 15px;
+}
+
+.timeInput,
+.dateInput {
+  width: 130px;
+}
+
+.select {
+  min-width: 120px;
+}
+
+.timeInput:focus-visible,
+.dateInput:focus-visible,
+.timesInput:focus-visible,
+.select:focus-visible {
+  border-color: var(--cream);
+}
+
+.timeInput:disabled {
+  opacity: 0.45;
+}
+
+/* ---------- Часы работы ---------- */
+.hoursTable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.hoursRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hoursDay {
+  width: 120px;
+  color: var(--paper);
+  font-size: 14.5px;
+}
+
+.dash {
+  color: var(--muted);
+}
+
+.dayOff {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.dayOff input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
+
+/* ---------- Сетка недели ---------- */
+.addRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+
+.warn {
+  margin: 4px 0 0;
+  color: var(--warn);
+  font-size: 13.5px;
+}
+
+.week {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.weekday {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.weekdayName {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.slotList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slotRow {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.slotTime {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.slotTitle {
+  color: var(--paper);
+  min-width: 0;
+}
+
+.hiddenTag {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.slotActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px;
+}
+
+.linkBtn:hover {
+  color: var(--cream);
+}
+
+.removeBtn {
+  background: none;
+  border: 1px solid var(--line2);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.removeBtn:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+/* ---------- Свободные дни ---------- */
+.freeList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.freeRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.freeDate {
+  color: var(--paper);
+}
+
+.freeTimes {
+  color: var(--muted);
+  font-size: 14px;
+}
