@@ -161,7 +161,12 @@ export function LessonArticle({ lesson, similar, afterHero }: Props) {
       <Container>
         <div className={styles.priceRepeat}>
           <p className={styles.priceValue}>{lesson.price}</p>
-          <Button aria-label={`Записаться: ${lesson.title}`}>Записаться</Button>
+          {/* На узком экране кнопку внизу даёт плавающая полоса (StickyPrice),
+              поэтому здесь она только на десктопе: SPEC.md раздел 6 — внизу
+              «повтор цены», отдельная кнопка не обязательна. */}
+          <div className={styles.priceRepeatCta}>
+            <Button aria-label={`Записаться: ${lesson.title}`}>Записаться</Button>
+          </div>
         </div>
       </Container>
 

@@ -179,8 +179,18 @@
   }
 }
 
+/* Кнопка нижнего повтора цены — только на десктопе: на узком экране её роль
+   выполняет плавающая полоса StickyPrice (порог тот же, 900px). */
+.priceRepeatCta {
+  display: none;
+}
+
 @media (min-width: 900px) {
   .priceRepeat {
     margin-bottom: 62px;
+  }
+
+  .priceRepeatCta {
+    display: block;
   }
 }
