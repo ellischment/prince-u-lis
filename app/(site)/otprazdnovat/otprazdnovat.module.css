@@ -1,0 +1,160 @@
+/* Отпраздновать: сетка форматов и страница формата. Сверено с макетом
+   princ-i-lis-site-4-2-2.html: .otm-grid стр.311, .lesson-hero / .lprice-box
+   (страница формата #otm-detail стр.910-945). */
+
+.head {
+  padding: 96px 0 8px;
+  max-width: 760px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+}
+
+.h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(30px, 4.4vw, 46px);
+  color: var(--paper);
+}
+
+.lead {
+  margin: 0 0 28px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding-bottom: 62px;
+}
+
+.empty {
+  color: var(--muted);
+  max-width: 60ch;
+  padding-bottom: 62px;
+}
+
+/* ---------- Страница формата ---------- */
+.back {
+  padding: 96px 0 20px;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+  padding-bottom: 62px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(28px, 4vw, 40px);
+  color: var(--paper);
+}
+
+.intro {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.block {
+  margin-top: 28px;
+}
+
+.blockTitle {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: var(--cream);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--paper);
+}
+
+.includes {
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.includes li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  color: var(--paper);
+}
+
+.includes li::before {
+  content: "✦";
+  color: var(--gold);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.priceBox {
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.price {
+  margin: 0 0 6px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 26px;
+  color: var(--cream);
+}
+
+.priceNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.formBox {
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.formTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+  color: var(--paper);
+}
+
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 920px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .detail {
+    grid-template-columns: 1.4fr 1fr;
+    gap: 34px;
+  }
+}

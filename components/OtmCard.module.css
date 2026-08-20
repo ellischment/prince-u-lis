@@ -1,0 +1,75 @@
+/* Карточка формата/вида. Сверено с princ-i-lis-site-4-2-2.html: .otm стр.311-317
+   (.op фото 4/3-заглушка, .ob тело, h4 название, p описание). */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition:
+    transform 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--line2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+.link {
+  display: block;
+  color: inherit;
+}
+
+.ph {
+  aspect-ratio: 4 / 3;
+  /* Заглушка из макета: сырой hex разрешён в gradient (DESIGN-LOCK). */
+  background: linear-gradient(150deg, #1d3457, #0f2036);
+  display: grid;
+  place-items: center;
+}
+
+.mark {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 38px;
+  color: var(--gold);
+  opacity: 0.35;
+}
+
+.body {
+  padding: 16px 18px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 21px;
+  color: var(--paper);
+}
+
+.desc {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.note {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cream);
+}
+
+.link:hover .title {
+  color: var(--cream);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+}

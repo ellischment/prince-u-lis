@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
+import { getCelebrationSlugs } from "@/lib/celebrations";
 import { COURSE_FORMAT_SLUG } from "@/lib/constants";
 import { getLessonSlugs } from "@/lib/lessons";
+import { getPartnershipSlugs } from "@/lib/partnerships";
 import { getShopSlugs } from "@/lib/shop";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -8,7 +10,12 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 // Карта сайта. Адреса добавляются сюда автоматически: SPEC.md раздел 3.
 // Разделы, которых ещё нет, не выводятся: ссылка на 404 вредит выдаче.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [lessons, shopSlugs] = await Promise.all([getLessonSlugs(), getShopSlugs()]);
+  const [lessons, shopSlugs, celebrations, partnerships] = await Promise.all([
+    getLessonSlugs(),
+    getShopSlugs(),
+    getCelebrationSlugs(),
+    getPartnershipSlugs(),
+  ]);
 
   // Курс попадает в карту ровно один раз и только как /kursy/[slug]:
   // ARCHITECTURE.md раздел 4. Его адрес в /zanyatiya отдаёт 301, а редирект
@@ -47,5 +54,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
+    // Этап 6: праздники, сотрудничество, бонусы (SPEC §10).
+    ...(celebrations.length > 0
+      ? [{ url: `${SITE_URL}/otprazdnovat`, changeFrequency: "monthly" as const, priority: 0.8 }]
+      : []),
+    ...celebrations.map((c) => ({
+      url: `${SITE_URL}/otprazdnovat/${c.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+    ...(partnerships.length > 0
+      ? [{ url: `${SITE_URL}/sotrudnichestvo`, changeFrequency: "monthly" as const, priority: 0.7 }]
+      : []),
+    ...partnerships.map((p) => ({
+      url: `${SITE_URL}/sotrudnichestvo/${p.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+    { url: `${SITE_URL}/bonusy`, changeFrequency: "monthly", priority: 0.6 },
   ];
 }

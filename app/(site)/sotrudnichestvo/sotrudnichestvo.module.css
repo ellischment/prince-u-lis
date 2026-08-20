@@ -1,0 +1,147 @@
+/* Сотрудничество: сетка видов, общая форма и страница вида. Сверено с макетом
+   princ-i-lis-site-4-2-2.html: .otm-grid стр.311, #coop / #coop-detail
+   стр.947-1135 (карточки, форма #coopForm, страница вида со steps и needs). */
+
+.head {
+  padding: 96px 0 8px;
+  max-width: 780px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+}
+
+.h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(30px, 4.4vw, 46px);
+  color: var(--paper);
+}
+
+.lead {
+  margin: 0 0 28px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-bottom: 36px;
+}
+
+/* ---------- Форма (общая на списке и страница вида) ---------- */
+.formBox {
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  margin-bottom: 62px;
+}
+
+.formTitle {
+  margin: 0 0 10px;
+  font-size: 24px;
+  color: var(--paper);
+}
+
+.formNote {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+/* ---------- Страница вида ---------- */
+.back {
+  padding: 96px 0 20px;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+  padding-bottom: 62px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(28px, 4vw, 40px);
+  color: var(--paper);
+}
+
+.intro {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.block {
+  margin-top: 28px;
+}
+
+.blockTitle {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: var(--cream);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--paper);
+}
+
+.includes {
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.includes li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  color: var(--paper);
+}
+
+.includes li::before {
+  content: "✦";
+  color: var(--gold);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* На странице вида форма уже в колонке — убираем нижний отступ списка. */
+.side .formBox {
+  margin-bottom: 0;
+}
+
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 920px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .detail {
+    grid-template-columns: 1.4fr 1fr;
+    gap: 34px;
+  }
+}
