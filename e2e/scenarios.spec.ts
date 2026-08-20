@@ -98,3 +98,28 @@ test("каталог «Купить» из панели меняет сайт", 
   await page.getByRole("link", { name: catTitle }).click();
   await expect(page.getByText(itemTitle)).toBeVisible();
 });
+
+test("формат праздника из панели появляется на сайте", async ({ page }) => {
+  const title = `Тест-праздник ${String(Date.now()).slice(-6)}`;
+
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+
+  await page.goto("/admin/celebrations");
+  await expect(page.getByRole("heading", { name: "Отпраздновать" })).toBeVisible();
+
+  const form = page.locator("form", { has: page.getByRole("button", { name: "Добавить формат" }) });
+  await form.getByLabel("Название формата").fill(title);
+  await form.getByLabel("Ориентир цены").fill("от 12 345 ₽");
+  await form.getByLabel("Описание").fill("Тестовое описание формата");
+  await form.getByLabel("Как проходит — по шагу на строку").fill("Первый шаг\nВторой шаг");
+  await page.getByRole("button", { name: "Добавить формат" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: title })).toBeVisible();
+
+  // На сайте формат виден карточкой на /otprazdnovat.
+  await page.goto("/otprazdnovat");
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+});

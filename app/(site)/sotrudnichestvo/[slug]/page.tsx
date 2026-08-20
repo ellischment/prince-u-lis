@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { RequestForm } from "@/components/RequestForm";
-import { getPartnershipBySlug } from "@/lib/partnerships";
+import { getPartnershipBySlug, getPartnershipReplyTime } from "@/lib/partnerships";
 import styles from "../sotrudnichestvo.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/sotrudnichestvo/[slug]">): Promise<Metadata> {
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/sotrudnichestvo/[
 
 export default async function PartnershipPage({ params }: PageProps<"/sotrudnichestvo/[slug]">) {
   const { slug } = await params;
-  const item = await getPartnershipBySlug(slug);
+  const [item, replyTime] = await Promise.all([getPartnershipBySlug(slug), getPartnershipReplyTime()]);
   if (!item) notFound();
 
   return (
@@ -65,7 +65,7 @@ export default async function PartnershipPage({ params }: PageProps<"/sotrudnich
             <div className={styles.formBox}>
               <h2 className={styles.formTitle}>Оставить заявку</h2>
               <p className={styles.formNote}>
-                Ответим в течение пары дней. Заявка уходит напрямую руководителю студии.
+                Ответим в течение {replyTime}. Заявка уходит напрямую руководителю студии.
               </p>
               <RequestForm
                 type="partnership"

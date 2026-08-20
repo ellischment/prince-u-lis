@@ -5,6 +5,25 @@
 import { TAGS, cachedRead } from "./cache";
 import { prisma } from "./db";
 
+/** Срок ответа на заявку сотрудничества (SiteText `partnership.replyTime`).
+ *  Настраивается в панели (PLAN 6.2), дефолт — «пары дней». */
+export const REPLY_TIME_DEFAULT = "пары дней";
+
+export const getPartnershipReplyTime = cachedRead(
+  ["partnership-reply-time"],
+  [TAGS.partnerships, TAGS.texts],
+  async () => {
+    const row = await prisma.siteText.findUnique({ where: { key: "partnership.replyTime" } });
+    if (!row?.value) return REPLY_TIME_DEFAULT;
+    try {
+      const parsed: unknown = JSON.parse(row.value);
+      return typeof parsed === "string" && parsed.trim().length > 0 ? parsed : REPLY_TIME_DEFAULT;
+    } catch {
+      return row.value.trim().length > 0 ? row.value : REPLY_TIME_DEFAULT;
+    }
+  },
+);
+
 /** Все видимые виды сотрудничества с шагами и списком «что написать в заявке». */
 export const getPartnerships = cachedRead(
   ["partnerships"],

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/Container";
 import { OtmCard } from "@/components/OtmCard";
 import { RequestForm } from "@/components/RequestForm";
-import { getPartnerships } from "@/lib/partnerships";
+import { getPartnerships, getPartnershipReplyTime } from "@/lib/partnerships";
 import styles from "./sotrudnichestvo.module.css";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SotrudnichestvoPage() {
-  const kinds = await getPartnerships();
+  const [kinds, replyTime] = await Promise.all([getPartnerships(), getPartnershipReplyTime()]);
 
   return (
     <main id="main">
@@ -43,7 +43,7 @@ export default async function SotrudnichestvoPage() {
           <p className={styles.eyebrow}>Общий запрос</p>
           <h2 className={styles.formTitle}>Расскажите о себе и идее</h2>
           <p className={styles.formNote}>
-            Ответим в течение пары дней. Заявка уходит напрямую руководителю студии. Если у вас
+            Ответим в течение {replyTime}. Заявка уходит напрямую руководителю студии. Если у вас
             конкретный формат, выберите его выше — контекст подставится сам.
           </p>
           <RequestForm

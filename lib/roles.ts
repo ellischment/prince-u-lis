@@ -9,6 +9,10 @@ export const PANEL_SECTIONS = [
   { slug: "lessons", title: "Занятия", ownerOnly: false },
   { slug: "shop", title: "Купить", ownerOnly: false },
   { slug: "celebrations", title: "Отпраздновать", ownerOnly: false },
+  // «Сотрудничество» нет в списке разделов SPEC §13, но PLAN 6.2 требует
+  // управлять видами сотрудничества, а другого места для этого в панели нет.
+  // Расхождение SPEC §13 ↔ PLAN 6.2 зафиксировано в STATE — ждёт подтверждения.
+  { slug: "partnership", title: "Сотрудничество", ownerOnly: false },
   { slug: "masters", title: "Команда мастеров", ownerOnly: false },
   { slug: "reviews", title: "Отзывы", ownerOnly: false },
   { slug: "blog", title: "Блог", ownerOnly: false },
