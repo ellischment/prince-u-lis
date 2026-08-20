@@ -34,3 +34,32 @@ test("правка занятия в панели меняет сайт", async 
   await page.getByRole("link", { name: LESSON_TITLE }).click();
   await expect(page.getByText(NEW_PRICE).first()).toBeVisible();
 });
+
+test("заявка проходит конвейер и попадает в журнал панели", async ({ page, request }) => {
+  // Уникальные имя и телефон, чтобы не сработала дедупликация при повторных прогонах.
+  const marker = `Гость-${Date.now()}`;
+  const phone = "+7916" + String(Date.now()).slice(-7);
+
+  const res = await request.post("/api/requests", {
+    data: {
+      type: "booking",
+      name: marker,
+      phone,
+      channel: "call",
+      consent: true,
+      consentVersion: "",
+    },
+  });
+  expect(res.ok()).toBeTruthy();
+
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+
+  // Журнал показывает заявку с расшифрованным именем (в базе оно зашифровано).
+  await page.goto("/admin/requests?status=all");
+  await expect(page.getByRole("heading", { name: "Журнал заявок" })).toBeVisible();
+  await expect(page.getByText(marker)).toBeVisible();
+});

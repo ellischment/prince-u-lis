@@ -1,0 +1,64 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 70ch;
+  margin: 0 0 18px;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.filter,
+.filterOn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.filter:hover {
+  color: var(--paper);
+  border-color: var(--cream);
+}
+
+.filterOn {
+  background: var(--fox);
+  border-color: var(--fox);
+  color: var(--paper);
+}
+
+.empty {
+  color: var(--muted);
+}
+
+.when {
+  white-space: nowrap;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.contact {
+  color: var(--paper);
+}
+
+.comment {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
