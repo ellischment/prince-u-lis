@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
+    "import:content": "tsx prisma/import-content.ts",
     "amo:probe": "tsx scripts/amo-probe.ts",
     "check:env": "tsx scripts/check-env.ts",
     "test:unit": "vitest run",
