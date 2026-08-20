@@ -1,0 +1,69 @@
+/* Карусель с управлением (FEATURES 1.10). Сверено с макетом .rail-wrap/.rail-btn
+   princ-i-lis-site-4-2-2.html: стрелки по краям, лента с горизонтальной
+   прокруткой, дети — карточки фиксированной ширины. */
+
+.wrap {
+  position: relative;
+}
+
+.track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.track > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--card2);
+  border: 1px solid var(--line2);
+  color: var(--cream);
+  font-size: 22px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition:
+    opacity 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.arrow:hover {
+  border-color: var(--cream);
+}
+
+.arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.prev {
+  left: -6px;
+}
+
+.next {
+  right: -6px;
+}
+
+@media (max-width: 560px) {
+  .prev {
+    left: 2px;
+  }
+  .next {
+    right: 2px;
+  }
+}

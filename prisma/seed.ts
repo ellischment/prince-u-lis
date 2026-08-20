@@ -984,10 +984,14 @@ async function seedTexts(): Promise<void> {
         { id: "trust", visible: true },
         { id: "catalog", visible: true },
         { id: "schedule", visible: true },
+        { id: "team", visible: true },
+        { id: "works", visible: true },
+        { id: "events", visible: true },
+        { id: "reviews", visible: true },
         { id: "contacts", visible: true },
       ],
     },
-    { key: "partnership.replyTime", value: "Отвечаем в течение двух рабочих дней" },
+    { key: "partnership.replyTime", value: "двух рабочих дней" },
     {
       key: "faq.items",
       value: [

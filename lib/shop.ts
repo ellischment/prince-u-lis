@@ -74,6 +74,39 @@ export const getWorkFilters = cachedRead(
   },
 );
 
+export type WorkStripItem = {
+  id: string;
+  title: string;
+  slug: string;
+  short: string | null;
+  cover: Cover;
+};
+
+/**
+ * Полоса работ на главной (FEATURES 1.13, SPEC §5 п.7): до шести работ с
+ * названием и коротким описанием (`short`). Обложка — первое изображение;
+ * без фото карточка покажет букву названия.
+ */
+export const getHomeWorks = cachedRead(
+  ["home-works"],
+  [TAGS.works],
+  async (): Promise<WorkStripItem[]> => {
+    const works = await prisma.work.findMany({
+      where: { visible: true },
+      orderBy: { sort: "asc" },
+      take: 6,
+      include: coverInclude,
+    });
+    return works.map((w) => ({
+      id: w.id,
+      title: w.title,
+      slug: w.slug,
+      short: w.short,
+      cover: firstImage(w.media),
+    }));
+  },
+);
+
 /** Все видимые работы для сетки, с автором, материалом и обложкой. */
 export const getWorks = cachedRead(
   ["shop-works"],

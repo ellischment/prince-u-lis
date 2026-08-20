@@ -1,0 +1,68 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.card {
+  margin: 0;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.videoWrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--deep);
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.photoWrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.quote {
+  margin: 0;
+  color: var(--paper);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.quote::before {
+  content: "“";
+  color: var(--gold);
+  margin-right: 2px;
+}
+
+.name {
+  color: var(--fox-soft);
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

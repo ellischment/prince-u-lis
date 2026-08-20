@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { ButtonLink } from "@/components/Button";
+import { Carousel } from "@/components/Carousel";
+import { EventCard } from "@/components/EventCard";
 import { LessonCard } from "@/components/LessonCard";
+import { MasterCard } from "@/components/MasterCard";
+import { OtmCard } from "@/components/OtmCard";
+import { Reviews } from "@/components/Reviews";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
 import { Garland } from "@/components/Garland";
@@ -11,6 +16,10 @@ import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
 import { TaskOption } from "@/components/TaskOption";
 import { TASK_TAGS, type TaskTag } from "@/lib/constants";
+import { getEvents, pickHomeEvents } from "@/lib/events";
+import { getMasters } from "@/lib/masters";
+import { getPublishedReviews } from "@/lib/reviews";
+import { getHomeWorks } from "@/lib/shop";
 import {
   getCourses,
   lessonHref,
@@ -68,20 +77,41 @@ function homeHref(params: { task?: string; direction?: string; format?: string }
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
 
-  const [hero, trust, season, blocks, lessons, filters, hours, garland, quizLabels, week, courses] =
-    await Promise.all([
-      getHeroTexts(),
-      getTrustItems(),
-      getSeason(),
-      getBlocksOrder(),
-      getCatalogLessons(),
-      getLessonFilters(),
-      getStudioHours(),
-      getGarland(),
-      getQuizLabels(),
-      getWeekSchedule(),
-      getCourses(),
-    ]);
+  const [
+    hero,
+    trust,
+    season,
+    blocks,
+    lessons,
+    filters,
+    hours,
+    garland,
+    quizLabels,
+    week,
+    courses,
+    masters,
+    homeWorks,
+    allEvents,
+    reviews,
+  ] = await Promise.all([
+    getHeroTexts(),
+    getTrustItems(),
+    getSeason(),
+    getBlocksOrder(),
+    getCatalogLessons(),
+    getLessonFilters(),
+    getStudioHours(),
+    getGarland(),
+    getQuizLabels(),
+    getWeekSchedule(),
+    getCourses(),
+    getMasters(),
+    getHomeWorks(),
+    getEvents(),
+    getPublishedReviews(),
+  ]);
+
+  const homeEvents = pickHomeEvents(allEvents);
 
   // Расписание на главной (SPEC р.5 п.5): сегодняшний день недели и ближайший
   // будущий поток среди всех курсов — та же логика, что на /raspisanie.
@@ -312,6 +342,84 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <HomeSchedule week={week} today={today} course={homeCourse} />
       </Section>
     ),
+
+    team:
+      masters.length > 0 ? (
+        <Section
+          key="team"
+          title="Мастера студии"
+          action={<ButtonLink href="/komanda" variant="ghost">Вся команда</ButtonLink>}
+        >
+          <Carousel label="Мастера студии">
+            {masters.map((m) => (
+              <div key={m.id} className={styles.railItem}>
+                <MasterCard
+                  name={m.name}
+                  href={`/komanda/${m.slug}`}
+                  speciality={m.speciality}
+                  cover={m.media[0] ?? null}
+                />
+              </div>
+            ))}
+          </Carousel>
+        </Section>
+      ) : null,
+
+    works:
+      homeWorks.length > 0 ? (
+        <Section
+          key="works"
+          tone="deep"
+          title="Что уносят домой"
+          action={<ButtonLink href="/kupit" variant="ghost">В каталог «Купить»</ButtonLink>}
+        >
+          <Carousel label="Работы студии">
+            {homeWorks.map((w) => (
+              <div key={w.id} className={styles.railItemWide}>
+                <OtmCard
+                  title={w.title}
+                  href={`/kupit/${w.slug}`}
+                  description={w.short ?? ""}
+                  cover={w.cover}
+                />
+              </div>
+            ))}
+          </Carousel>
+        </Section>
+      ) : null,
+
+    events:
+      homeEvents.length > 0 ? (
+        <Section
+          key="events"
+          title="Что скоро и что было"
+          tone="navy"
+          action={<ButtonLink href="/sobytiya" variant="ghost">Все события</ButtonLink>}
+        >
+          <Carousel label="События студии">
+            {homeEvents.map(({ event, isPast, isNearest }) => (
+              <div key={event.id} className={styles.railItemWide}>
+                <EventCard
+                  title={event.title}
+                  href={`/sobytiya/${event.slug}`}
+                  date={event.date}
+                  description={event.description}
+                  cover={event.media[0] ?? null}
+                  isPast={isPast}
+                  isNearest={isNearest}
+                />
+              </div>
+            ))}
+          </Carousel>
+        </Section>
+      ) : null,
+
+    reviews:
+      reviews.length > 0 ? (
+        <Section key="reviews" title="Что говорят гости">
+          <Reviews items={reviews} />
+        </Section>
+      ) : null,
 
     contacts: (
       <Section key="contacts" id="kontakty" title="Контакты" tone="navy">

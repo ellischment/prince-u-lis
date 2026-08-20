@@ -1,0 +1,82 @@
+/* События: список и страница события. */
+
+.head {
+  padding: 96px 0 8px;
+  max-width: 760px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+}
+
+.h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(30px, 4.4vw, 46px);
+  color: var(--paper);
+}
+
+.lead {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.empty {
+  color: var(--muted);
+  max-width: 60ch;
+  padding-bottom: 62px;
+}
+
+.block {
+  margin: 20px 0 8px;
+}
+
+.block:last-child {
+  padding-bottom: 62px;
+}
+
+.blockTitle {
+  margin: 0 0 14px;
+  font-size: 22px;
+  color: var(--cream);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+/* ---------- Страница события ---------- */
+.back {
+  padding: 96px 0 20px;
+}
+
+.date {
+  margin: 0 0 14px;
+  color: var(--fox-soft);
+  font-size: 15px;
+}
+
+.description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+  max-width: 70ch;
+}
+
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 920px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

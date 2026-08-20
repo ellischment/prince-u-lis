@@ -308,3 +308,24 @@
     padding: 26px;
   }
 }
+
+/* Карточки в каруселях главной (команда, работы, события): фиксированная ширина,
+   чтобы карусель считала переполнение и шаг прокрутки (FEATURES 1.10). */
+.railItem {
+  width: 220px;
+}
+
+.railItemWide {
+  width: 300px;
+}
+
+@media (max-width: 560px) {
+  .railItem {
+    width: 62vw;
+    max-width: 240px;
+  }
+  .railItemWide {
+    width: 80vw;
+    max-width: 320px;
+  }
+}

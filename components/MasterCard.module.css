@@ -1,11 +1,9 @@
-/* Карточка формата/вида. Сверено с princ-i-lis-site-4-2-2.html: .otm стр.311-317
-   (.op фото 4/3-заглушка, .ob тело, h4 название, p описание). */
-
 .card {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r);
   overflow: hidden;
+  width: 100%;
   transition:
     transform 0.25s var(--ease),
     border-color 0.25s var(--ease),
@@ -25,7 +23,7 @@
 
 .ph {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 4;
   /* Заглушка из макета: сырой hex разрешён в gradient (DESIGN-LOCK). */
   background: linear-gradient(150deg, #1d3457, #0f2036);
   display: grid;
@@ -38,35 +36,28 @@
 
 .mark {
   font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 38px;
+  font-size: 46px;
   color: var(--gold);
-  opacity: 0.35;
+  opacity: 0.4;
 }
 
 .body {
-  padding: 16px 18px;
+  padding: 14px 16px;
 }
 
-.title {
-  margin: 0 0 6px;
-  font-size: 21px;
+.name {
+  margin: 0 0 4px;
+  font-size: 20px;
   color: var(--paper);
 }
 
-.desc {
+.speciality {
   margin: 0;
   font-size: 13.5px;
   color: var(--muted);
 }
 
-.note {
-  margin: 10px 0 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--cream);
-}
-
-.link:hover .title {
+.link:hover .name {
   color: var(--cream);
 }
 

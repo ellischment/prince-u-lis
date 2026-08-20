@@ -12,7 +12,17 @@
 // клиентский компонент формы (BlocksForm), и валидатор. Чтение из базы — в
 // lib/home-blocks-read.ts (тот же приём, что и lib/appearance.ts + -read.ts).
 
-export const HOME_BLOCKS = ["hero", "trust", "catalog", "schedule", "contacts"] as const;
+export const HOME_BLOCKS = [
+  "hero",
+  "trust",
+  "catalog",
+  "schedule",
+  "team",
+  "works",
+  "events",
+  "reviews",
+  "contacts",
+] as const;
 export type HomeBlock = (typeof HOME_BLOCKS)[number];
 
 export type BlockSetting = { id: HomeBlock; visible: boolean };
@@ -24,6 +34,10 @@ export const HOME_BLOCK_LABELS: Record<HomeBlock, string> = {
   trust: "Полоса доверия",
   catalog: "Анкета и каталог",
   schedule: "Расписание",
+  team: "Команда",
+  works: "Работы",
+  events: "События",
+  reviews: "Отзывы",
   contacts: "Контакты",
 };
 

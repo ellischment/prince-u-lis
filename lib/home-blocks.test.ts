@@ -6,14 +6,10 @@ import { describe, expect, it } from "vitest";
 import { HOME_BLOCKS, parseBlocksOrder, validateBlocksOrder } from "./home-blocks";
 
 describe("validateBlocksOrder", () => {
-  it("корректный порядок проходит как есть", () => {
-    const input = [
-      { id: "trust", visible: false },
-      { id: "hero", visible: true },
-      { id: "catalog", visible: true },
-      { id: "schedule", visible: true },
-      { id: "contacts", visible: true },
-    ];
+  it("корректный полный порядок проходит как есть", () => {
+    // Полный набор блоков в переставленном порядке, один скрыт: валидатор ничего
+    // не дописывает и возвращает как есть.
+    const input = [{ id: "trust", visible: false }, ...HOME_BLOCKS.filter((id) => id !== "trust").map((id) => ({ id, visible: true }))];
     expect(validateBlocksOrder(input)).toEqual(input);
   });
 
