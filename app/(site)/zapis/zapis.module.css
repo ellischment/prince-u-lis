@@ -1,0 +1,13 @@
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--fox-soft);
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lead {
+  color: var(--muted);
+  margin: 8px 0 28px;
+  max-width: 60ch;
+}

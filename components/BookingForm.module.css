@@ -1,0 +1,353 @@
+/* Форма записи. Сверено с секцией #book макета site-4-2-2 (.book стр.268,
+   .bstep стр.385-407, .pick-* стр.390-401, .chan стр.276-278, .consent стр.360-364,
+   .picked стр.372-380, .book-done стр.408-411). Цвета — токены через color-mix. */
+
+.form {
+  background: linear-gradient(155deg, var(--card), var(--deep));
+  border: 1px solid var(--line);
+  border-radius: calc(var(--r) + 6px);
+  padding: clamp(22px, 4vw, 42px);
+}
+
+.context {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--fox) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fox) 30%, transparent);
+  color: var(--paper);
+  font-size: 13.5px;
+}
+
+.step {
+  margin-bottom: 22px;
+}
+
+.stepHead {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 20px;
+  color: var(--paper);
+  margin-bottom: 12px;
+}
+
+.stepNum {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  color: var(--cream);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+}
+
+/* ---------- Шаг 1: свой список ---------- */
+
+.picker {
+  position: relative;
+}
+
+.pickBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--deep) 55%, transparent);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease);
+}
+
+.pickBtn:hover {
+  border-color: var(--line2);
+}
+
+.pickBtn[aria-expanded="true"] {
+  border-color: var(--cream);
+}
+
+.caret {
+  margin-left: auto;
+  color: var(--cream);
+  transition: transform 0.2s var(--ease);
+}
+
+.pickBtn[aria-expanded="true"] .caret {
+  transform: rotate(180deg);
+}
+
+.menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  padding: 8px;
+  max-height: 340px;
+  overflow: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.group {
+  display: contents;
+}
+
+.groupLabel {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+  padding: 10px 12px 6px;
+}
+
+.option {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: var(--paper);
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: background-color 0.14s var(--ease);
+}
+
+.option:hover,
+.option:focus-visible {
+  background: color-mix(in srgb, var(--cream) 12%, transparent);
+}
+
+.option[aria-selected="true"] {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+.optName {
+  min-width: 0;
+}
+
+.optPrice {
+  margin-left: auto;
+  color: var(--cream);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ---------- Сводка выбранного ---------- */
+
+.picked {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cream) 6%, transparent);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pickedMeta {
+  color: var(--paper);
+  font-size: 14.5px;
+}
+
+.pickedLinks {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pickedLinks a,
+.pickedLinks button {
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 1px dashed color-mix(in srgb, var(--muted) 45%, transparent);
+}
+
+.pickedLinks a:hover,
+.pickedLinks button:hover {
+  color: var(--cream);
+  border-bottom-color: var(--cream);
+}
+
+/* ---------- Шаг 2: имя и телефон ---------- */
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.req {
+  color: var(--fox);
+}
+
+.input {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--deep) 55%, transparent);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--cream);
+}
+
+/* ---------- Шаг 3: каналы и комментарий ---------- */
+
+.channels {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.channel {
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.15s var(--ease);
+}
+
+.channel:hover {
+  border-color: var(--line2);
+  color: var(--paper);
+}
+
+.channelOn {
+  background: var(--fox);
+  border-color: var(--fox);
+  color: var(--paper);
+}
+
+.textarea {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--deep) 55%, transparent);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--cream);
+}
+
+/* ---------- Согласие ---------- */
+
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 14px;
+}
+
+.consent input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 2px;
+  accent-color: var(--fox);
+}
+
+.consent label {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.consent a {
+  color: var(--cream);
+  text-decoration: underline;
+}
+
+.consent.invalid label {
+  color: var(--fox-soft);
+}
+
+/* ---------- Ошибки и невалидные поля ---------- */
+
+.error {
+  color: var(--fox-soft);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.invalid.pickBtn,
+.input.invalid {
+  border-color: var(--fox);
+  background: color-mix(in srgb, var(--fox) 8%, transparent);
+}
+
+/* ---------- Экран подтверждения ---------- */
+
+.done {
+  background: linear-gradient(155deg, var(--card), var(--deep));
+  border: 1px solid var(--gold);
+  border-radius: calc(var(--r) + 6px);
+  padding: clamp(28px, 5vw, 44px);
+  text-align: center;
+}
+
+.doneStar {
+  font-size: 44px;
+  margin-bottom: 12px;
+  color: var(--cream);
+}
+
+.doneTitle {
+  font-size: clamp(26px, 4vw, 30px);
+  color: var(--cream);
+  margin: 0 0 10px;
+}
+
+.doneText {
+  color: var(--muted);
+  font-size: 15.5px;
+  max-width: 440px;
+  margin: 0 auto 22px;
+}
+
+@media (max-width: 560px) {
+  .two {
+    grid-template-columns: 1fr;
+  }
+}

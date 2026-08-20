@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "./Button";
+import { ButtonLink } from "./Button";
 import { Container } from "./Container";
 import { LessonCard } from "./LessonCard";
 import { Gallery, type GalleryItem } from "./Gallery";
@@ -50,11 +50,13 @@ export type SimilarForArticle = {
 type Props = {
   lesson: LessonForArticle;
   similar: SimilarForArticle[];
+  /** Адрес формы записи с подставленным занятием: /zapis?zanyatie=<slug>. */
+  bookHref: string;
   /** Блок под первым экраном. У курса это «Ближайшие потоки». */
   afterHero?: ReactNode;
 };
 
-export function LessonArticle({ lesson, similar, afterHero }: Props) {
+export function LessonArticle({ lesson, similar, bookHref, afterHero }: Props) {
   return (
     <>
       <Section>
@@ -88,7 +90,9 @@ export function LessonArticle({ lesson, similar, afterHero }: Props) {
               Это заявка, а не бронь. Мы перезвоним и подтвердим время.
             </p>
           </div>
-          <Button aria-label={`Записаться: ${lesson.title}`}>Записаться</Button>
+          <ButtonLink href={bookHref} ariaLabel={`Записаться: ${lesson.title}`}>
+            Записаться
+          </ButtonLink>
         </div>
       </Section>
 
@@ -165,12 +169,14 @@ export function LessonArticle({ lesson, similar, afterHero }: Props) {
               поэтому здесь она только на десктопе: SPEC.md раздел 6 — внизу
               «повтор цены», отдельная кнопка не обязательна. */}
           <div className={styles.priceRepeatCta}>
-            <Button aria-label={`Записаться: ${lesson.title}`}>Записаться</Button>
+            <ButtonLink href={bookHref} ariaLabel={`Записаться: ${lesson.title}`}>
+              Записаться
+            </ButtonLink>
           </div>
         </div>
       </Container>
 
-      <StickyPrice price={lesson.price} title={lesson.title} />
+      <StickyPrice price={lesson.price} title={lesson.title} href={bookHref} />
     </>
   );
 }

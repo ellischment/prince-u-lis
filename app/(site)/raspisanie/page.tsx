@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@/components/Button";
+import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Section } from "@/components/Section";
 import { getCourses, lessonHref, nearestRun, formatRunDate, sessionsLabel } from "@/lib/courses";
@@ -69,16 +69,16 @@ export default async function SchedulePage() {
                           <Link href={row.href} className={styles.lessonLink}>
                             {row.title}
                           </Link>
-                          {/* Запись подставляет занятие и время в форму — это шаг 4.1.
-                              Пока кнопка неактивна, как и другие «Записаться» на сайте. */}
-                          <Button
+                          {/* Запись подставляет занятие и время в форму: slug берём из
+                              адреса занятия, время из слота (FEATURES.md 1.7). */}
+                          <ButtonLink
                             small
-                            disabled
                             className={styles.rowBtn}
-                            title="Запись откроется на следующем шаге"
+                            href={`/zapis?zanyatie=${row.href.split("/").pop()}&vremya=${encodeURIComponent(row.time)}`}
+                            ariaLabel={`Записаться: ${row.title}, ${row.time}`}
                           >
                             Записаться
-                          </Button>
+                          </ButtonLink>
                         </li>
                       ))}
                     </ul>

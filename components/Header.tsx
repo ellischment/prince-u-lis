@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { STUDIO_PHONE, STUDIO_PHONE_HREF } from "@/lib/studio";
 import { NAV_ITEMS } from "@/lib/nav";
-import { Button } from "./Button";
+import { ButtonLink } from "./Button";
 import styles from "./Header.module.css";
 
 const COLLAPSE_AT = 140;
@@ -64,10 +64,9 @@ export function Header() {
               ☎
             </span>
           </a>
-          {/* Форма записи — шаг 4.1. До неё кнопка неактивна, как и StickyPrice на странице занятия. */}
-          <Button small className={styles.book} aria-label="Записаться">
+          <ButtonLink href="/zapis" small className={styles.book} ariaLabel="Записаться">
             Записаться
-          </Button>
+          </ButtonLink>
         </div>
 
         <button

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "./Button";
+import { ButtonLink } from "./Button";
 import styles from "./StickyPrice.module.css";
 
 /**
  * Полоса с ценой и кнопкой записи появляется на узком экране при прокрутке.
  * SPEC.md раздел 6. На широком экране её нет: там цена видна в закреплённом блоке.
  */
-export function StickyPrice({ price, title }: { price: string; title: string }) {
+export function StickyPrice({ price, title, href }: { price: string; title: string; href: string }) {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -24,7 +24,9 @@ export function StickyPrice({ price, title }: { price: string; title: string }) 
   return (
     <div className={shown ? styles.barShown : styles.bar} aria-hidden={!shown}>
       <span className={styles.price}>{price}</span>
-      <Button aria-label={`Записаться: ${title}`}>Записаться</Button>
+      <ButtonLink href={href} ariaLabel={`Записаться: ${title}`}>
+        Записаться
+      </ButtonLink>
     </div>
   );
 }

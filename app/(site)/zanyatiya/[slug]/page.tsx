@@ -106,7 +106,7 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <LessonArticle lesson={lesson} similar={similar} />
+      <LessonArticle lesson={lesson} similar={similar} bookHref={`/zapis?zanyatie=${lesson.slug}`} />
     </main>
   );
 }

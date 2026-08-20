@@ -49,6 +49,10 @@ export type RequestType = (typeof REQUEST_TYPES)[number];
 export const REQUEST_CHANNELS = ["call", "telegram", "whatsapp", "max", "sms"] as const;
 export type RequestChannel = (typeof REQUEST_CHANNELS)[number];
 
+// Версия согласия на обработку ПДн. Меняется вместе с текстом политики; в базе у
+// каждой заявки хранится та версия, что действовала на момент отправки (SPEC р.8).
+export const CONSENT_VERSION = "2026-08-20";
+
 export const AMO_STATUSES = ["pending", "sent", "failed"] as const;
 export type AmoStatus = (typeof AMO_STATUSES)[number];
 

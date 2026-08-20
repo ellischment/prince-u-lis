@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/Button";
+import { ButtonLink } from "@/components/Button";
 import { LessonArticle } from "@/components/LessonArticle";
 import { Section } from "@/components/Section";
 import {
@@ -105,7 +105,12 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
             Открытых наборов пока нет. Оставьте заявку, и мы позовём вас, как только откроется
             следующий.
           </p>
-          <Button aria-label={`Сообщить о наборе: ${course.title}`}>Сообщить о наборе</Button>
+          <ButtonLink
+            href={`/zapis?zanyatie=${course.slug}`}
+            ariaLabel={`Сообщить о наборе: ${course.title}`}
+          >
+            Сообщить о наборе
+          </ButtonLink>
         </div>
       ) : (
         <ul className={styles.runs}>
@@ -118,11 +123,12 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
                 </span>
                 {run.note ? <span className={styles.note}>{run.note}</span> : null}
               </div>
-              <Button
-                aria-label={`Записаться на поток с ${formatRunDate(run.startDate)}: ${course.title}`}
+              <ButtonLink
+                href={`/zapis?zanyatie=${course.slug}&potok=${encodeURIComponent(formatRunDate(run.startDate))}`}
+                ariaLabel={`Записаться на поток с ${formatRunDate(run.startDate)}: ${course.title}`}
               >
                 Записаться на поток
-              </Button>
+              </ButtonLink>
             </li>
           ))}
         </ul>
@@ -141,7 +147,7 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <LessonArticle lesson={course} similar={similar} afterHero={runsBlock} />
+      <LessonArticle lesson={course} similar={similar} bookHref={`/zapis?zanyatie=${course.slug}`} afterHero={runsBlock} />
     </main>
   );
 }
