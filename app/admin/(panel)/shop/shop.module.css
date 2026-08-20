@@ -87,6 +87,49 @@
   gap: 14px;
 }
 
+/* Чек-лист (например, какие занятия ведёт мастер) */
+.checks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--paper);
+  font-size: 14px;
+}
+
+.check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
+
+.checkInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--paper);
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.checkInline input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
+
+@media (min-width: 560px) {
+  .checks {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Дерево категорий */
 .tree {
   list-style: none;

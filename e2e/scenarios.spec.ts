@@ -123,3 +123,44 @@ test("формат праздника из панели появляется н�
   await page.goto("/otprazdnovat");
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 });
+
+test("видеоотзыв нельзя опубликовать без согласия (сервер отклоняет)", async ({ page }) => {
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+
+  await page.goto("/admin/reviews");
+  const form = page.locator("form", { has: page.getByRole("button", { name: "Добавить отзыв" }) });
+  await form.locator('input[name="guestName"]').fill("Проверка Согласия");
+  await form.locator('select[name="kind"]').selectOption("video");
+  await form.locator('input[name="videoUrl"]').fill("https://rutube.ru/video/abc123/");
+  await form.locator('textarea[name="text"]').fill("Отличная студия, всем советую.");
+  await form.locator('select[name="status"]').selectOption("published");
+  // Согласие НЕ отмечаем (checkbox name=consentReceived остаётся снятым).
+  await page.getByRole("button", { name: "Добавить отзыв" }).click();
+
+  // Сервер отклоняет: в сообщении об ошибке — про согласие, отзыв не опубликован.
+  await expect(form.getByRole("alert")).toContainText(/согласи/i);
+});
+
+test("мастер из панели появляется на сайте", async ({ page }) => {
+  const name = `Тест-мастер ${String(Date.now()).slice(-6)}`;
+
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+
+  await page.goto("/admin/masters");
+  const form = page.locator("form", { has: page.getByRole("button", { name: "Добавить мастера" }) });
+  await form.getByLabel("Имя").fill(name);
+  await form.getByLabel("Специализация").fill("тестовое направление");
+  await page.getByRole("button", { name: "Добавить мастера" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: name })).toBeVisible();
+
+  await page.goto("/komanda");
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+});
