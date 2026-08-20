@@ -983,6 +983,7 @@ async function seedTexts(): Promise<void> {
         { id: "hero", visible: true },
         { id: "trust", visible: true },
         { id: "catalog", visible: true },
+        { id: "schedule", visible: true },
         { id: "contacts", visible: true },
       ],
     },

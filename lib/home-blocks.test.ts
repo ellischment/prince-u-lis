@@ -11,6 +11,7 @@ describe("validateBlocksOrder", () => {
       { id: "trust", visible: false },
       { id: "hero", visible: true },
       { id: "catalog", visible: true },
+      { id: "schedule", visible: true },
       { id: "contacts", visible: true },
     ];
     expect(validateBlocksOrder(input)).toEqual(input);

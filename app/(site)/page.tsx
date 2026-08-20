@@ -5,13 +5,22 @@ import { LessonCard } from "@/components/LessonCard";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
 import { Garland } from "@/components/Garland";
+import { HomeSchedule, type HomeCourseTeaser } from "@/components/HomeSchedule";
 import { Section } from "@/components/Section";
 import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
 import { TaskOption } from "@/components/TaskOption";
 import { TASK_TAGS, type TaskTag } from "@/lib/constants";
-import { lessonHref } from "@/lib/courses";
+import {
+  getCourses,
+  lessonHref,
+  nearestRun,
+  formatRunDate,
+  sessionsLabel,
+} from "@/lib/courses";
 import { filterLessons } from "@/lib/filters";
+import { getWeekSchedule } from "@/lib/schedule";
+import { currentWeekdayIndex } from "@/lib/time";
 import { type HomeBlock } from "@/lib/home-blocks";
 import { getBlocksOrder } from "@/lib/home-blocks-read";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
@@ -59,7 +68,7 @@ function homeHref(params: { task?: string; direction?: string; format?: string }
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
 
-  const [hero, trust, season, blocks, lessons, filters, hours, garland, quizLabels] =
+  const [hero, trust, season, blocks, lessons, filters, hours, garland, quizLabels, week, courses] =
     await Promise.all([
       getHeroTexts(),
       getTrustItems(),
@@ -70,7 +79,27 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       getStudioHours(),
       getGarland(),
       getQuizLabels(),
+      getWeekSchedule(),
+      getCourses(),
     ]);
+
+  // Расписание на главной (SPEC р.5 п.5): сегодняшний день недели и ближайший
+  // будущий поток среди всех курсов — та же логика, что на /raspisanie.
+  const today = currentWeekdayIndex();
+  const nearest = courses
+    .map((course) => ({ course, run: nearestRun(course.runs) }))
+    .filter(
+      (item): item is { course: (typeof courses)[number]; run: NonNullable<typeof item.run> } =>
+        item.run !== null,
+    )
+    .sort((a, b) => a.run.startDate.getTime() - b.run.startDate.getTime())[0];
+  const homeCourse: HomeCourseTeaser | null = nearest
+    ? {
+        title: nearest.course.title,
+        href: lessonHref(nearest.course),
+        meta: `Старт ${formatRunDate(nearest.run.startDate)} · ${sessionsLabel(nearest.run.sessionsCount)} · ${nearest.run.timeText}`,
+      }
+    : null;
 
   const taskParam = typeof params.zadacha === "string" ? params.zadacha : undefined;
   const task = (TASK_TAGS as readonly string[]).includes(taskParam ?? "")
@@ -266,6 +295,22 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           ) : null}
         </Section>
       </div>
+    ),
+
+    schedule: (
+      <Section
+        key="schedule"
+        id="raspisanie"
+        title="Когда придёте?"
+        tone="navy"
+        action={
+          <ButtonLink href="/raspisanie" variant="ghost">
+            Всё расписание
+          </ButtonLink>
+        }
+      >
+        <HomeSchedule week={week} today={today} course={homeCourse} />
+      </Section>
     ),
 
     contacts: (
