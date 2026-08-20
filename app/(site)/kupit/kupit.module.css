@@ -1,0 +1,227 @@
+/* Каталог «Купить». Сверено с princ-i-lis-site-4-2-2.html: .buy-tabs/.buy-tab
+   стр.304-306, .works-mesh/.wm стр.307-309, .svc-cards/.otm стр.311-317. Цвета
+   только через переменные палитры; сырой hex — лишь в градиентах-заглушках. */
+
+.head {
+  padding: 96px 0 8px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+}
+
+.h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(30px, 4.4vw, 46px);
+  color: var(--paper);
+}
+
+.lead,
+.tabLead {
+  max-width: 62ch;
+  color: var(--muted);
+}
+
+.lead {
+  margin: 0 0 28px;
+}
+
+.tabLead {
+  margin: 0 0 22px;
+}
+
+/* Вкладки */
+.tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.tab {
+  padding: 11px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  transition: 0.2s var(--ease);
+}
+
+.tab:hover {
+  border-color: var(--line2);
+  color: var(--paper);
+}
+
+.tabOn {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--deep);
+  font-weight: 600;
+}
+
+.tabOn:hover {
+  color: var(--deep);
+}
+
+/* Ряды фильтров: одна строка с прокруткой, как .dirs макета */
+.filterLabel {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fox-soft);
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 9px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 18px;
+  scrollbar-width: thin;
+}
+
+.filterRow > * {
+  flex: 0 0 auto;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13.5px;
+  transition: 0.18s var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--cream);
+  color: var(--paper);
+}
+
+.chipOn {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--deep);
+  font-weight: 600;
+}
+
+.chipOn:hover {
+  color: var(--deep);
+}
+
+/* Сетка работ без подписей (showcase) */
+.mesh {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  /* Заглушка из макета: сырой hex разрешён в gradient (DESIGN-LOCK). */
+  background: linear-gradient(150deg, #1d3457, #0f2036);
+  display: grid;
+  place-items: center;
+  transition: 0.2s var(--ease);
+}
+
+.tile:hover {
+  transform: scale(1.02);
+  border-color: var(--line2);
+}
+
+.tilePhoto {
+  object-fit: cover;
+}
+
+.tileMark {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 34px;
+  color: var(--gold);
+  opacity: 0.3;
+}
+
+/* Карточки товаров-услуг (cards) */
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.hint {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 60ch;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.hint p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+/* Блок коворкинга внутри вкладки «Сертификаты и курсы» */
+.coworking {
+  margin-top: 44px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 100px;
+}
+
+.coworkingTitle {
+  margin: 0 0 12px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 28px;
+  color: var(--paper);
+}
+
+.coworkingPrice {
+  margin: 0 0 18px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 22px;
+  color: var(--cream);
+}
+
+@media (min-width: 560px) {
+  .mesh {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 920px) {
+  .mesh {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -24,6 +24,17 @@ export type CategoryDisplay = (typeof CATEGORY_DISPLAYS)[number];
  */
 export const COURSE_FORMAT_SLUG = "kursy";
 
+/**
+ * Адрес категории «Сертификаты и курсы» (kind=shop, первый уровень) и адрес
+ * занятия-коворкинга. На вкладке этой категории показывается блок коворкинга с
+ * якорем #coworking (FEATURES.md 1.8, пункт меню «Коворкинг» ведёт сюда).
+ * Значения завязаны на seed. Если студия переименует адрес в справочнике, блок
+ * коворкинга просто не покажется — не «чинится» догадкой, как и COURSE_FORMAT_SLUG.
+ */
+export const CERTIFICATES_CATEGORY_SLUG = "sertifikaty-i-kursy";
+export const COWORKING_LESSON_SLUG = "kovorking-v-masterskoy";
+export const COWORKING_ANCHOR = "coworking";
+
 export const TASK_TAGS = ["duo", "kids", "gift", "self", "company", "practice"] as const;
 export type TaskTag = (typeof TASK_TAGS)[number];
 

@@ -14,7 +14,7 @@ export const NAV_ITEMS = [
   { label: "Купить", href: "/kupit" },
   { label: "Отпраздновать", href: "/otprazdnovat" },
   { label: "Сотрудничество", href: "/sotrudnichestvo" },
-  { label: "Коворкинг", href: "/zanyatiya?napravlenie=kovorking" },
+  { label: "Коворкинг", href: "/kupit?vkladka=sertifikaty-i-kursy#coworking" },
   { label: "Бонусы", href: "/bonusy" },
   { label: "Блог", href: "/blog" },
   { label: "Контакты", href: "/#kontakty" },
