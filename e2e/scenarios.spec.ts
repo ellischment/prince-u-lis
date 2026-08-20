@@ -63,3 +63,38 @@ test("заявка проходит конвейер и попадает в жу
   await expect(page.getByRole("heading", { name: "Журнал заявок" })).toBeVisible();
   await expect(page.getByText(marker)).toBeVisible();
 });
+
+test("каталог «Купить» из панели меняет сайт", async ({ page }) => {
+  const stamp = String(Date.now()).slice(-6);
+  const catTitle = `Тест-раздел ${stamp}`;
+  const itemTitle = `Тест-товар ${stamp}`;
+
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+
+  await page.goto("/admin/shop");
+  await expect(page.getByRole("heading", { name: "Купить" })).toBeVisible();
+
+  // Категория первого уровня (тип показа «карточки» по умолчанию).
+  await page.getByPlaceholder("Название категории").fill(catTitle);
+  await page.getByRole("button", { name: "Добавить категорию" }).click();
+
+  // Товар в этой категории. Форма товаров — та, где кнопка «Добавить товар».
+  // selectOption сам дождётся, когда новая категория появится в списке (её
+  // наличие подтверждает, что создание категории доехало через сброс кэша).
+  const itemForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить товар" }) });
+  await itemForm.getByLabel("Название").fill(itemTitle);
+  await itemForm.getByLabel("Цена").fill("999 ₽");
+  await itemForm.getByLabel("Категория").selectOption({ label: catTitle });
+  await itemForm.getByLabel("Описание").fill("Описание тестового товара");
+  await page.getByRole("button", { name: "Добавить товар" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: itemTitle })).toBeVisible();
+
+  // На сайте: новая вкладка появилась (категория непустая), товар виден.
+  await page.goto("/kupit");
+  await page.getByRole("link", { name: catTitle }).click();
+  await expect(page.getByText(itemTitle)).toBeVisible();
+});
