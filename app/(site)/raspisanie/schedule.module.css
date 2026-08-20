@@ -396,3 +396,63 @@
   color: var(--cream);
   white-space: nowrap;
 }
+
+/* ---------- Инлайн-заявка на индивидуальное время ---------- */
+
+.contactRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .contactRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.consentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.consentRow input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  margin-top: 2px;
+  accent-color: var(--fox);
+}
+
+.consentRow a {
+  color: var(--cream);
+  text-decoration: underline;
+}
+
+.errorLine {
+  margin: 0;
+  color: var(--fox-soft);
+  font-size: 13px;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--sky) 30%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sky) 8%, transparent);
+}
+
+.confirmTitle {
+  margin: 0;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 22px;
+  color: var(--cream);
+}

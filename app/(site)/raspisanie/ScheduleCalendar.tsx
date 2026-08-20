@@ -42,6 +42,14 @@ export function ScheduleCalendar({ openDays, todayKey }: { openDays: OpenDay[]; 
   const [picked, setPicked] = useState<string | null>(null);
   const [custom, setCustom] = useState("");
 
+  // Поля заявки на индивидуальное время (FEATURES 1.6): отправка на месте.
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+
   const cells = useMemo(() => monthCells(cursor.year, cursor.month), [cursor]);
   const selectedTimes = selected ? (openMap.get(selected) ?? []) : [];
 
@@ -58,6 +66,67 @@ export function ScheduleCalendar({ openDays, todayKey }: { openDays: OpenDay[]; 
     setSelected(dateKey);
     setPicked(null);
     setCustom("");
+    setError(null);
+  }
+
+  async function submit() {
+    setError(null);
+    // Порядок сообщений: сперва время (п.5), потом имя, телефон, согласие.
+    if (!effectiveTime) {
+      setError("Выберите время из списка, «любое время» или впишите своё");
+      return;
+    }
+    if (name.trim().length < 2) {
+      setError("Как к вам обращаться");
+      return;
+    }
+    if (phone.replace(/\D/g, "").length !== 11) {
+      setError("Введите телефон полностью");
+      return;
+    }
+    if (!consent) {
+      setError("Нужно согласие на обработку данных");
+      return;
+    }
+
+    setPending(true);
+    try {
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          type: "free_time",
+          dateText: selectedLabel,
+          timeText: effectiveTime,
+          name,
+          phone,
+          channel: "call",
+          consent,
+          consentVersion: "", // сервер ставит действующую версию сам
+        }),
+      });
+      const data: { ok?: boolean; error?: string } = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Не удалось отправить заявку");
+        return;
+      }
+      setDone(`${selectedLabel}, ${effectiveTime}`);
+    } catch {
+      setError("Нет связи с сервером. Попробуйте ещё раз.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function resetAll() {
+    setDone(null);
+    setSelected(null);
+    setPicked(null);
+    setCustom("");
+    setName("");
+    setPhone("");
+    setConsent(false);
+    setError(null);
   }
 
   // Произвольное время имеет приоритет над выбранным из списка (FEATURES 1.6).
@@ -189,18 +258,61 @@ export function ScheduleCalendar({ openDays, todayKey }: { openDays: OpenDay[]; 
                 </p>
               ) : null}
 
-              {/* Отправка заявки (имя, телефон, согласие + конвейер) — шаг 4.1.
-                  Пока кнопка неактивна; выбор дня и времени уже работает. */}
-              <Button disabled title="Отправка заявки появится на следующем шаге">
-                Оставить заявку
-              </Button>
-              <p className={styles.fallback}>
-                Пока можно записаться по телефону{" "}
-                <a href={STUDIO_PHONE_HREF} className={styles.phone}>
-                  {STUDIO_PHONE}
-                </a>
-                .
-              </p>
+              {done ? (
+                <div className={styles.confirm} role="status">
+                  <p className={styles.confirmTitle}>Заявка отправлена</p>
+                  <p className={styles.summary}>
+                    Вы выбрали: {done}. Мы свяжемся и подтвердим удобное время.
+                  </p>
+                  <button type="button" className={styles.timeChip} onClick={resetAll}>
+                    Выбрать другое время
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className={styles.contactRow}>
+                    <input
+                      className={styles.customInput}
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Имя"
+                      maxLength={80}
+                      aria-label="Имя"
+                    />
+                    <input
+                      className={styles.customInput}
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder="Телефон"
+                      inputMode="tel"
+                      maxLength={20}
+                      aria-label="Телефон"
+                    />
+                  </div>
+                  <label className={styles.consentRow}>
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(event) => setConsent(event.target.checked)}
+                    />
+                    <span>
+                      Согласен на обработку персональных данных и принимаю{" "}
+                      <a href="/politika">Политику обработки данных</a>.
+                    </span>
+                  </label>
+                  {error ? <p className={styles.errorLine}>{error}</p> : null}
+                  <Button onClick={submit} disabled={pending}>
+                    {pending ? "Отправляем..." : "Оставить заявку"}
+                  </Button>
+                  <p className={styles.fallback}>
+                    Или запишитесь по телефону{" "}
+                    <a href={STUDIO_PHONE_HREF} className={styles.phone}>
+                      {STUDIO_PHONE}
+                    </a>
+                    .
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <p className={styles.hint}>Выберите подсвеченный день, чтобы увидеть время.</p>
