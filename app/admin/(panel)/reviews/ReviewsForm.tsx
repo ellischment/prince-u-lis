@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import Image from "next/image";
+import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
 import { deleteReview, moveReview, saveReview, type SectionState } from "./actions";
 import content from "../content/content.module.css";
+import media from "../media.module.css";
 import styles from "../shop/shop.module.css";
 
 export type ReviewView = {
@@ -13,6 +15,8 @@ export type ReviewView = {
   kind: string;
   text: string;
   videoUrl: string;
+  mediaId: string;
+  photoPath: string | null;
   consentReceived: boolean;
   status: string;
 };
@@ -36,12 +40,43 @@ function SubmitButton({ editing }: { editing: boolean }) {
 export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
   const [state, formAction] = useActionState<SectionState, FormData>(saveReview, {});
   const [edit, setEdit] = useState<ReviewView | null>(null);
+  const [kind, setKind] = useState(edit?.kind ?? "text");
+  const [photo, setPhoto] = useState<{ id: string; path: string } | null>(
+    edit?.mediaId && edit.photoPath ? { id: edit.mediaId, path: edit.photoPath } : null,
+  );
+  const [photoPending, startPhotoUpload] = useTransition();
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const d = edit;
+
+  function pickEdit(r: ReviewView | null) {
+    setEdit(r);
+    setKind(r?.kind ?? "text");
+    setPhoto(r?.mediaId && r.photoPath ? { id: r.mediaId, path: r.photoPath } : null);
+    setPhotoError(null);
+  }
+
+  function handlePhotoFile(file: File | null) {
+    if (!file) return;
+    setPhotoError(null);
+    startPhotoUpload(async () => {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("entityType", "review");
+      const response = await fetch("/api/media/upload", { method: "POST", body: form });
+      const data: { id?: string; path?: string; error?: string } = await response.json();
+      if (!response.ok || !data.id || !data.path) {
+        setPhotoError(data.error ?? "Не удалось загрузить фото");
+        return;
+      }
+      setPhoto({ id: data.id, path: data.path });
+    });
+  }
 
   return (
     <div>
       <form key={edit?.id ?? "new"} action={formAction} className={styles.card} noValidate>
         <input type="hidden" name="id" value={edit?.id ?? ""} />
+        <input type="hidden" name="mediaId" value={photo?.id ?? ""} />
         <div className={styles.grid2}>
           <label className={styles.field}>
             <span className={styles.label}>Имя гостя</span>
@@ -49,7 +84,12 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
           </label>
           <label className={styles.field}>
             <span className={styles.label}>Формат</span>
-            <select name="kind" className={styles.select} defaultValue={d?.kind ?? "text"}>
+            <select
+              name="kind"
+              className={styles.select}
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+            >
               <option value="text">текст</option>
               <option value="photo">фото</option>
               <option value="video">видео</option>
@@ -60,10 +100,41 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
           <span className={styles.label}>Текст отзыва</span>
           <textarea name="text" className={styles.textarea} defaultValue={d?.text ?? ""} rows={3} />
         </label>
-        <label className={styles.field}>
-          <span className={styles.label}>Ссылка на видео (для формата «видео»: VK Видео, Rutube, YouTube)</span>
-          <input name="videoUrl" className={styles.input} defaultValue={d?.videoUrl ?? ""} placeholder="https://…" />
-        </label>
+
+        {kind === "photo" ? (
+          <div className={styles.field}>
+            <span className={styles.label}>Фото отзыва</span>
+            {photo ? (
+              <div className={media.mediaRow}>
+                <Image src={photo.path} alt="" width={80} height={60} className={media.mediaThumb} />
+                <span className={media.mediaUrl}>{photo.path}</span>
+                <button type="button" className={media.removeLast} onClick={() => setPhoto(null)}>
+                  Удалить
+                </button>
+              </div>
+            ) : (
+              <label className={`${media.uploadButton} ${media.uploadInline}`}>
+                {photoPending ? "Загружаем..." : "Загрузить фото"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  disabled={photoPending}
+                  onChange={(e) => handlePhotoFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            )}
+            {photoError ? <span className={media.error}>{photoError}</span> : null}
+          </div>
+        ) : null}
+
+        {kind === "video" ? (
+          <label className={styles.field}>
+            <span className={styles.label}>Ссылка на видео (VK Видео, Rutube, YouTube)</span>
+            <input name="videoUrl" className={styles.input} defaultValue={d?.videoUrl ?? ""} placeholder="https://…" />
+          </label>
+        ) : null}
+
         <div className={styles.grid2}>
           <label className={styles.field}>
             <span className={styles.label}>Статус</span>
@@ -96,7 +167,7 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
         <div className={styles.formActions}>
           <SubmitButton editing={edit !== null} />
           {edit ? (
-            <button type="button" className={styles.linkBtn} onClick={() => setEdit(null)}>
+            <button type="button" className={styles.linkBtn} onClick={() => pickEdit(null)}>
               отменить правку
             </button>
           ) : null}
@@ -127,7 +198,7 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
                 <input type="hidden" name="dir" value="down" />
                 <button type="submit" className={styles.linkBtn} aria-label="Ниже">↓</button>
               </form>
-              <button type="button" className={styles.linkBtn} onClick={() => setEdit(r)}>
+              <button type="button" className={styles.linkBtn} onClick={() => pickEdit(r)}>
                 изменить
               </button>
               <form action={deleteReview}>

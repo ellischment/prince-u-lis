@@ -44,6 +44,11 @@ const MAP: Record<string, Tag[]> = {
   article: [TAGS.articles],
   event: [TAGS.events],
   review: [TAGS.reviews],
+  // Обобщённый медиа-узел (lib/media-entities.ts) обслуживает работы, товары,
+  // форматы праздников, мастеров и события одним действием: реальный тип
+  // сущности известен только в момент вызова, а карта panelAction статична.
+  // Сбрасывает объединение их тегов — безопасный запас, не «тихая» потеря.
+  media: [TAGS.works, TAGS.shop, TAGS.celebrations, TAGS.masters, TAGS.events, TAGS.home],
   schedule: [TAGS.schedule],
   siteText: [TAGS.texts, TAGS.home],
 };

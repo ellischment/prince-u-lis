@@ -38,7 +38,9 @@ function firstString(value: string | string[] | undefined): string | undefined {
 /** Буква-заглушка для сетки без подписей: товар или работа без фото. */
 function MeshTile({ title, href, cover }: { title: string; href: string; cover: WorkCard["cover"] }) {
   return (
-    <Link href={href} className={styles.tile}>
+    // Сетка без подписей (FEATURES 1.8): видимого текста нет, поэтому у самой
+    // ссылки — accessible name, иначе для скринридера это безымянная ссылка.
+    <Link href={href} className={styles.tile} aria-label={title}>
       {cover?.path ? (
         <Image
           className={styles.tilePhoto}

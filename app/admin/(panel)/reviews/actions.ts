@@ -1,5 +1,8 @@
 "use server";
 
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import type { Prisma } from "@prisma/client";
 import { ActionError, panelAction } from "@/lib/action";
 import { idSchema, moveSchema, reviewSchema } from "@/lib/validation/team";
 
@@ -12,6 +15,15 @@ function toState(r: { ok: boolean; errors?: Record<string, string> }): SectionSt
   return r.ok ? { ok: true } : { ok: false, errors: r.errors };
 }
 
+/** Удаляет файл орфанного фото отзыва (замена/удаление отзыва). Ошибка гасится:
+ *  запись в базе важнее, чем гарантированная уборка файла на диске. */
+async function deleteMediaRow(tx: Prisma.TransactionClient, mediaId: string): Promise<void> {
+  const media = await tx.media.delete({ where: { id: mediaId } }).catch(() => null);
+  if (media?.path) {
+    await unlink(path.join(process.cwd(), "public", media.path)).catch(() => undefined);
+  }
+}
+
 // Правило согласия проверяется в reviewSchema.superRefine (серверная валидация,
 // не только интерфейс): фото/видео нельзя опубликовать без отметки согласия.
 const saveCore = panelAction({
@@ -21,11 +33,17 @@ const saveCore = panelAction({
   action: "review.save",
   paths: PATHS,
   run: async (input, tx) => {
+    if (input.mediaId) {
+      const media = await tx.media.findUnique({ where: { id: input.mediaId } });
+      if (!media) throw new ActionError("Загруженное фото не найдено, попробуйте загрузить заново");
+    }
+
     const data = {
       guestName: input.guestName,
       kind: input.kind,
       text: input.text,
       videoUrl: input.videoUrl,
+      mediaId: input.mediaId,
       consentReceived: input.consentReceived,
       status: input.status,
     };
@@ -34,6 +52,10 @@ const saveCore = panelAction({
       const existing = await tx.review.findUnique({ where: { id: input.id } });
       if (!existing) throw new ActionError("Отзыв не найден");
       await tx.review.update({ where: { id: input.id }, data });
+      // Фото заменили или сняли: старый файл-сирота больше не нужен на диске.
+      if (existing.mediaId && existing.mediaId !== input.mediaId) {
+        await deleteMediaRow(tx, existing.mediaId);
+      }
       return { id: input.id };
     }
     const last = await tx.review.findFirst({ orderBy: { sort: "desc" } });
@@ -51,6 +73,7 @@ export async function saveReview(_p: SectionState, form: FormData): Promise<Sect
       kind: String(form.get("kind") ?? "text"),
       text: String(form.get("text") ?? ""),
       videoUrl: String(form.get("videoUrl") ?? ""),
+      mediaId: String(form.get("mediaId") ?? ""),
       consentReceived: form.get("consentReceived") === "on" || form.get("consentReceived") === "true",
       status: String(form.get("status") ?? "draft"),
     }),
@@ -89,7 +112,9 @@ const deleteCore = panelAction({
   action: "review.delete",
   paths: PATHS,
   run: async (input, tx) => {
+    const existing = await tx.review.findUnique({ where: { id: input.id } });
     await tx.review.delete({ where: { id: input.id } });
+    if (existing?.mediaId) await deleteMediaRow(tx, existing.mediaId);
     return { id: input.id };
   },
   entityId: (i) => i.id,

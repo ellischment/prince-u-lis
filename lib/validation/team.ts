@@ -33,6 +33,7 @@ export const reviewSchema = z
     kind: z.enum(REVIEW_KINDS),
     text: z.string().trim().min(1, "Добавьте текст отзыва").max(2000),
     videoUrl: optional(300),
+    mediaId: optional(60),
     consentReceived: z.coerce.boolean(),
     status: z.enum(REVIEW_STATUSES),
   })

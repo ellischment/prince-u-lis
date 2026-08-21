@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteMaster, moveMaster, saveMaster, toggleMaster, type SectionState } from "./actions";
 import content from "../content/content.module.css";
 import styles from "../shop/shop.module.css";
@@ -15,6 +16,7 @@ export type MasterView = {
   experience: string;
   lessonIds: string[];
   visible: boolean;
+  media: MediaItem[];
 };
 type LessonOption = { id: string; title: string };
 
@@ -83,6 +85,16 @@ export function MastersForm({ masters, lessons }: { masters: MasterView[]; lesso
           ) : null}
         </div>
       </form>
+
+      {edit ? (
+        <EntityMediaEditor
+          entityType="master"
+          entityId={edit.id}
+          initialMedia={edit.media}
+          title="Фото и видео мастера"
+          note="Первое фото — главное для карточки в карусели."
+        />
+      ) : null}
 
       <ul className={styles.list}>
         {masters.length === 0 ? <li className={styles.empty}>Мастеров пока нет.</li> : null}

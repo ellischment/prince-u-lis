@@ -1,0 +1,126 @@
+/* Галерея медиа для сущностей вне занятий (работа, товар, формат праздника,
+   мастер, событие). Повторяет классы app/admin/(panel)/lessons/[id]/editor.module.css,
+   вынесено в общий модуль, чтобы не тянуть страничный CSS занятия. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  color: var(--cream);
+}
+
+.sectionNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mediaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mediaThumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mediaVideoTag {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card2);
+  border-radius: 8px;
+  color: var(--cream);
+  font-size: 12px;
+}
+
+.mediaUrl {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.removeLast {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.removeLast:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.uploadRow,
+.videoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.uploadButton {
+  padding: 10px 18px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--paper);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.uploadButton:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.uploadInline {
+  align-self: flex-start;
+}
+
+.input {
+  padding: 10px 12px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 10px;
+  color: var(--paper);
+  font: inherit;
+  font-size: 15px;
+}
+
+.videoRow .input {
+  flex-grow: 1;
+  min-width: 220px;
+}
+
+.hint {
+  color: var(--fox-soft);
+  font-size: 12.5px;
+}
+
+.error {
+  color: var(--bad);
+  font-size: 12.5px;
+}

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteWork, saveWork, toggleWork, type ShopState } from "./actions";
 import content from "../content/content.module.css";
 import styles from "./shop.module.css";
@@ -18,6 +19,7 @@ type WorkView = {
   description: string;
   short: string;
   visible: boolean;
+  media: MediaItem[];
 };
 type Option = { id: string; title: string };
 
@@ -116,6 +118,16 @@ export function WorksForm({
           ) : null}
         </div>
       </form>
+
+      {edit ? (
+        <EntityMediaEditor
+          entityType="work"
+          entityId={edit.id}
+          initialMedia={edit.media}
+          title="Фотографии работы"
+          note="Первое фото — обложка карточки. Порядок меняется перетаскиванием."
+        />
+      ) : null}
 
       <ul className={styles.list}>
         {works.length === 0 ? <li className={styles.empty}>Работ пока нет.</li> : null}

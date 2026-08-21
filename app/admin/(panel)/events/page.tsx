@@ -32,7 +32,12 @@ export default async function EventsPanelPage() {
     );
   }
 
-  const rows = await prisma.event.findMany({ orderBy: { date: "desc" } });
+  const rows = await prisma.event.findMany({
+    orderBy: { date: "desc" },
+    include: {
+      media: { orderBy: { sort: "asc" }, select: { id: true, kind: true, path: true, url: true, alt: true } },
+    },
+  });
   const today = startOfTodayMoscow().getTime();
 
   const events = rows.map((e) => ({
@@ -43,6 +48,7 @@ export default async function EventsPanelPage() {
     description: e.description,
     visible: e.visible,
     isPast: e.date.getTime() < today,
+    media: e.media,
   }));
 
   return (
@@ -50,8 +56,7 @@ export default async function EventsPanelPage() {
       <h1>События</h1>
       <p className={section.note}>
         Маркеты, обжиги и вечера для страницы «События» и блока на главной. После даты событие само
-        уходит в прошедшие — удалять не нужно, остаётся с фотоотчётом. Загрузка фотоотчёта — отдельный
-        шаг.
+        уходит в прошедшие — удалять не нужно, остаётся с фотоотчётом.
       </p>
       <EventsForm events={events} />
     </>

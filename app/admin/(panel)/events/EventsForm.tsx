@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteEvent, saveEvent, toggleEvent, type SectionState } from "./actions";
 import content from "../content/content.module.css";
 import styles from "../shop/shop.module.css";
@@ -15,6 +16,7 @@ export type EventView = {
   description: string;
   visible: boolean;
   isPast: boolean;
+  media: MediaItem[];
 };
 
 function SubmitButton({ editing }: { editing: boolean }) {
@@ -65,6 +67,16 @@ export function EventsForm({ events }: { events: EventView[] }) {
           ) : null}
         </div>
       </form>
+
+      {edit ? (
+        <EntityMediaEditor
+          entityType="event"
+          entityId={edit.id}
+          initialMedia={edit.media}
+          title="Фотоотчёт"
+          note="Первое фото — обложка карточки события."
+        />
+      ) : null}
 
       <ul className={styles.list}>
         {events.length === 0 ? <li className={styles.empty}>Событий пока нет.</li> : null}

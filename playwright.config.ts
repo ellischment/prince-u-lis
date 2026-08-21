@@ -30,8 +30,18 @@ export default defineConfig({
   },
   // Сценарий проверяет сброс кэша через updateTag (шаг 0.5): в dev кэш почти
   // не работает, поэтому сервер поднимается на боевой сборке, не next dev.
+  //
+  // Не "npm start" (next start): next.config.ts включает output:"standalone"
+  // для Docker (ARCHITECTURE §2a), а next start с этой настройкой официально
+  // не поддерживается — Next сам печатает предупреждение и советует
+  // node .next/standalone/server.js. На next start это било по загрузке медиа:
+  // раздача статики и /_next/image шли из замороженного на момент сборки
+  // public/, поэтому свежая фотография из панели не отображалась на сайте.
+  // node .next/standalone/server.js — та же команда, что в docker-entrypoint.sh,
+  // и с ней сервер отдаёт актуальный public/ и .next/static (после синхронизации
+  // scripts/sync-standalone-assets.ts внутри npm run build, повторяет Dockerfile).
   webServer: {
-    command: "npm start",
+    command: "node .next/standalone/server.js",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

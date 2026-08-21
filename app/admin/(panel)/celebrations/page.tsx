@@ -29,6 +29,7 @@ export default async function CelebrationsPanelPage() {
     include: {
       steps: { orderBy: { sort: "asc" } },
       includes: { orderBy: { sort: "asc" } },
+      media: { orderBy: { sort: "asc" }, select: { id: true, kind: true, path: true, url: true, alt: true } },
     },
   });
 
@@ -40,6 +41,7 @@ export default async function CelebrationsPanelPage() {
     steps: r.steps.map((s) => s.text),
     includes: r.includes.map((i) => i.text),
     visible: r.visible,
+    media: r.media,
   }));
 
   return (
@@ -47,8 +49,7 @@ export default async function CelebrationsPanelPage() {
       <h1>Отпраздновать</h1>
       <p className={section.note}>
         Форматы праздников для страницы «Отпраздновать». Порядок задаёт стрелками, скрытый формат на
-        сайте не показывается. Фотогалерея формата подключается в разделе «Фото и видео» (загрузка
-        для праздников — отдельный шаг).
+        сайте не показывается.
       </p>
       <CelebrationsForm items={items} />
     </>

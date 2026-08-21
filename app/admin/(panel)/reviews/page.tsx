@@ -24,13 +24,18 @@ export default async function ReviewsPanelPage() {
     );
   }
 
-  const rows = await prisma.review.findMany({ orderBy: { sort: "asc" } });
+  const rows = await prisma.review.findMany({
+    orderBy: { sort: "asc" },
+    include: { media: { select: { path: true } } },
+  });
   const reviews = rows.map((r) => ({
     id: r.id,
     guestName: r.guestName,
     kind: r.kind,
     text: r.text,
     videoUrl: r.videoUrl ?? "",
+    mediaId: r.mediaId ?? "",
+    photoPath: r.media?.path ?? null,
     consentReceived: r.consentReceived,
     status: r.status,
   }));
@@ -41,7 +46,7 @@ export default async function ReviewsPanelPage() {
       <p className={section.note}>
         На сайте показываются только опубликованные отзывы (три штуки на главной). Фото и видео
         нельзя опубликовать без отметки о письменном согласии гостя — это проверяет сервер, а не
-        только форма. Загрузка фото для отзыва — отдельный шаг; для видео достаточно ссылки.
+        только форма.
       </p>
       <ReviewsForm reviews={reviews} />
     </>

@@ -3,7 +3,10 @@
 // в коде (см. STATE.md, раздел про шаг 1.3). Здесь — единственный, который
 // можно построить сейчас на уже готовом коде.
 
+import path from "node:path";
 import { test, expect } from "@playwright/test";
+
+const TEST_PHOTO = path.join(__dirname, "fixtures", "test-photo.jpg");
 
 const LESSON_TITLE = "Гончарный круг для начинающих";
 const LESSON_SLUG = "goncharnyy-krug-dlya-nachinayushchikh";
@@ -163,4 +166,45 @@ test("мастер из панели появляется на сайте", asyn
 
   await page.goto("/komanda");
   await expect(page.getByRole("heading", { name })).toBeVisible();
+});
+
+test("загруженное фото работы доезжает до карточки на сайте", async ({ page }) => {
+  const title = `Тест-работа ${String(Date.now()).slice(-6)}`;
+
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+
+  await page.goto("/admin/shop");
+
+  // Создать работу.
+  const workForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить работу" }) });
+  await workForm.locator('input[name="title"]').fill(title);
+  await workForm.locator('input[name="price"]').fill("1 000 ₽");
+  await workForm.locator('select[name="authorId"]').selectOption({ index: 1 });
+  await workForm.locator('select[name="materialId"]').selectOption({ index: 1 });
+  await workForm.locator('textarea[name="description"]').fill("Тестовое описание работы");
+  await page.getByRole("button", { name: "Добавить работу" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: title })).toBeVisible();
+
+  // Открыть работу на правку — появляется загрузчик галереи.
+  await page.getByRole("listitem").filter({ hasText: title }).getByRole("button", { name: "изменить" }).click();
+  await expect(page.getByText("Фотографии работы")).toBeVisible();
+
+  // Загрузить фото и дождаться, что оно появилось в галерее панели.
+  await page.locator('input[type="file"]').setInputFiles(TEST_PHOTO);
+  await expect(page.locator('[class*="mediaRow"]').first()).toBeVisible({ timeout: 15000 });
+
+  // На сайте: сетка «Работы» без подписей (FEATURES 1.8), но у плитки есть
+  // aria-label с названием — по нему находим именно нашу карточку.
+  await page.goto("/kupit?vkladka=raboty&rabot=50");
+  const tile = page.getByRole("link", { name: title });
+  await expect(tile).toBeVisible();
+  await expect(tile.locator("img")).toBeVisible();
+  await tile.click();
+
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  await expect(page.locator("main img").first()).toBeVisible();
 });

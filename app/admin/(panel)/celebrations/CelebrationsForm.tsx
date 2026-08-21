@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import {
   deleteCelebration,
   moveCelebration,
@@ -21,6 +22,7 @@ export type CelebrationView = {
   steps: string[];
   includes: string[];
   visible: boolean;
+  media: MediaItem[];
 };
 
 function SubmitButton({ editing }: { editing: boolean }) {
@@ -79,6 +81,17 @@ export function CelebrationsForm({ items }: { items: CelebrationView[] }) {
           ) : null}
         </div>
       </form>
+
+      {edit ? (
+        <EntityMediaEditor
+          entityType="celebration"
+          entityId={edit.id}
+          initialMedia={edit.media}
+          title="Фото и видео формата"
+          note="До пяти кадров, включая видео. Карусель «Как это было у других»."
+          max={5}
+        />
+      ) : null}
 
       <ul className={styles.list}>
         {items.length === 0 ? <li className={styles.empty}>Форматов пока нет.</li> : null}

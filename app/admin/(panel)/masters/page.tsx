@@ -27,7 +27,10 @@ export default async function MastersPanelPage() {
   const [rows, lessons] = await Promise.all([
     prisma.master.findMany({
       orderBy: { sort: "asc" },
-      include: { lessons: { select: { lessonId: true } } },
+      include: {
+        lessons: { select: { lessonId: true } },
+        media: { orderBy: { sort: "asc" }, select: { id: true, kind: true, path: true, url: true, alt: true } },
+      },
     }),
     prisma.lesson.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } }),
   ]);
@@ -40,6 +43,7 @@ export default async function MastersPanelPage() {
     experience: m.experience ?? "",
     lessonIds: m.lessons.map((l) => l.lessonId),
     visible: m.visible,
+    media: m.media,
   }));
 
   return (
@@ -48,8 +52,7 @@ export default async function MastersPanelPage() {
       <p className={section.note}>
         Мастера для страницы «Команда» и карусели на главной. Порядок — стрелками, скрытый мастер на
         сайте не показывается. Связь с занятиями только для показа: на запись она не влияет, мастера
-        ставит студия. Фотографии и видео мастера подключаются в разделе «Фото и видео» (загрузка —
-        отдельный шаг).
+        ставит студия.
       </p>
       <MastersForm masters={masters} lessons={lessons} />
     </>

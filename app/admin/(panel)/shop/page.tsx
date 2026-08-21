@@ -36,11 +36,18 @@ export default async function ShopPanelPage() {
     }),
     prisma.work.findMany({
       orderBy: { sort: "asc" },
-      include: { author: { select: { title: true } }, material: { select: { title: true } } },
+      include: {
+        author: { select: { title: true } },
+        material: { select: { title: true } },
+        media: { orderBy: { sort: "asc" }, select: { id: true, kind: true, path: true, url: true, alt: true } },
+      },
     }),
     prisma.shopItem.findMany({
       orderBy: { sort: "asc" },
-      include: { category: { select: { title: true } } },
+      include: {
+        category: { select: { title: true } },
+        media: { orderBy: { sort: "asc" }, select: { id: true, kind: true, path: true, url: true, alt: true } },
+      },
     }),
     prisma.category.findMany({
       where: { kind: "work_author", visible: true },
@@ -95,6 +102,7 @@ export default async function ShopPanelPage() {
     description: w.description,
     short: w.short ?? "",
     visible: w.visible,
+    media: w.media,
   }));
 
   const itemView = shopItems.map((i) => ({
@@ -106,6 +114,7 @@ export default async function ShopPanelPage() {
     description: i.description,
     terms: i.terms ?? "",
     visible: i.visible,
+    media: i.media,
   }));
 
   return (
@@ -125,8 +134,8 @@ export default async function ShopPanelPage() {
 
       <h2 className={section.subhead}>Работы</h2>
       <p className={section.note}>
-        Готовые работы с ценой. Фотографии добавляются в разделе «Фото и видео» (загрузка для работ
-        подключается отдельным шагом); без фото карточка показывает букву названия.
+        Готовые работы с ценой. Фотографии добавляются при правке уже сохранённой работы (кнопка
+        «изменить»); без фото карточка показывает букву названия.
       </p>
       <WorksForm works={workView} authors={authors} materials={materials} />
 

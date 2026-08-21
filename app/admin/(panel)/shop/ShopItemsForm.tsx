@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteShopItem, saveShopItem, toggleShopItem, type ShopState } from "./actions";
 import content from "../content/content.module.css";
 import styles from "./shop.module.css";
@@ -16,6 +17,7 @@ type ItemView = {
   description: string;
   terms: string;
   visible: boolean;
+  media: MediaItem[];
 };
 type CategoryOption = { id: string; label: string };
 
@@ -99,6 +101,16 @@ export function ShopItemsForm({
           ) : null}
         </div>
       </form>
+
+      {edit ? (
+        <EntityMediaEditor
+          entityType="shopItem"
+          entityId={edit.id}
+          initialMedia={edit.media}
+          title="Фотографии товара"
+          note="Первое фото — обложка карточки. Порядок меняется перетаскиванием."
+        />
+      ) : null}
 
       <ul className={styles.list}>
         {items.length === 0 ? <li className={styles.empty}>Товаров пока нет.</li> : null}
