@@ -109,7 +109,18 @@ export default async function KupitPage({ searchParams }: PageProps<"/kupit">) {
           ))}
         </nav>
 
-        {active === WORKS_TAB ? (
+        {tabs.length === 0 ? (
+          // Каталог пуст целиком: ни работ, ни товаров. Показываем это прямо, а
+          // не подсказку «снимите фильтр» из вкладки работ — фильтров тут нет и
+          // снимать нечего, гость решил бы, что сам виноват в пустом экране.
+          <div className={styles.hint}>
+            <p>
+              Каталог сейчас наполняется. Готовые работы и сертификаты скоро появятся, а пока
+              напишите или позвоните: подберём подарок и расскажем про абонементы.
+            </p>
+            <ButtonLink href="/zanyatiya">Смотреть занятия</ButtonLink>
+          </div>
+        ) : active === WORKS_TAB ? (
           <WorksTab
             works={works}
             filters={workFilters}

@@ -1,7 +1,17 @@
 #!/usr/bin/env python
 # Нормализатор наполнения: Excel «Принц и Лис» -> prisma/content/lessons.json.
-# Фаза 1: занятия, курсы, потоки курсов, привязка фото. Остальные листы (мастера,
-# расписание, праздники, статьи, события, FAQ) — следующим заходом.
+# Разбирает листы, которые студия РЕАЛЬНО заполнила: занятия, потоки курсов,
+# фото, мастера, часы работы, форматы праздников.
+#
+# Чего здесь намеренно нет. В листах «Работы», «Товары и услуги», «Отзывы»,
+# «События», «Статьи», «Бонусы», «Сотрудничество», «Расписание», «Открытые дни»,
+# «Вопросы и ответы» осталась ровно одна строка — та самая строка-пример из
+# шаблона («Первая строка под шапкой всегда выделена и это пример», лист
+# «Инструкция»). Это не данные студии, а наш собственный образец: заливать его
+# на сайт значило бы показать гостю выдуманные цены и выдуманный отзыв от
+# несуществующего человека (CLAUDE.md: выдуманные значения = санкции поиска;
+# SPEC §16: отзыв публикуется только при письменном согласии). Эти разделы
+# остаются пустыми, пока студия не пришлёт настоящие строки.
 #
 # Читает xlsx напрямую (zipfile + xml), без сторонних библиотек. Логика разбора и
 # чистки собрана здесь, в одном месте, чтобы результат можно было глазами свериться
@@ -147,6 +157,69 @@ def header_index(rows):
     return 0
 
 
+def trim_marks(cell):
+    """Чистка формата ввода: студия ставит лишние знаки по краям («:6 лет»).
+    Правим только пунктуацию по краям, сам текст не переписываем — опечатки
+    внутри («4г года») выносятся в отчёт, чтобы студия поправила их в панели."""
+    return clean(cell).strip(" :;,.-")
+
+
+def money(cell):
+    """Цена как её увидит гость. Excel отдаёт число (9000.0) — приводим к «9 000 ₽».
+    Дробное число ценой не считаем: «14.5» это явная описка ввода, а угадывать
+    (14 500? 14,5 тысячи?) нельзя — цена уходит пустой и попадает в отчёт."""
+    s = clean(cell)
+    if not s:
+        return ""
+    try:
+        value = float(s.replace(",", "."))
+    except ValueError:
+        return s  # уже написано словами: «от 4 000 ₽»
+    if value != int(value) or value < 100:
+        return ""
+    return "{:,} ₽".format(int(value)).replace(",", " ")
+
+
+WEEKDAYS = {
+    "понедельник": 1, "вторник": 2, "среда": 3, "четверг": 4,
+    "пятница": 5, "суббота": 6, "воскресенье": 7,
+}
+
+# Русские окончания, которые мешают сопоставить «Лепка» из графы мастера с
+# «Курс по ручной лепке» в названии занятия. Грубый стемминг: сравниваем корни.
+def stem(word):
+    w = re.sub(r"[«»\"'(),.]", "", word.strip().lower())
+    return w[:-2] if len(w) > 6 else (w[:-1] if len(w) > 4 else w)
+
+
+def match_lessons(cell, lesson_titles):
+    """Графа «Ведёт занятия» — свободный текст («Гончарный круг, Лепка, роспись,
+    всее что с керамикой связанно»). Занятие считаем совпавшим, только если в
+    его названии нашлись корни ВСЕХ значимых слов фрагмента: по одному слову
+    «занятия» или «керамикой» совпало бы пол-каталога. Что не сопоставилось,
+    возвращаем отдельно — связь мастера с занятием показная (FEATURES 2.7), её
+    безопаснее доставить галочками в панели, чем угадать здесь неверно."""
+    matched, unmatched = [], []
+    for part in re.split(r"[,\n;]", clean(cell)):
+        part = part.strip()
+        if len(part) < 4:
+            continue
+        roots = [stem(w) for w in re.split(r"\s+", part) if len(w) >= 4]
+        hits = []
+        if roots:
+            for t in lesson_titles:
+                plain = re.sub(r"[«»\"']", "", t.lower())
+                if all(root in plain for root in roots):
+                    hits.append(t)
+        if hits:
+            for t in hits:
+                if t not in matched:
+                    matched.append(t)
+        else:
+            unmatched.append(part)
+    return matched, unmatched
+
+
 def find_sheet(sheets, needle):
     for name in sheets:
         if needle.lower() in name.lower():
@@ -155,7 +228,10 @@ def find_sheet(sheets, needle):
 
 
 def build(sheets):
-    out = {"directions": [], "formats": [], "lessons": [], "runs": [], "media": []}
+    out = {
+        "directions": [], "formats": [], "lessons": [], "runs": [], "media": [],
+        "masters": [], "hours": [], "celebrations": [], "notes": [],
+    }
 
     # --- Категории из листа «Категории и списки» ---
     cats = find_sheet(sheets, "Категории")
@@ -245,10 +321,85 @@ def build(sheets):
                 "sort": to_int(r[5], 0) if len(r) > 5 else 0,
             })
 
+    # --- Мастера ---
+    # Колонка «Показывать» у части строк пустая: студия заполняла её не везде.
+    # Пустая ячейка тут значит «не проставили», а не «скрыть» — иначе половина
+    # реальной команды молча пропала бы с сайта. Скрываем только явное «нет».
+    lesson_titles = [l["title"] for l in out["lessons"]]
+    ms = find_sheet(sheets, "Мастера")
+    if ms:
+        mhi = header_index(ms)
+        for i, r in enumerate(ms[mhi + 1:]):
+            name = clean(r[1]) if len(r) > 1 else ""
+            if not name:
+                continue
+            show = clean(r[0]) if len(r) > 0 else ""
+            teaches, unknown = match_lessons(r[5] if len(r) > 5 else "", lesson_titles)
+            if unknown:
+                out["notes"].append(
+                    "Мастер «%s»: не разобрано в графе «Ведёт занятия» — %s" % (name, "; ".join(unknown))
+                )
+            out["masters"].append({
+                "name": name,
+                "speciality": trim_marks(r[2]) if len(r) > 2 else "",
+                "quote": trim_marks(r[3]) if len(r) > 3 else "",
+                "experience": trim_marks(r[4]) if len(r) > 4 else "",
+                "lessonTitles": teaches,
+                "visible": clean(show).lower() != "нет",
+                # Порядок = порядок строк в таблице. Колонку «Порядок» студия
+                # заполнила только у первой строки, и смешивать её с индексами
+                # значит получить двух мастеров с одним номером.
+                "sort": i,
+            })
+
+    # --- Часы работы ---
+    hs = find_sheet(sheets, "Часы")
+    if hs:
+        hhi = header_index(hs)
+        for r in hs[hhi + 1:]:
+            day = clean(r[0]) if len(r) > 0 else ""
+            weekday = WEEKDAYS.get(day.lower())
+            if not weekday:
+                continue
+            out["hours"].append({
+                "weekday": weekday,
+                "opensAt": clean(r[1]) if len(r) > 1 else "",
+                "closesAt": clean(r[2]) if len(r) > 2 else "",
+                "dayOff": yes(r[3]) if len(r) > 3 else False,
+            })
+
+    # --- Форматы праздников ---
+    cs = find_sheet(sheets, "Праздники")
+    if cs:
+        chi = header_index(cs)
+        for i, r in enumerate(cs[chi + 1:]):
+            title = clean(r[1]) if len(r) > 1 else ""
+            if not title:
+                continue
+            price = money(r[3]) if len(r) > 3 else ""
+            if not price:
+                out["notes"].append("Праздник «%s»: не разобрана цена «%s» — нужен текст вида «от 9 000 ₽»"
+                                    % (title, clean(r[3]) if len(r) > 3 else ""))
+            out["celebrations"].append({
+                "title": title,
+                "intro": clean(r[2]) if len(r) > 2 else "",
+                "priceHint": price,
+                "steps": lines(r[4]) if len(r) > 4 else [],
+                "includes": lines(r[5]) if len(r) > 5 else [],
+                "visible": clean(r[0]).lower() != "нет" if len(r) > 0 else True,
+                "sort": to_int(r[6], i) if len(r) > 6 else i,
+            })
+
     return out
 
 
 def main():
+    # Консоль Windows по умолчанию cp1251 и падает на «₽» в отчёте (UnicodeEncodeError),
+    # уже ПОСЛЕ записи JSON: молча терялся список вопросов студии. Печатаем в utf-8,
+    # неотображаемое заменяем, чтобы вывод не ронял импорт.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     src = sys.argv[1]
     dst = sys.argv[2]
     sheets = load_sheets(src)
@@ -259,10 +410,15 @@ def main():
           "formats:", len(data["formats"]),
           "lessons:", len(data["lessons"]),
           "runs:", len(data["runs"]),
-          "media:", len(data["media"]))
+          "media:", len(data["media"]),
+          "masters:", len(data["masters"]),
+          "hours:", len(data["hours"]),
+          "celebrations:", len(data["celebrations"]))
     unmatched = [r["rawTitle"] for r in data["runs"] if not r["matched"]]
     if unmatched:
         print("ПОТОКИ без сопоставления с занятием:", unmatched)
+    for note in data["notes"]:
+        print("ВОПРОС СТУДИИ:", note)
 
 
 if __name__ == "__main__":

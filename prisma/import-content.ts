@@ -1,9 +1,19 @@
 // prisma/import-content.ts
 // Импорт реального наполнения студии из prisma/content/lessons.json + папки фото.
-// Фаза 1: направления/форматы, занятия и их состав, потоки курсов, галереи фото.
-// Повторяемый и идемпотентный: пересоздаёт домен занятий целиком, поэтому новую
-// версию таблицы можно залить поверх. Мастера, расписание, праздники и прочее —
-// следующим заходом.
+// Заливает всё, что студия реально заполнила в таблице: направления и форматы,
+// занятия с составом, потоки курсов, галереи фото, мастеров, часы работы,
+// форматы праздников, справочники каталога «Купить».
+//
+// И столь же важное: СНОСИТ демо-наполнение разделов, которых студия не
+// прислала (работы, товары, отзывы, события, статьи, бонусы, сотрудничество,
+// расписание, открытые дни). Демо-данные придуманы для разработки: выдуманные
+// работы с ценами и отзывы от несуществующих гостей на боевом сайте — это и
+// санкции поиска (CLAUDE.md), и публикация отзыва без согласия (SPEC §16).
+// Пустой раздел честнее: страницы этих разделов показывают «пока пусто», а
+// пустая категория и вовсе не выводится.
+//
+// Повторяемый и идемпотентный: пересоздаёт домен целиком, поэтому новую версию
+// таблицы можно залить поверх.
 //
 // Запуск: npm run import:content -- "<путь к папке Фото>"
 // (папка с исходными jpg; имена файлов должны совпадать с листом «Фото и видео»).
@@ -63,7 +73,45 @@ type RunIn = {
   visible: boolean;
 };
 type MediaIn = { lessonTitle: string; kind: string; file: string; alt: string; sort: number };
-type Content = { lessons: LessonIn[]; runs: RunIn[]; media: MediaIn[] };
+type MasterIn = {
+  name: string;
+  speciality: string;
+  quote: string;
+  experience: string;
+  lessonTitles: string[];
+  visible: boolean;
+  sort: number;
+};
+type HoursIn = { weekday: number; opensAt: string; closesAt: string; dayOff: boolean };
+type CelebrationIn = {
+  title: string;
+  intro: string;
+  priceHint: string;
+  steps: string[];
+  includes: string[];
+  visible: boolean;
+  sort: number;
+};
+type Content = {
+  lessons: LessonIn[];
+  runs: RunIn[];
+  media: MediaIn[];
+  masters: MasterIn[];
+  hours: HoursIn[];
+  celebrations: CelebrationIn[];
+  notes: string[];
+};
+
+// Справочник каталога «Купить». Плоский список студии («Сертификаты», «Курсы и
+// абонементы», «Глина и массы», «Глазури и ангобы», «Инструмент», «Обжиг»)
+// раскладывается по SPEC §9: материалы керамистам это подкатегории второго
+// уровня внутри «Керамистам». Сам раздел «Керамистам» в списке студии не
+// назван — берём его из SPEC, где он один из трёх обязательных.
+const SHOP_TREE: { title: string; children: string[] }[] = [
+  { title: "Сертификаты", children: [] },
+  { title: "Курсы и абонементы", children: [] },
+  { title: "Керамистам", children: ["Глина и массы", "Глазури и ангобы", "Инструмент", "Обжиг"] },
+];
 
 /** Показатель готовности, FEATURES.md 2.2: семь признаков, каждый даёт долю.
  *  Привязки работ в импорте нет, поэтому её признак всегда пуст. */
@@ -135,8 +183,29 @@ async function main() {
   //    потом занятия (каскадят состав/потоки/медиа/связи с мастерами), потом
   //    категории направлений и форматов. Статьи и заявки на занятие обнуляются.
   await prisma.scheduleSlot.deleteMany({});
+  await prisma.article.deleteMany({});
   await prisma.lesson.deleteMany({});
   await prisma.category.deleteMany({ where: { kind: { in: ["lesson_direction", "lesson_format"] } } });
+
+  // 1a. Сносим демо-наполнение разделов, по которым студия не прислала данных.
+  //     В таблице там осталась только строка-пример из шаблона (см. шапку
+  //     scripts/content/normalize.py), а в базе с этапов 5-7 лежат придуманные
+  //     для разработки работы, товары, отзывы и события. На боевом сайте это
+  //     выдуманные цены и отзыв от несуществующего гостя — убираем.
+  await prisma.work.deleteMany({});
+  await prisma.shopItem.deleteMany({});
+  // Справочники работ и каталога пересоздаются ниже из листа «Категории и списки»,
+  // поэтому чистим и их: иначе демо-значения столкнутся по уникальному (kind, slug).
+  await prisma.category.deleteMany({
+    where: { kind: { in: ["shop", "work_author", "work_material"] } },
+  });
+  await prisma.review.deleteMany({});
+  await prisma.event.deleteMany({});
+  await prisma.bonusLevel.deleteMany({});
+  await prisma.partnership.deleteMany({});
+  await prisma.freeDay.deleteMany({});
+  await prisma.celebration.deleteMany({});
+  await prisma.master.deleteMany({});
 
   // 2. Категории из фактически используемых занятиями значений.
   const dirTitles = [...new Set(content.lessons.map((l) => l.directionTitle).filter(Boolean))];
@@ -246,11 +315,115 @@ async function main() {
     if (imgOk % 20 === 0) console.log(`  обработано фото: ${imgOk}`);
   }
 
+  // 6. Мастера и что они ведут. Связь показная (FEATURES 2.7): на запись не
+  //    влияет, поэтому неразобранные строки графы «Ведёт занятия» не выдумываем
+  //    — они выведены отчётом нормализатора, студия доставит галочками в панели.
+  const masterSlugs = new Set<string>();
+  for (const m of content.masters) {
+    let slug = slugify(m.name) || `master-${masterSlugs.size + 1}`;
+    let n = 2;
+    while (masterSlugs.has(slug)) slug = `${slugify(m.name)}-${n++}`;
+    masterSlugs.add(slug);
+
+    const lessonIds = m.lessonTitles
+      .map((t) => lessonId.get(t.trim()))
+      .filter((id): id is string => Boolean(id));
+
+    await prisma.master.create({
+      data: {
+        name: m.name,
+        slug,
+        speciality: m.speciality,
+        quote: m.quote || null,
+        experience: m.experience || null,
+        visible: m.visible,
+        sort: m.sort,
+        lessons: { create: lessonIds.map((id) => ({ lessonId: id })) },
+      },
+    });
+  }
+
+  // 7. Часы работы: апсерт по дню недели, как действие панели (schedule.hours.save).
+  for (const h of content.hours) {
+    await prisma.studioHours.upsert({
+      where: { weekday: h.weekday },
+      update: { opensAt: h.opensAt, closesAt: h.closesAt, dayOff: h.dayOff },
+      create: { weekday: h.weekday, opensAt: h.opensAt, closesAt: h.closesAt, dayOff: h.dayOff },
+    });
+  }
+
+  // 8. Форматы праздников.
+  const celebrationSlugs = new Set<string>();
+  for (const c of content.celebrations) {
+    let slug = slugify(c.title) || `format-${celebrationSlugs.size + 1}`;
+    let n = 2;
+    while (celebrationSlugs.has(slug)) slug = `${slugify(c.title)}-${n++}`;
+    celebrationSlugs.add(slug);
+
+    await prisma.celebration.create({
+      data: {
+        title: c.title,
+        slug,
+        intro: c.intro,
+        priceHint: c.priceHint,
+        visible: c.visible,
+        sort: c.sort,
+        steps: { create: c.steps.map((text, s) => ({ text, sort: s })) },
+        includes: { create: c.includes.map((text, s) => ({ text, sort: s })) },
+      },
+    });
+  }
+
+  // 9. Справочники каталога «Купить»: авторы и материалы работ, разделы.
+  //    Сущностей в них пока нет, на сайте пустая категория не показывается —
+  //    это заготовка, чтобы студия могла завести работы и товары в панели.
+  for (const [i, title] of ["Елизаветы", "Мастеров"].entries()) {
+    await prisma.category.create({
+      data: { title, slug: slugify(title), kind: "work_author", visible: true, sort: i },
+    });
+  }
+  for (const [i, title] of dirTitles.entries()) {
+    await prisma.category.create({
+      data: { title, slug: slugify(title), kind: "work_material", visible: true, sort: i },
+    });
+  }
+  for (const [i, node] of SHOP_TREE.entries()) {
+    const parent = await prisma.category.create({
+      data: {
+        title: node.title,
+        slug: slugify(node.title),
+        kind: "shop",
+        display: "cards",
+        visible: true,
+        sort: i,
+      },
+    });
+    for (const [j, child] of node.children.entries()) {
+      await prisma.category.create({
+        data: {
+          title: child,
+          slug: slugify(child),
+          kind: "shop",
+          parentId: parent.id,
+          visible: true,
+          sort: j,
+        },
+      });
+    }
+  }
+
   console.log(
     `Готово. Направления: ${dirId.size}, форматы: ${fmtId.size}, занятия: ${lessonId.size}, ` +
-      `потоки: ${runsCreated}, фото: ${imgOk}${missing.length ? `, не найдено файлов: ${missing.length}` : ""}`,
+      `потоки: ${runsCreated}, фото: ${imgOk}, мастера: ${content.masters.length}, ` +
+      `часы: ${content.hours.length}, праздники: ${content.celebrations.length}` +
+      `${missing.length ? `, не найдено файлов: ${missing.length}` : ""}`,
   );
   if (missing.length) console.warn("Нет файлов:", missing.slice(0, 15));
+  console.log(
+    "Пустыми остались разделы, по которым студия не прислала данных: работы, товары," +
+      " отзывы, события, статьи, бонусы, сотрудничество, сетка расписания, открытые дни.",
+  );
+  for (const note of content.notes) console.log("ВОПРОС СТУДИИ:", note);
 }
 
 main()

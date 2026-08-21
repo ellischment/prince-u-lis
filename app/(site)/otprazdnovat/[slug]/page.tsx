@@ -71,7 +71,10 @@ export default async function CelebrationPage({ params }: PageProps<"/otprazdnov
 
           <aside className={styles.side}>
             <div className={styles.priceBox}>
-              <p className={styles.price}>{item.priceHint}</p>
+              {/* Ориентир цены выводится, только если он есть: пустое поле не
+                  показываем (CLAUDE.md, SEO.md — выдуманное или пустое значение
+                  в разметке цены вредит выдаче). Смету всё равно считаем под повод. */}
+              {item.priceHint ? <p className={styles.price}>{item.priceHint}</p> : null}
               <p className={styles.priceNote}>Точную смету считаем под ваш повод.</p>
             </div>
             <div className={styles.formBox}>
