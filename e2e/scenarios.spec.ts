@@ -208,3 +208,59 @@ test("загруженное фото работы доезжает до кар�
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
   await expect(page.locator("main img").first()).toBeVisible();
 });
+
+// Приёмка шага 8.1. Проверка из FEATURES.md 1.9: «Отключить JavaScript в
+// браузере и пройти по списку через адреса. Все элементы доступны» — кнопка,
+// сделанная только на JavaScript, отдала бы роботу первую порцию и ничего
+// больше. Поэтому весь сценарий идёт с выключенным JavaScript.
+test.describe("блог без JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("список, вторая страница и статья доступны по ссылкам", async ({ page }) => {
+    await page.goto("/blog");
+    await expect(page.getByRole("heading", { level: 1, name: "Статьи студии" })).toBeVisible();
+    // Закреплённая статья идёт первой (SPEC §10).
+    const cards = page.locator("article");
+    await expect(cards.first()).toContainText("Закреплено");
+    await expect(cards).toHaveCount(6); // порция статей, FEATURES 1.9
+
+    // Кнопка «показать ещё» дополняет адреса: она ссылка с параметром, поэтому
+    // работает и без JavaScript.
+    await page.getByRole("link", { name: "Показать ещё" }).click();
+    await expect(page).toHaveURL(/statei=12/);
+    await expect(page.locator("article")).toHaveCount(8);
+
+    // Настоящий адрес второй страницы: робот доходит по ссылке.
+    await page.goto("/blog");
+    await page.getByRole("navigation", { name: "Страницы блога" }).getByRole("link", { name: "2" }).click();
+    await expect(page).toHaveURL(/\/blog\/2$/);
+    const second = page.locator("article");
+    await expect(second).toHaveCount(2);
+
+    // Со второй страницы открывается статья: она отрисована на сервере.
+    const title = await second.first().getByRole("heading").textContent();
+    await second.first().getByRole("link").first().click();
+    await expect(page.getByRole("heading", { level: 1, name: title! })).toBeVisible();
+    // H1 на странице ровно один, дальше заголовки из разметки (SPEC §10).
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator("main h2").first()).toBeVisible();
+  });
+});
+
+test("черновик не показывается на сайте и не попадает в карту сайта", async ({ request }) => {
+  const draft = await request.get("/blog/chernovik-pro-zimnie-nabory");
+  expect(draft.status()).toBe(404);
+
+  const sitemap = await request.get("/sitemap.xml");
+  const xml = await sitemap.text();
+  expect(xml).toContain("/blog/chto-nadet-na-goncharnyy-krug");
+  expect(xml).not.toContain("chernovik-pro-zimnie-nabory");
+});
+
+test("старый адрес статьи отвечает постоянным редиректом", async ({ request }) => {
+  // Запись переезда делает панель при смене slug (lib/redirects.ts), в демо-сиде
+  // она заведена заранее: редактора статей ещё нет (шаг 8.2).
+  const moved = await request.get("/blog/staryy-adres-stati", { maxRedirects: 0 });
+  expect(moved.status()).toBe(308); // Next отдаёт 308, поисковики читают как 301
+  expect(moved.headers()["location"]).toContain("/blog/chto-nadet-na-goncharnyy-krug");
+});

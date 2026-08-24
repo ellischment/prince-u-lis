@@ -3,6 +3,7 @@
 // и SPEC.md раздел 3 «При смене slug старый адрес отвечает редиректом 301».
 
 import type { Prisma } from "@prisma/client";
+import { prisma } from "./db";
 
 /**
  * Записывает редирект со старого адреса на новый. Вызывается внутри той же
@@ -24,4 +25,18 @@ export async function recordSlugRedirect(
     update: { toPath },
     create: { fromPath, toPath },
   });
+}
+
+/**
+ * Куда ведёт старый адрес, если он был переименован. Читается страницей перед
+ * тем, как отдать 404: адрес, по которому уже ходят ссылки и поисковик, должен
+ * отвечать переездом, а не пустотой.
+ *
+ * Без кэша намеренно. Запрос случается только на несуществующем адресе, то есть
+ * редко, а кэшировать его пришлось бы по тегу той сущности, которой у адреса
+ * уже нет.
+ */
+export async function findRedirect(fromPath: string): Promise<string | null> {
+  const row = await prisma.redirect.findUnique({ where: { fromPath } });
+  return row?.toPath ?? null;
 }

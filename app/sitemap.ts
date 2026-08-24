@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getArticleSlugs } from "@/lib/articles";
 import { getCelebrationSlugs } from "@/lib/celebrations";
 import { COURSE_FORMAT_SLUG } from "@/lib/constants";
 import { getEventSlugs } from "@/lib/events";
@@ -12,14 +13,16 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 // Карта сайта. Адреса добавляются сюда автоматически: SPEC.md раздел 3.
 // Разделы, которых ещё нет, не выводятся: ссылка на 404 вредит выдаче.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [lessons, shopSlugs, celebrations, partnerships, masters, events] = await Promise.all([
-    getLessonSlugs(),
-    getShopSlugs(),
-    getCelebrationSlugs(),
-    getPartnershipSlugs(),
-    getMasterSlugs(),
-    getEventSlugs(),
-  ]);
+  const [lessons, shopSlugs, celebrations, partnerships, masters, events, articles] =
+    await Promise.all([
+      getLessonSlugs(),
+      getShopSlugs(),
+      getCelebrationSlugs(),
+      getPartnershipSlugs(),
+      getMasterSlugs(),
+      getEventSlugs(),
+      getArticleSlugs(),
+    ]);
 
   // Курс попадает в карту ровно один раз и только как /kursy/[slug]:
   // ARCHITECTURE.md раздел 4. Его адрес в /zanyatiya отдаёт 301, а редирект
@@ -90,6 +93,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       : []),
     ...events.map((e) => ({
       url: `${SITE_URL}/sobytiya/${e.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+    // Этап 8: блог. getArticleSlugs отдаёт только опубликованные статьи —
+    // черновик и снятая с сайта в карту не попадают (SEO.md раздел 12).
+    // Страницы списка (/blog/2 и далее) в карту не идут: робот доходит до них
+    // по ссылкам постраничной навигации, а их состав меняется с каждой
+    // публикацией.
+    ...(articles.length > 0
+      ? [{ url: `${SITE_URL}/blog`, changeFrequency: "weekly" as const, priority: 0.7 }]
+      : []),
+    ...articles.map((a) => ({
+      url: `${SITE_URL}/blog/${a.slug}`,
+      lastModified: a.updatedAt,
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),

@@ -1,0 +1,94 @@
+/* Карточка статьи. Макет site-4-2-2, блок `.bpost`. */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  width: 100%;
+  transition:
+    transform 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--line2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Закреплённая статья обведена золотом (макет `.bpost.pinned`). */
+.pinned {
+  border-color: var(--gold);
+}
+
+.link {
+  display: block;
+  color: inherit;
+}
+
+.ph {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  /* Заглушка из макета: сырой hex разрешён в gradient (DESIGN-LOCK). */
+  background: linear-gradient(150deg, #1d3457, #0f2036);
+  display: grid;
+  place-items: center;
+}
+
+.photo {
+  object-fit: cover;
+}
+
+.mark {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 40px;
+  color: var(--gold);
+  opacity: 0.35;
+}
+
+.body {
+  padding: 16px 18px;
+}
+
+.pin {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 21px;
+  line-height: 1.25;
+  color: var(--paper);
+}
+
+.excerpt {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.date {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--fox-soft);
+}
+
+.link:hover .title {
+  color: var(--cream);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+}

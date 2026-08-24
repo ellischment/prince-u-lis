@@ -329,3 +329,17 @@
     max-width: 320px;
   }
 }
+
+/* Блок блога на главной. Макет site-4-2-2: `.blog-grid` — первая карточка шире
+   остальных (закреплённая статья идёт первой), на узком экране одна колонка. */
+.blogGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 920px) {
+  .blogGrid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+}

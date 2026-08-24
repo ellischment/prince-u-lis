@@ -184,6 +184,9 @@ async function main() {
   //    категории направлений и форматов. Статьи и заявки на занятие обнуляются.
   await prisma.scheduleSlot.deleteMany({});
   await prisma.article.deleteMany({});
+  // Вместе со статьями уходят переезды их адресов: демо-редирект вёл бы на
+  // страницу, которой больше нет, то есть на 404 вместо статьи.
+  await prisma.redirect.deleteMany({ where: { fromPath: { startsWith: "/blog/" } } });
   await prisma.lesson.deleteMany({});
   await prisma.category.deleteMany({ where: { kind: { in: ["lesson_direction", "lesson_format"] } } });
 

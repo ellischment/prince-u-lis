@@ -806,6 +806,9 @@ async function seedBonus(): Promise<void> {
 async function seedArticles(lessonIds: Map<string, string>): Promise<void> {
   const now = new Date();
 
+  // Статей нужно больше одной порции: список отдаётся по шесть (FEATURES 1.9),
+  // и без второй страницы адрес /blog/2 нечем проверить. Один черновик — чтобы
+  // видеть, что он не показывается на сайте и не попадает в карту сайта.
   const articles = [
     {
       title: "Что надеть на гончарный круг",
@@ -814,6 +817,7 @@ async function seedArticles(lessonIds: Map<string, string>): Promise<void> {
       pinned: true,
       lessonKey: "krug-start",
       days: 3,
+      draft: false,
     },
     {
       title: "Почему первая работа всегда кривая",
@@ -822,6 +826,7 @@ async function seedArticles(lessonIds: Map<string, string>): Promise<void> {
       pinned: false,
       lessonKey: "lepka-ruki",
       days: 10,
+      draft: false,
     },
     {
       title: "Как выбрать подарок тому, у кого всё есть",
@@ -830,6 +835,61 @@ async function seedArticles(lessonIds: Map<string, string>): Promise<void> {
       pinned: false,
       lessonKey: null,
       days: 21,
+      draft: false,
+    },
+    {
+      title: "Куда сходить вдвоём, если надоели рестораны",
+      slug: "kuda-shodit-vdvoem",
+      excerpt: "Вечер, из которого уносят не фотографию, а вещь, сделанную вместе.",
+      pinned: false,
+      lessonKey: null,
+      days: 28,
+      draft: false,
+    },
+    {
+      title: "«Я не умею рисовать»: почему это не проблема",
+      slug: "ya-ne-umeyu-risovat",
+      excerpt: "Про страх чистого листа и почему он проходит на первом занятии.",
+      pinned: false,
+      lessonKey: null,
+      days: 35,
+      draft: false,
+    },
+    {
+      title: "Сколько сохнет глина и почему кружку не отдают сразу",
+      slug: "skolko-sohnet-glina",
+      excerpt: "Путь от сырого изделия до готовой вещи: сушка, два обжига, глазурь.",
+      pinned: false,
+      lessonKey: null,
+      days: 42,
+      draft: false,
+    },
+    {
+      title: "Керамика, живопись или витраж: с чего начать",
+      slug: "s-chego-nachat",
+      excerpt: "Три направления студии и три разных ощущения от первого занятия.",
+      pinned: false,
+      lessonKey: null,
+      days: 56,
+      draft: false,
+    },
+    {
+      title: "Как проходит день рождения в мастерской",
+      slug: "kak-prohodit-den-rozhdeniya",
+      excerpt: "По часам: встреча, работа за столами, чай и коробки с изделиями.",
+      pinned: false,
+      lessonKey: null,
+      days: 70,
+      draft: false,
+    },
+    {
+      title: "Черновик про зимние наборы",
+      slug: "chernovik-pro-zimnie-nabory",
+      excerpt: "Статья ещё пишется и на сайте показываться не должна.",
+      pinned: false,
+      lessonKey: null,
+      days: 1,
+      draft: true,
     },
   ];
 
@@ -839,14 +899,42 @@ async function seedArticles(lessonIds: Map<string, string>): Promise<void> {
         title: article.title,
         slug: article.slug,
         excerpt: article.excerpt,
-        bodyMarkdown: `## Коротко\n\n${article.excerpt}\n\n## Подробно\n\nТекст статьи готовит студия. До этого момента здесь стоит заготовка, чтобы страница была видна целиком и её можно было проверить.\n`,
+        bodyMarkdown: `## Коротко
+
+${article.excerpt}
+
+## Подробно
+
+Текст статьи готовит студия. До этого момента здесь стоит заготовка, чтобы страница была видна целиком и её можно было проверить.
+
+- первый пункт списка
+- второй пункт списка
+
+> Приходите с вопросами: мастер рядом весь визит.
+
+Подробности про форматы — на странице [занятий](/zanyatiya).
+`,
         lessonId: article.lessonKey ? (lessonIds.get(article.lessonKey) ?? null) : null,
         pinned: article.pinned,
-        status: "published",
-        publishedAt: new Date(now.getTime() - article.days * 24 * 60 * 60 * 1000),
+        status: article.draft ? "draft" : "published",
+        publishedAt: article.draft
+          ? null
+          : new Date(now.getTime() - article.days * 24 * 60 * 60 * 1000),
       },
     });
   }
+
+  // Переезд со старого адреса статьи. Пишет его панель в той же транзакции, что
+  // и смену slug (lib/redirects.ts), но редактора статей ещё нет (шаг 8.2), а
+  // отдача 301 на сайте есть уже сейчас: без этой строки её нечем проверить.
+  await prisma.redirect.upsert({
+    where: { fromPath: "/blog/staryy-adres-stati" },
+    update: { toPath: "/blog/chto-nadet-na-goncharnyy-krug" },
+    create: {
+      fromPath: "/blog/staryy-adres-stati",
+      toPath: "/blog/chto-nadet-na-goncharnyy-krug",
+    },
+  });
 }
 
 async function seedEvents(): Promise<void> {
@@ -987,6 +1075,7 @@ async function seedTexts(): Promise<void> {
         { id: "team", visible: true },
         { id: "works", visible: true },
         { id: "events", visible: true },
+        { id: "blog", visible: true },
         { id: "reviews", visible: true },
         { id: "contacts", visible: true },
       ],

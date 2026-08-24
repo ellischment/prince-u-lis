@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
+import { ArticleCard } from "@/components/ArticleCard";
 import { ButtonLink } from "@/components/Button";
 import { Carousel } from "@/components/Carousel";
 import { EventCard } from "@/components/EventCard";
@@ -16,6 +17,7 @@ import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
 import { TaskOption } from "@/components/TaskOption";
 import { TASK_TAGS, type TaskTag } from "@/lib/constants";
+import { HOME_ARTICLES, getPublishedArticles } from "@/lib/articles";
 import { getEvents, pickHomeEvents } from "@/lib/events";
 import { getMasters } from "@/lib/masters";
 import { getPublishedReviews } from "@/lib/reviews";
@@ -92,6 +94,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     masters,
     homeWorks,
     allEvents,
+    articles,
     reviews,
   ] = await Promise.all([
     getHeroTexts(),
@@ -108,10 +111,13 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     getMasters(),
     getHomeWorks(),
     getEvents(),
+    getPublishedArticles(),
     getPublishedReviews(),
   ]);
 
   const homeEvents = pickHomeEvents(allEvents);
+  // Три статьи, закреплённая первой: порядок задан чтением (SPEC §5 п.9).
+  const homeArticles = articles.slice(0, HOME_ARTICLES);
 
   // Расписание на главной (SPEC р.5 п.5): сегодняшний день недели и ближайший
   // будущий поток среди всех курсов — та же логика, что на /raspisanie.
@@ -411,6 +417,33 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               </div>
             ))}
           </Carousel>
+        </Section>
+      ) : null,
+
+    blog:
+      homeArticles.length > 0 ? (
+        <Section
+          key="blog"
+          title="Почитать перед визитом"
+          action={
+            <ButtonLink href="/blog" variant="ghost">
+              Все статьи
+            </ButtonLink>
+          }
+        >
+          <div className={styles.blogGrid}>
+            {homeArticles.map((article) => (
+              <ArticleCard
+                key={article.id}
+                title={article.title}
+                href={`/blog/${article.slug}`}
+                excerpt={article.excerpt}
+                cover={article.cover}
+                pinned={article.pinned}
+                publishedAt={article.publishedAt}
+              />
+            ))}
+          </div>
         </Section>
       ) : null,
 
