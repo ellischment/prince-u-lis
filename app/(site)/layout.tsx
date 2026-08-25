@@ -26,7 +26,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
   };
 
   return (
-    <div style={buttonVars}>
+    <div className="site-shell" style={buttonVars}>
       <a className="skip-link" href="#main">
         Перейти к содержанию
       </a>

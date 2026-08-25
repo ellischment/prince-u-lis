@@ -121,6 +121,25 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   top: 16px;
 }
 
+/* Оболочка публичных страниц (app/(site)/layout.tsx). Держит подвал внизу
+   экрана на коротких страницах: пустой блог, 404, тонкий раздел. Без этого под
+   подвалом оставалась полоса фона --deep поверх более светлого --navy подвала,
+   и на широком экране она читалась как посторонний блок внизу страницы
+   (DESIGN-LOCK, «Проверка низа страницы»).
+   dvh, а не vh: на телефоне адресная строка съезжает и vh даёт лишний скролл. */
+.site-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Растягивается содержимое страницы, а не шапка с подвалом. Правило нарочно
+   привязано к оболочке сайта: в панели свой флекс-контейнер со своим main. */
+.site-shell > main {
+  flex: 1 0 auto;
+}
+
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
 section { padding: 62px 0; position: relative; }
 
