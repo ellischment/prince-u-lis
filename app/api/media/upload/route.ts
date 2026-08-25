@@ -35,13 +35,17 @@ export async function POST(request: Request): Promise<Response> {
   // без владельца до сохранения отзыва (lib/media-entities.ts занимается только
   // сущностями-галереями). Файл не переданному entityId не требует: делается
   // независимо, id подставляется в форму отзыва перед сохранением.
-  if (entityTypeRaw === "review") {
+  // Обложка отзыва и статьи: обе — одиночная ссылка на Media без обратного
+  // поля у Media (Review.mediaId, Article.coverId; SPEC §2). Это один кадр без
+  // владельца до сохранения записи, id подставляется в форму перед сохранением.
+  // Галереями (lib/media-entities.ts) они не являются, поэтому идут отдельно.
+  if (entityTypeRaw === "review" || entityTypeRaw === "article") {
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "Файл не передан" }, { status: 400 });
     }
-    let processedReview;
+    let processedSingle;
     try {
-      processedReview = await processUploadedImage(file);
+      processedSingle = await processUploadedImage(file);
     } catch (error: unknown) {
       const message = error instanceof MediaValidationError ? error.message : "Не удалось обработать файл";
       return NextResponse.json({ error: message }, { status: 400 });
@@ -49,14 +53,14 @@ export async function POST(request: Request): Promise<Response> {
     const media = await prisma.media.create({
       data: {
         kind: "image",
-        path: processedReview.path,
+        path: processedSingle.path,
         alt: typeof alt === "string" && alt.trim() ? alt.trim() : null,
-        width: processedReview.width,
-        height: processedReview.height,
-        bytes: processedReview.bytes,
+        width: processedSingle.width,
+        height: processedSingle.height,
+        bytes: processedSingle.bytes,
       },
     });
-    await writeAudit({ userId: user.id, action: "media.upload", entity: "review", payload: { mediaId: media.id, kind: "image" } });
+    await writeAudit({ userId: user.id, action: "media.upload", entity: entityTypeRaw, payload: { mediaId: media.id, kind: "image" } });
     return NextResponse.json({
       id: media.id,
       path: media.path,

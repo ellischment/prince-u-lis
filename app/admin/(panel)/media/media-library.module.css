@@ -1,0 +1,108 @@
+/* Раздел «Фото и видео»: сводка и таблица использования. */
+
+.lead {
+  max-width: 70ch;
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+}
+
+.statNum {
+  font-size: 24px;
+  color: var(--paper);
+}
+
+.statLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.note {
+  max-width: 70ch;
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.empty {
+  color: var(--muted);
+}
+
+.fileCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.thumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.videoMark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--card2);
+  color: var(--cream);
+}
+
+.fileName {
+  color: var(--paper);
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.usage {
+  color: var(--paper);
+  font-size: 14px;
+}
+
+.usageSection {
+  color: var(--muted);
+}
+
+.usageLink {
+  color: var(--cream);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.usageLink:hover {
+  color: var(--paper);
+}
+
+.size,
+.date {
+  color: var(--muted);
+  white-space: nowrap;
+}

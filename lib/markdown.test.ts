@@ -84,3 +84,23 @@ describe("safeUrl", () => {
     expect(safeUrl("")).toBeNull();
   });
 });
+
+describe("renderMarkdown видео", () => {
+  it("абзац из одной ссылки на площадку становится плеером", () => {
+    const html = renderMarkdown("Текст\n\nhttps://rutube.ru/video/abc123/\n");
+    expect(html).toContain('class="video-embed"');
+    expect(html).toContain("rutube.ru/play/embed/abc123");
+    expect(html).toContain("<p>Текст</p>");
+  });
+
+  it("ссылка на площадку внутри абзаца остаётся обычной ссылкой", () => {
+    const html = renderMarkdown("Смотрите тут https://youtu.be/xyz и дальше текст");
+    expect(html).not.toContain("video-embed");
+    expect(html).toContain('href="https://youtu.be/xyz"');
+  });
+
+  it("посторонняя ссылка плеером не становится", () => {
+    const html = renderMarkdown("https://example.com/video/1\n");
+    expect(html).not.toContain("video-embed");
+  });
+});

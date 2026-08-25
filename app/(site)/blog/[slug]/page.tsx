@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ButtonLink } from "@/components/Button";
-import { Container } from "@/components/Container";
+import { ArticleView } from "@/components/ArticleView";
 import {
   ARTICLES_PAGE_SIZE,
   getArticleBySlug,
@@ -12,21 +9,10 @@ import {
   pageCount,
   parsePageSegment,
 } from "@/lib/articles";
-import { lessonHref } from "@/lib/courses";
-import { renderMarkdown } from "@/lib/markdown";
 import { findRedirect } from "@/lib/redirects";
-import { STUDIO_NAME } from "@/lib/studio";
 import { BlogList } from "../BlogList";
-import styles from "../blog.module.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-
-const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "Europe/Moscow",
-});
 
 /**
  * Один адрес обслуживает и статью, и страницу списка: `/blog/2` требует SPEC §3
@@ -114,8 +100,6 @@ export default async function ArticlePage({ params }: PageProps<"/blog/[slug]">)
     notFound();
   }
 
-  const body = renderMarkdown(article.bodyMarkdown);
-
   // Разметка Article по SEO.md раздел 6. Поле, которое нечем заполнить, не
   // выводится: выдуманные значения приводят к санкциям поисковика.
   const schema: Record<string, unknown> = {
@@ -142,56 +126,7 @@ export default async function ArticlePage({ params }: PageProps<"/blog/[slug]">)
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <Container>
-        <div className={styles.back}>
-          <ButtonLink href="/blog" variant="ghost">
-            ← Все статьи
-          </ButtonLink>
-        </div>
-
-        <article className={styles.article}>
-          <header className={styles.head}>
-            <p className={styles.eyebrow}>{article.topic ?? "Блог"}</p>
-            <h1 className={styles.h1}>{article.title}</h1>
-            <p className={styles.meta}>
-              {article.publishedAt ? (
-                <time dateTime={article.publishedAt.toISOString().slice(0, 10)}>
-                  {DATE_FMT.format(article.publishedAt)}
-                </time>
-              ) : null}
-              {article.publishedAt ? " · " : ""}
-              Студия «{STUDIO_NAME}»
-            </p>
-            <p className={styles.excerpt}>{article.excerpt}</p>
-          </header>
-
-          {article.cover?.path ? (
-            <div className={styles.cover}>
-              <Image
-                src={article.cover.path}
-                alt={article.cover.alt ?? article.title}
-                width={article.cover.width ?? 1600}
-                height={article.cover.height ?? 900}
-                sizes="(max-width: 800px) 100vw, 760px"
-                priority
-              />
-            </div>
-          ) : null}
-
-          {/* Разметка собрана на сервере из Markdown белым списком тегов:
-              чужой HTML внутрь не попадает, см. lib/markdown.ts. */}
-          <div className={styles.prose} dangerouslySetInnerHTML={{ __html: body }} />
-        </article>
-
-        {article.lesson ? (
-          <div className={styles.related}>
-            <p className={styles.relatedLabel}>Занятие по теме</p>
-            <Link className={styles.relatedLink} href={lessonHref(article.lesson)}>
-              {article.lesson.title}
-            </Link>
-          </div>
-        ) : null}
-      </Container>
+      <ArticleView article={article} />
     </main>
   );
 }

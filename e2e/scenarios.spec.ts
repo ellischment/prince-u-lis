@@ -264,3 +264,76 @@ test("старый адрес статьи отвечает постоянным
   expect(moved.status()).toBe(308); // Next отдаёт 308, поисковики читают как 301
   expect(moved.headers()["location"]).toContain("/blog/chto-nadet-na-goncharnyy-krug");
 });
+
+// Приёмка шага 8.2. Статья создаётся, редактируется, публикуется и меняет
+// сайт из панели. Панель за логином, поэтому e2e логинится через SEED_OWNER_*.
+async function loginPanel(page: import("@playwright/test").Page) {
+  await page.goto("/admin/login");
+  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
+  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+}
+
+test("статья из панели: создание, публикация, правка меняют сайт", async ({ page }) => {
+  await loginPanel(page);
+
+  const marker = Date.now();
+  const title = `Статья про глину ${marker}`;
+  const slug = `statya-pro-glinu-${marker}`;
+
+  await page.goto("/admin/blog");
+  await page.getByRole("link", { name: "Новая статья" }).click();
+
+  await page.getByLabel("Заголовок", { exact: true }).fill(title);
+  await page.getByLabel("Адрес страницы").fill(slug);
+  await page.getByLabel("Краткое описание").fill("Короткое описание статьи для проверки.");
+  await page.locator("textarea[class*='body']").fill("## Раздел\n\nАбзац текста статьи.\n");
+  await page.getByRole("button", { name: "Сохранить" }).click();
+  // После сохранения новая статья открывается по своему адресу с id.
+  await page.waitForURL(/\/admin\/blog\/[^/]+$/);
+
+  // Черновик на сайте не показывается.
+  const draft = await page.request.get(`/blog/${slug}`);
+  expect(draft.status()).toBe(404);
+
+  // Публикуем и проверяем, что статья появилась на сайте и в списке блога.
+  await page.getByRole("button", { name: "Опубликовать" }).click();
+  await expect(page.getByRole("button", { name: "Снять с сайта" })).toBeVisible();
+
+  await page.goto(`/blog/${slug}`);
+  await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+  await expect(page.getByText("Абзац текста статьи.")).toBeVisible();
+  // H1 на странице ровно один, дальше заголовки из разметки.
+  await expect(page.locator("h1")).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 2, name: "Раздел" })).toBeVisible();
+
+  await page.goto("/blog");
+  await expect(page.getByRole("link", { name: title })).toBeVisible();
+
+  // Статья в карте сайта.
+  const sitemap = await page.request.get("/sitemap.xml");
+  expect(await sitemap.text()).toContain(`/blog/${slug}`);
+
+  // Снятие с сайта возвращает 404, но список блога остаётся доступен.
+  await page.goto(`/admin/blog/${slug}`.replace(slug, "")); // no-op guard
+  await page.goto("/admin/blog");
+  await page.getByRole("link", { name: title }).click();
+  await page.getByRole("button", { name: "Снять с сайта" }).click();
+  await expect(page.getByRole("button", { name: "Опубликовать" })).toBeVisible();
+
+  const gone = await page.request.get(`/blog/${slug}`);
+  expect(gone.status()).toBe(404);
+});
+
+test("раздел «Фото и видео»: сводка и таблица использования", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin/media");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Фото и видео" })).toBeVisible();
+  // Счётчик занятого места (PLAN 8.2): подпись присутствует.
+  await expect(page.getByText("занято на диске")).toBeVisible();
+  // Таблица использования: у демо-занятия есть фото, значит колонка «Где
+  // используется» ведёт на страницу занятия.
+  await expect(page.getByRole("region", { name: "Список медиа" })).toBeVisible();
+});

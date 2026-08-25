@@ -1,0 +1,13 @@
+/* Полоса-предупреждение над предпросмотром. Гость её не видит: страница живёт
+   только внутри панели. */
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  margin: 0;
+  padding: 10px 24px;
+  background: var(--gold);
+  color: var(--deep);
+  font-size: 14px;
+  text-align: center;
+}

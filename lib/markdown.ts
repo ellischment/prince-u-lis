@@ -13,6 +13,7 @@
 // клиентскому предпросмотру редактора (шаг 8.2), где окно есть.
 
 import { Marked, type Tokens } from "marked";
+import { embedUrl } from "./video";
 
 /** Схемы, которые разрешены в ссылках. `javascript:` и `data:` сюда не входят. */
 const ALLOWED_SCHEMES = ["http:", "https:", "mailto:", "tel:"];
@@ -115,8 +116,35 @@ const markdown = new Marked({
       // CLAUDE.md «изображения ленивые» выполняется, webp даёт сама загрузка.
       return `<img src="${escapeHtml(url)}" alt="${escapeHtml(text ?? "")}"${titleAttr} loading="lazy" decoding="async"${srcsetOf(url)}>`;
     },
+
+    // Абзац, в котором нет ничего кроме ссылки на видео, становится плеером
+    // площадки. Так работает кнопка «видео» в редакторе (FEATURES 2.5) и так
+    // же устроено видео в остальных разделах: на сервере оно не хранится,
+    // только ссылка на VK Видео, Rutube или YouTube (SPEC §1).
+    paragraph(node: Tokens.Paragraph) {
+      const embed = soleVideoEmbed(node.tokens);
+      if (embed) {
+        return `<div class="video-embed"><iframe src="${escapeHtml(embed)}" title="Видео" loading="lazy" allowfullscreen frameborder="0"></iframe></div>\n`;
+      }
+      return `<p>${this.parser.parseInline(node.tokens)}</p>\n`;
+    },
   },
 });
+
+/**
+ * Адрес плеера, если абзац состоит ровно из одной ссылки на разрешённую
+ * площадку. Иначе null, и абзац остаётся абзацем.
+ */
+function soleVideoEmbed(nodes: Tokens.Paragraph["tokens"]): string | null {
+  const meaningful = nodes.filter((node) => node.raw.trim() !== "");
+  if (meaningful.length !== 1) return null;
+
+  const node = meaningful[0];
+  if (node.type !== "link" && node.type !== "text") return null;
+
+  const candidate = node.type === "link" ? node.href : node.raw.trim();
+  return embedUrl(candidate.trim());
+}
 
 /** Markdown статьи в HTML, готовый к выводу. Пустой текст даёт пустую строку. */
 export function renderMarkdown(source: string): string {
