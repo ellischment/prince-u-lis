@@ -337,3 +337,53 @@ test("раздел «Фото и видео»: сводка и таблица и
   // используется» ведёт на страницу занятия.
   await expect(page.getByRole("region", { name: "Список медиа" })).toBeVisible();
 });
+
+test("раздел «Сегодня»: поиск, «что стоит проверить», быстрые действия", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Сегодня" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Быстрые действия" })).toBeVisible();
+
+  // Поиск по содержимому ведёт в нужный раздел: демо-занятие находится.
+  await page.getByRole("searchbox").fill("Гончарный круг");
+  await page.getByRole("button", { name: "Найти" }).click();
+  await expect(page.getByRole("link", { name: /Гончарный круг для начинающих/ }).first()).toBeVisible();
+});
+
+test("вопросы и ответы из панели меняют страницу /voprosy", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin/content");
+
+  const marker = `Можно ли с собакой ${Date.now()}`;
+  // Форма вопросов — та, где кнопка «Добавить вопрос».
+  const faqForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить вопрос" }) });
+  await faqForm.getByRole("button", { name: "Добавить вопрос" }).click();
+  const questions = faqForm.locator("textarea");
+  // Последняя добавленная пара — заполняем её вопрос и ответ.
+  await faqForm.locator("input[type='text'], input:not([type])").last().fill(marker);
+  await questions.last().fill("Да, если она не мешает другим гостям.");
+  await faqForm.getByRole("button", { name: "Сохранить вопросы" }).click();
+  await expect(faqForm.getByRole("status")).toContainText("Сохранено");
+
+  await page.goto("/voprosy");
+  await expect(page.getByRole("heading", { level: 2, name: marker })).toBeVisible();
+});
+
+test("«Настройки и доступы»: владелец заводит новый доступ", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin/settings");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Настройки и доступы" })).toBeVisible();
+
+  const email = `sotrudnik-${Date.now()}@princ-lis.test`;
+  const createForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить доступ" }) });
+  await createForm.getByLabel("Почта").fill(email);
+  await createForm.getByLabel("Пароль").fill("nadezhno-1234");
+  // В форме создания ровно один select (роль); строчные select-ы ролей — в таблице.
+  await createForm.locator("select").selectOption("admin");
+  await page.getByRole("button", { name: "Добавить доступ" }).click();
+
+  // Новый доступ появился в таблице пользователей.
+  await expect(page.getByRole("cell", { name: email })).toBeVisible();
+});

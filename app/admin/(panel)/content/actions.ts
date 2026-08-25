@@ -4,9 +4,11 @@ import { panelAction } from "@/lib/action";
 import {
   blocksOrderSchema,
   buttonColorSchema,
+  faqItemsSchema,
   garlandSchema,
   heroTextsSchema,
   quizLabelsSchema,
+  quizVisibleSchema,
   seasonSchema,
   trustItemsSchema,
 } from "@/lib/validation/texts";
@@ -231,5 +233,50 @@ export async function saveQuizLabels(_prev: ContentState, formData: FormData): P
     company: String(formData.get("company") ?? ""),
     practice: String(formData.get("practice") ?? ""),
   });
+  return result.ok ? { ok: true } : { ok: false, errors: result.errors };
+}
+
+// Вопросы и ответы (SiteText `faq.items`) — контент, доступно всем троим ролям.
+// Страница на сайте — /voprosy (SPEC §3). Тег texts сбрасывает и её.
+const saveFaq = panelAction({
+  roles: ["admin", "owner", "tech"],
+  schema: faqItemsSchema,
+  entity: "siteText",
+  action: "texts.faq.save",
+  run: async (input, tx) => {
+    await tx.siteText.upsert({
+      where: { key: "faq.items" },
+      update: { value: JSON.stringify(input.items) },
+      create: { key: "faq.items", value: JSON.stringify(input.items) },
+    });
+    return { count: input.items.length };
+  },
+  paths: () => ["/voprosy"],
+});
+
+export async function saveFaqItems(_prev: ContentState, formData: FormData): Promise<ContentState> {
+  const result = await saveFaq({ items: String(formData.get("items") ?? "") });
+  return result.ok ? { ok: true } : { ok: false, errors: result.errors };
+}
+
+// Видимость задач анкеты (SiteText `quizVisible`) — контент, всем троим ролям.
+// Тег home сбрасывает главную, где стоит анкета.
+const saveQuizVisibleAction = panelAction({
+  roles: ["admin", "owner", "tech"],
+  schema: quizVisibleSchema,
+  entity: "siteText",
+  action: "texts.quizVisible.save",
+  run: async (input, tx) => {
+    await tx.siteText.upsert({
+      where: { key: "quizVisible" },
+      update: { value: JSON.stringify(input.tags) },
+      create: { key: "quizVisible", value: JSON.stringify(input.tags) },
+    });
+    return { count: input.tags.length };
+  },
+});
+
+export async function saveQuizVisible(_prev: ContentState, formData: FormData): Promise<ContentState> {
+  const result = await saveQuizVisibleAction({ tags: String(formData.get("tags") ?? "") });
   return result.ok ? { ok: true } : { ok: false, errors: result.errors };
 }

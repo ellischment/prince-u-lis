@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getArticleSlugs } from "@/lib/articles";
+import { getFaqItems } from "@/lib/site-texts";
 import { getCelebrationSlugs } from "@/lib/celebrations";
 import { COURSE_FORMAT_SLUG } from "@/lib/constants";
 import { getEventSlugs } from "@/lib/events";
@@ -13,7 +14,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 // Карта сайта. Адреса добавляются сюда автоматически: SPEC.md раздел 3.
 // Разделы, которых ещё нет, не выводятся: ссылка на 404 вредит выдаче.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [lessons, shopSlugs, celebrations, partnerships, masters, events, articles] =
+  const [lessons, shopSlugs, celebrations, partnerships, masters, events, articles, faq] =
     await Promise.all([
       getLessonSlugs(),
       getShopSlugs(),
@@ -22,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       getMasterSlugs(),
       getEventSlugs(),
       getArticleSlugs(),
+      getFaqItems(),
     ]);
 
   // Курс попадает в карту ровно один раз и только как /kursy/[slug]:
@@ -110,5 +112,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
+    // Вопросы: страница в карте, только если студия завела хотя бы один вопрос.
+    // Пустая /voprosy показывает честное состояние, но индексировать её незачем.
+    ...(faq.length > 0
+      ? [{ url: `${SITE_URL}/voprosy`, changeFrequency: "monthly" as const, priority: 0.5 }]
+      : []),
   ];
 }

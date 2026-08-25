@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DEFAULT_BUTTON_KEY, isButtonColorKey, parseGarland, type ButtonColorKey } from "@/lib/appearance";
-import { parseQuizLabels, parseTrustItems, readSeasonSettings } from "@/lib/site-texts";
+import { parseFaqItems, parseQuizLabels, parseQuizVisible, parseTrustItems, readSeasonSettings } from "@/lib/site-texts";
 import { parseBlocksOrder } from "@/lib/home-blocks";
 import { HeroForm } from "./HeroForm";
 import { TrustForm } from "./TrustForm";
@@ -11,6 +11,8 @@ import { SeasonForm } from "./SeasonForm";
 import { ButtonColorForm } from "./ButtonColorForm";
 import { GarlandForm } from "./GarlandForm";
 import { QuizLabelsForm } from "./QuizLabelsForm";
+import { FaqForm } from "./FaqForm";
+import { QuizVisibleForm } from "./QuizVisibleForm";
 import styles from "../section.module.css";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +62,8 @@ export default async function ContentPage() {
           "buttonColor",
           "garland",
           "quizLabels",
+          "quizVisible",
+          "faq.items",
         ],
       },
     },
@@ -69,6 +73,8 @@ export default async function ContentPage() {
   const buttonKey = readButtonKey(byKey.get("buttonColor"));
   const garland = parseGarland(byKey.get("garland"));
   const quizLabels = parseQuizLabels(byKey.get("quizLabels"));
+  const quizVisible = parseQuizVisible(byKey.get("quizVisible"));
+  const faqItems = parseFaqItems(byKey.get("faq.items"));
   const trust = parseTrustItems(byKey.get("trust.items"));
   const blocks = parseBlocksOrder(byKey.get("blocksOrder"));
   const seasonSettings = readSeasonSettings(byKey.get("season"), byKey.get("season.winter"));
@@ -119,6 +125,19 @@ export default async function ContentPage() {
         Подписи шести кнопок анкеты на главной. Что подбирает кнопка, не меняется.
       </p>
       <QuizLabelsForm current={quizLabels} />
+
+      <h2 className={styles.subhead}>Какие задачи анкеты показывать</h2>
+      <p className={styles.note}>
+        Галочка — показывать кнопку задачи на главной. Хотя бы одна должна остаться включённой.
+      </p>
+      <QuizVisibleForm current={quizVisible} />
+
+      <h2 className={styles.subhead}>Вопросы и ответы</h2>
+      <p className={styles.note}>
+        Пары вопрос-ответ для страницы «Вопросы». Пустой список — страницы на сайте нет; первый
+        вопрос её создаёт.
+      </p>
+      <FaqForm current={faqItems} />
 
       <h2 className={styles.subhead}>Цвет кнопок</h2>
       <p className={styles.note}>

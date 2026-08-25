@@ -35,7 +35,7 @@ import { currentWeekdayIndex } from "@/lib/time";
 import { type HomeBlock } from "@/lib/home-blocks";
 import { getBlocksOrder } from "@/lib/home-blocks-read";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
-import { getHeroTexts, getQuizLabels, getSeason, getTrustItems } from "@/lib/site-texts";
+import { getHeroTexts, getQuizLabels, getQuizVisible, getSeason, getTrustItems } from "@/lib/site-texts";
 import { getGarland } from "@/lib/appearance-read";
 import { STUDIO_ADDRESS, STUDIO_PHONE, STUDIO_PHONE_HREF, formatStudioHours } from "@/lib/studio";
 import { getStudioHours } from "@/lib/studio-hours";
@@ -89,6 +89,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     hours,
     garland,
     quizLabels,
+    quizVisibleTags,
     week,
     courses,
     masters,
@@ -106,6 +107,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     getStudioHours(),
     getGarland(),
     getQuizLabels(),
+    getQuizVisible(),
     getWeekSchedule(),
     getCourses(),
     getMasters(),
@@ -230,7 +232,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <div className={styles.quizBody}>
               <p className={styles.quizIntro}>Нажмите то, что про вас. Остальное подберём сами.</p>
               <div className={styles.qopts} role="group" aria-label="Повод визита">
-                {TASK_TAGS.map((tag) => (
+                {TASK_TAGS.filter((tag) => quizVisibleTags.includes(tag)).map((tag) => (
                   <TaskOption
                     key={tag}
                     href={task === tag ? homeHref({ direction: directionSlug, format: formatSlug }) : homeHref({ task: tag, format: formatSlug })}

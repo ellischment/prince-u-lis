@@ -36,7 +36,13 @@ export default async function PanelLayout({ children }: LayoutProps<"/admin">) {
           <ul className={styles.menu}>
             {sections.map((section) => (
               <li key={section.slug}>
-                <Link href={`/admin/${section.slug}`} className={styles.menuLink}>
+                {/* «Сегодня» — это индекс панели /admin, а не /admin/today
+                    (там сработала бы заглушка [section]). Остальные разделы
+                    адресуются по слагу. */}
+                <Link
+                  href={section.slug === "today" ? "/admin" : `/admin/${section.slug}`}
+                  className={styles.menuLink}
+                >
                   {section.title}
                 </Link>
               </li>

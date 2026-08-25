@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isButtonColorKey, validateGarland } from "@/lib/appearance";
 import { validateBlocksOrder } from "@/lib/home-blocks";
-import { SEASONS } from "@/lib/constants";
+import { SEASONS, TASK_TAGS } from "@/lib/constants";
 
 // Одна схема на поле, используется и на клиенте, и на сервере.
 export const heroTextsSchema = z.object({
@@ -143,5 +143,62 @@ export const blocksOrderSchema = z.object({
       return z.NEVER;
     }
     return order;
+  }),
+});
+
+// Вопросы и ответы приходят строкой JSON (форма собирает пары вопрос/ответ).
+// Пустой список допустим: студия ещё не прислала вопросы. Пустые и битые пары
+// отсеиваются, лишние пробелы срезаются.
+export const faqItemsSchema = z.object({
+  items: z.string().transform((raw, ctx) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Список вопросов не читается" });
+      return z.NEVER;
+    }
+    if (!Array.isArray(parsed)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Список вопросов должен быть массивом" });
+      return z.NEVER;
+    }
+    const items: { question: string; answer: string }[] = [];
+    for (const entry of parsed) {
+      if (
+        entry &&
+        typeof entry === "object" &&
+        typeof (entry as { question?: unknown }).question === "string" &&
+        typeof (entry as { answer?: unknown }).answer === "string"
+      ) {
+        const question = (entry as { question: string }).question.trim();
+        const answer = (entry as { answer: string }).answer.trim();
+        if (question && answer) items.push({ question, answer });
+      }
+    }
+    return items;
+  }),
+});
+
+// Видимость задач анкеты приходит строкой JSON (массив включённых тегов).
+// Пустой массив недопустим: пустая анкета — поломка, а не выбор.
+export const quizVisibleSchema = z.object({
+  tags: z.string().transform((raw, ctx) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Список задач не читается" });
+      return z.NEVER;
+    }
+    if (!Array.isArray(parsed)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Список задач должен быть массивом" });
+      return z.NEVER;
+    }
+    const tags = TASK_TAGS.filter((tag) => parsed.includes(tag));
+    if (tags.length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Оставьте включённой хотя бы одну задачу" });
+      return z.NEVER;
+    }
+    return tags;
   }),
 });

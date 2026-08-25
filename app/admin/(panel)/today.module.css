@@ -1,0 +1,156 @@
+/* Раздел «Сегодня»: поиск, расписание дня, «что стоит проверить», действия. */
+
+.search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  max-width: 640px;
+}
+
+.searchInput {
+  flex-grow: 1;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.searchInput:focus-visible {
+  border-color: var(--cream);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.block {
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+}
+
+.blockTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 18px;
+  color: var(--paper);
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.schedule,
+.checklist,
+.hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slot {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.slotTime {
+  min-width: 52px;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}
+
+.slotLesson {
+  color: var(--paper);
+}
+
+.slotLesson:hover {
+  color: var(--cream);
+}
+
+.check {
+  padding-left: 16px;
+  position: relative;
+}
+
+.check::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fox);
+}
+
+.checkLink {
+  color: var(--paper);
+}
+
+.checkLink:hover {
+  color: var(--cream);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hit {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.hitSection {
+  min-width: 82px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hitTitle {
+  color: var(--paper);
+}
+
+.hit:hover .hitTitle {
+  color: var(--cream);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action {
+  padding: 10px 16px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  color: var(--paper);
+  font-size: 14px;
+}
+
+.action:hover {
+  background: var(--card2);
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+@media (min-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -51,6 +51,10 @@ const MAP: Record<string, Tag[]> = {
   media: [TAGS.works, TAGS.shop, TAGS.celebrations, TAGS.masters, TAGS.events, TAGS.home],
   schedule: [TAGS.schedule],
   siteText: [TAGS.texts, TAGS.home],
+  // Доступы в панель не отражаются на публичном сайте: сбрасывать нечего.
+  // Строка нужна, чтобы panelAction («Настройки и доступы») прошёл общий
+  // конвейер — роль, валидация, транзакция, журнал — как все прочие действия.
+  user: [],
 };
 
 export type Entity = keyof typeof MAP;

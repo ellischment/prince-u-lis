@@ -212,3 +212,60 @@ export const getQuizLabels = cachedRead(["quiz-labels"], [TAGS.texts, TAGS.home]
   const row = await prisma.siteText.findUnique({ where: { key: "quizLabels" } });
   return parseQuizLabels(row?.value);
 });
+
+export type FaqItem = { question: string; answer: string };
+
+/**
+ * Вопросы и ответы (SiteText `faq.items`, JSON-массив). PLAN 2.2 требует
+ * управлять ими в панели, страница — `/voprosy` (SPEC §3). Пустой список это
+ * рабочее состояние: студия ещё не прислала вопросы, страница показывает это
+ * честно, а не выдумывает вопросы.
+ */
+export function parseFaqItems(value: string | undefined): FaqItem[] {
+  if (value === undefined) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is FaqItem =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as FaqItem).question === "string" &&
+        typeof (item as FaqItem).answer === "string" &&
+        (item as FaqItem).question.trim().length > 0 &&
+        (item as FaqItem).answer.trim().length > 0,
+    );
+  } catch {
+    return [];
+  }
+}
+
+export const getFaqItems = cachedRead(["faq-items"], [TAGS.texts], async () => {
+  const row = await prisma.siteText.findUnique({ where: { key: "faq.items" } });
+  return parseFaqItems(row?.value);
+});
+
+/**
+ * Какие задачи анкеты «Чем займёмся» показывать (PLAN 3.2). КЛЮЧИ задач
+ * фиксированы (завязаны на фильтрацию по LessonTaskTag), настраивается только
+ * видимость. Настройка `quizVisible` — JSON-массив включённых тегов. Пустая или
+ * битая настройка означает «показывать все»: пустая анкета была бы поломкой,
+ * а не выбором. Что каждая задача подбирает — задаётся тегами у занятий
+ * (LessonTaskTag, редактор занятия), здесь только показ.
+ */
+export function parseQuizVisible(value: string | undefined): TaskTag[] {
+  if (value === undefined) return [...TASK_TAGS];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [...TASK_TAGS];
+    const enabled = TASK_TAGS.filter((tag) => parsed.includes(tag));
+    return enabled.length > 0 ? enabled : [...TASK_TAGS];
+  } catch {
+    return [...TASK_TAGS];
+  }
+}
+
+export const getQuizVisible = cachedRead(["quiz-visible"], [TAGS.texts, TAGS.home], async () => {
+  const row = await prisma.siteText.findUnique({ where: { key: "quizVisible" } });
+  return parseQuizVisible(row?.value);
+});

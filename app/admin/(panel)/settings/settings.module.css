@@ -1,0 +1,120 @@
+/* Раздел «Настройки и доступы»: таблица пользователей и форма нового доступа. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.error {
+  margin: 0;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--bad) 18%, transparent);
+  border: 1px solid var(--bad);
+  border-radius: var(--r);
+  color: var(--paper);
+}
+
+.email {
+  color: var(--paper);
+  word-break: break-word;
+}
+
+.roleSelect,
+.input {
+  min-height: 40px;
+  padding: 8px 12px;
+  background: var(--navy);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.roleSelect:focus-visible,
+.input:focus-visible {
+  border-color: var(--cream);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.linkButton:hover:not(:disabled) {
+  color: var(--paper);
+}
+
+.linkButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.self {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.resetRow .input {
+  flex-grow: 1;
+  min-width: 220px;
+}
+
+.createForm {
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+}
+
+.subhead {
+  margin: 0 0 14px;
+  font-size: 18px;
+  color: var(--paper);
+}
+
+.createGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (min-width: 720px) {
+  .createGrid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+}
