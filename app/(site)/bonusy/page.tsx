@@ -3,14 +3,15 @@ import { Container } from "@/components/Container";
 import { JsonLd } from "@/components/JsonLd";
 import { getBonusLevels } from "@/lib/bonus";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./bonusy.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Бонусы постоянным гостям",
   description:
     "Чем чаще приходите в студию «Принц и Лис», тем приятнее. Уровни постоянного гостя без карточек и приложений: мы просто помним, сколько раз вы были.",
-  alternates: { canonical: "/bonusy" },
-};
+  path: "/bonusy",
+});
 
 // Оттенок грани паспорта по уровню (макет .passport.b1/b2/b3).
 const ACCENT_CLASS: Record<string, string> = {

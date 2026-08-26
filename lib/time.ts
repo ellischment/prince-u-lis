@@ -42,3 +42,46 @@ export function moscowDateKey(now: Date = new Date()): string {
 export function startOfTodayMoscow(now: Date = new Date()): Date {
   return new Date(`${moscowDateKey(now)}T00:00:00+03:00`);
 }
+
+/** Текущее время в Москве в виде «19:05». */
+function moscowClock(now: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(now);
+}
+
+/**
+ * Ближайшая дата, когда сработает слот недельной сетки: «понедельник, 19:00»
+ * превращается в «2026-08-31T19:00:00+03:00». Нужна разметке Event на
+ * /raspisanie (SEO.md раздел 1): Event без startDate валидаторы считают
+ * ошибкой, а выдумывать дату нельзя — она считается от сегодняшнего дня.
+ *
+ * Сегодняшний слот, время которого уже прошло, переносится на следующую
+ * неделю: занятие в 12:00 вечером сегодня уже не состоится.
+ *
+ * Москва с 2014 года без перевода часов, поэтому смещение всегда +03:00 и
+ * арифметика по дням безопасна. Непонятное время («вечером») даёт null:
+ * поле, которое нечем заполнить, не выводится.
+ */
+export function nextOccurrenceMoscow(
+  weekday: number,
+  time: string,
+  now: Date = new Date(),
+): string | null {
+  if (!Number.isInteger(weekday) || weekday < 1 || weekday > 7) return null;
+  if (!/^\d{2}:\d{2}$/.test(time)) return null;
+
+  const today = currentWeekdayIndex(now);
+  let daysAhead = (weekday - today + 7) % 7;
+  if (daysAhead === 0 && time <= moscowClock(now)) daysAhead = 7;
+
+  // Считаем по календарной дате Москвы, а не по UTC-моменту: в 01:00 МСК
+  // сегодняшнее московское число на сутки больше UTC-шного.
+  const date = new Date(`${moscowDateKey(now)}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + daysAhead);
+
+  return `${date.toISOString().slice(0, 10)}T${time}:00+03:00`;
+}

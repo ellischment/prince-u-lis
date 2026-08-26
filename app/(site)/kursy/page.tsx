@@ -5,14 +5,15 @@ import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { formatRunDate, getCourses, nearestRun, sessionsLabel } from "@/lib/courses";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./courses.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Курсы керамики и живописи",
   description:
     "Курсы студии «Принц и Лис» на Сущёвской: несколько встреч подряд, от первого касания глины до готовой работы. Даты ближайших наборов и число встреч.",
-  alternates: { canonical: "/kursy" },
-};
+  path: "/kursy",
+});
 
 export default async function CoursesPage() {
   const [courses, organization] = await Promise.all([getCourses(), organizationSchema()]);

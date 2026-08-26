@@ -6,6 +6,7 @@ import { Gallery } from "@/components/Gallery";
 import { JsonLd } from "@/components/JsonLd";
 import { getEventBySlug } from "@/lib/events";
 import { breadcrumbSchema, eventSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { startOfTodayMoscow } from "@/lib/time";
 import styles from "../sobytiya.module.css";
 
@@ -19,13 +20,15 @@ const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
 export async function generateMetadata({ params }: PageProps<"/sobytiya/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const event = await getEventBySlug(slug);
-  if (!event) return { title: "Не найдено" };
+  if (!event) return { title: "Не найдено", robots: { index: false, follow: false } };
   const description = event.description.slice(0, 160);
-  return {
+  const cover = event.media.find((m) => m.kind === "image" && m.path);
+  return pageMetadata({
     title: `${event.title} — событие студии «Принц и Лис»`,
     description,
-    openGraph: { title: event.title, description },
-  };
+    path: `/sobytiya/${event.slug}`,
+    image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,
+  });
 }
 
 export default async function EventPage({ params }: PageProps<"/sobytiya/[slug]">) {

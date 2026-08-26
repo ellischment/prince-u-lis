@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { ArticleCard } from "@/components/ArticleCard";
@@ -23,6 +24,7 @@ import { getEvents, pickHomeEvents } from "@/lib/events";
 import { getMasters } from "@/lib/masters";
 import { getAllPublishedReviews, getPublishedReviews } from "@/lib/reviews";
 import { organizationSchema, reviewsSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { getHomeWorks } from "@/lib/shop";
 import {
   getCourses,
@@ -77,6 +79,16 @@ function homeHref(params: { task?: string; direction?: string; format?: string }
   const query = search.toString();
   return query ? `/?${query}#catalog` : "/#catalog";
 }
+
+export const metadata: Metadata = pageMetadata({
+  title: "Студия «Принц и Лис»: керамика, живопись и витраж в Москве",
+  description:
+    "Мастерская керамики, живописи и витража в Москве. Занятия с нуля, курсы, праздники и коворкинг.",
+  path: "/",
+  // Без шаблона «%s. Студия «Принц и Лис»» из app/layout.tsx: иначе название
+  // студии встанет в заголовок главной дважды подряд.
+  titleAbsolute: true,
+});
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
@@ -482,10 +494,17 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     ),
   };
 
-  const reviews_ = reviewsSchema(
-    reviews.map((r) => ({ guestName: r.guestName, text: r.text, rating: r.rating })),
-    allReviews,
-  );
+  // Разметка отзывов идёт, только когда отзывы реально видны на странице:
+  // блок можно выключить в панели (blocksOrder), и тогда Review в разметке
+  // описывал бы содержимое, которого на странице нет. Это прямое нарушение
+  // правил поисковика, а не мелочь.
+  const reviewsMarkup =
+    showBlock("reviews") && reviews.length > 0
+      ? reviewsSchema(
+          reviews.map((r) => ({ guestName: r.guestName, text: r.text, rating: r.rating })),
+          allReviews,
+        )
+      : {};
 
   return (
     <main id="main">
@@ -493,7 +512,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         Перейти к содержанию
       </a>
 
-      <JsonLd items={[{ ...organization, ...reviews_ }, websiteSchema()]} />
+      <JsonLd items={[{ ...organization, ...reviewsMarkup }, websiteSchema()]} />
 
       {order.filter(showBlock).map((id) => sections[id])}
     </main>

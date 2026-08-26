@@ -63,6 +63,18 @@ export function isButtonColorKey(value: unknown): value is ButtonColorKey {
   return typeof value === "string" && BUTTON_CHOICES.some((choice) => choice.key === value);
 }
 
+/**
+ * Три токена палитры числом (SPEC.md р.12), для `app/opengraph-image.tsx`:
+ * ImageResponse (satori) рендерит вне DOM и не понимает `var(--*)`, а сырой
+ * hex вне токен-файла блокирует pre-commit. Этот файл — разрешённое
+ * исключение, поэтому значения живут здесь, а не в самом og-файле.
+ */
+export const PALETTE_HEX = {
+  deep: "#0C1A2E",
+  paper: "#F3ECDD",
+  gold: "#C9A24B",
+} as const;
+
 // ---------- Композиция гирлянды ----------
 
 export type GarlandStrand = {

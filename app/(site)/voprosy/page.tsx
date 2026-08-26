@@ -4,18 +4,19 @@ import { Container } from "@/components/Container";
 import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { breadcrumbSchema, faqSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { getFaqItems } from "@/lib/site-texts";
 import styles from "./voprosy.module.css";
 
 // Статическая с тегом texts: правка в «Контент и оформление» сбрасывает texts
 // и /voprosy (ARCHITECTURE §3, карта сброса — строка «Тексты и оформление»).
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Вопросы и ответы",
   description:
     "Частые вопросы о занятиях студии «Принц и Лис»: нужен ли опыт, что надеть, как проходят занятия, можно ли с детьми.",
-  alternates: { canonical: "/voprosy" },
-};
+  path: "/voprosy",
+});
 
 export default async function VoprosyPage() {
   const [items, organization] = await Promise.all([getFaqItems(), organizationSchema()]);

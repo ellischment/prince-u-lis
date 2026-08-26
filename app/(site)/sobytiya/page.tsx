@@ -4,17 +4,18 @@ import { EventCard } from "@/components/EventCard";
 import { JsonLd } from "@/components/JsonLd";
 import { getEvents } from "@/lib/events";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { startOfTodayMoscow } from "@/lib/time";
 import styles from "./sobytiya.module.css";
 
 export const dynamic = "force-dynamic"; // нужен актуальный «сегодня» для деления
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "События студии «Принц и Лис»",
   description:
     "Маркеты, открытые обжиги и вечера в мастерской на Сущёвской. Что скоро и что уже было в студии керамики, живописи и витража.",
-  alternates: { canonical: "/sobytiya" },
-};
+  path: "/sobytiya",
+});
 
 export default async function SobytiyaPage() {
   const [events, organization] = await Promise.all([getEvents(), organizationSchema()]);

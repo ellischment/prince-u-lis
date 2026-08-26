@@ -6,18 +6,19 @@ import { JsonLd } from "@/components/JsonLd";
 import { RequestForm } from "@/components/RequestForm";
 import { getPartnershipBySlug, getPartnershipReplyTime } from "@/lib/partnerships";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "../sotrudnichestvo.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/sotrudnichestvo/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const item = await getPartnershipBySlug(slug);
-  if (!item) return { title: "Не найдено" };
+  if (!item) return { title: "Не найдено", robots: { index: false, follow: false } };
   const description = item.description.slice(0, 160);
-  return {
+  return pageMetadata({
     title: `${item.title} — сотрудничество со студией «Принц и Лис»`,
     description,
-    openGraph: { title: item.title, description },
-  };
+    path: `/sotrudnichestvo/${item.slug}`,
+  });
 }
 
 export default async function PartnershipPage({ params }: PageProps<"/sotrudnichestvo/[slug]">) {

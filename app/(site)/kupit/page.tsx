@@ -12,6 +12,7 @@ import {
 } from "@/lib/constants";
 import { getLessonBySlug } from "@/lib/lessons";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import {
   filterWorks,
   getShopCategories,
@@ -24,12 +25,12 @@ import {
 } from "@/lib/shop";
 import styles from "./kupit.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Купить: работы, сертификаты и материалы для керамики",
   description:
     "Готовые работы студии «Принц и Лис», подарочные сертификаты, абонементы и материалы для керамистов. Заявка на покупку без предоплаты.",
-  alternates: { canonical: "/kupit" },
-};
+  path: "/kupit",
+});
 
 const WORKS_TAB = "raboty";
 const WORKS_STEP = 9; // порция работ (FEATURES.md 1.9, «девять для работ»)

@@ -13,6 +13,7 @@ import { reviewStats } from "./reviews";
 import { STUDIO_CITY, STUDIO_NAME, STUDIO_PHONE_HREF } from "./studio";
 import type { DayHours } from "./studio";
 import { getStudioHours } from "./studio-hours";
+import { nextOccurrenceMoscow } from "./time";
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const STUDIO_ID = `${SITE_URL}/#studio`;
@@ -295,28 +296,41 @@ export function serviceSchema(celebration: { title: string; priceHint: string })
 
 /**
  * Расписание недели как список Event (SEO.md раздел 1: «Расписание: Event для
- * каждого занятия недели»). Слот повторяется еженедельно без своей даты —
- * вместо startDate используется eventSchedule с днём недели и временем, тот же
- * приём, что courseSchedule у CourseInstance (SEO.md раздел 4).
+ * каждого занятия недели»). Слот сетки сам по себе даты не имеет, а Event без
+ * `startDate` валидаторы Яндекса и Google считают ошибкой (SEO.md раздел 14
+ * требует пройти оба). Поэтому дата считается честно — ближайшее срабатывание
+ * слота от сегодняшнего московского дня, — а повторяемость остаётся отдельным
+ * полем `eventSchedule`. Слот с непонятным временем в разметку не идёт вовсе.
+ *
+ * Страница `/raspisanie` динамическая (ARCHITECTURE §3), поэтому дата всегда
+ * свежая: закэшировать вчерашнее «ближайшее занятие» здесь невозможно.
  */
 export function scheduleEventSchema(
   rows: { weekday: number; time: string; title: string; href: string }[],
 ) {
-  return rows.map((row) => ({
-    "@type": "Event",
-    name: row.title,
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    location: { "@id": STUDIO_ID },
-    organizer: { "@id": STUDIO_ID },
-    eventSchedule: {
-      "@type": "Schedule",
-      repeatFrequency: "P1W",
-      byDay: `https://schema.org/${EN_WEEKDAYS[row.weekday - 1]}`,
-      startTime: row.time,
-    },
-    url: absoluteUrl(row.href),
-  }));
+  return rows
+    .map((row) => {
+      const startDate = nextOccurrenceMoscow(row.weekday, row.time);
+      if (!startDate) return null;
+
+      return {
+        "@type": "Event",
+        name: row.title,
+        startDate,
+        eventStatus: "https://schema.org/EventScheduled",
+        eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+        location: { "@id": STUDIO_ID },
+        organizer: { "@id": STUDIO_ID },
+        eventSchedule: {
+          "@type": "Schedule",
+          repeatFrequency: "P1W",
+          byDay: `https://schema.org/${EN_WEEKDAYS[row.weekday - 1]}`,
+          startTime: row.time,
+        },
+        url: absoluteUrl(row.href),
+      };
+    })
+    .filter((event): event is NonNullable<typeof event> => event !== null);
 }
 
 /** Вопросы и ответы (SEO.md раздел 9). Пустой список схему не отдаёт. */

@@ -14,6 +14,7 @@ import {
 } from "@/lib/courses";
 import { getSimilarLessons } from "@/lib/lessons";
 import { breadcrumbSchema, courseWithRunsSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./runs.module.css";
 
 // Показываются два-три ближайших потока: FEATURES.md раздел 1.8a.
@@ -28,18 +29,19 @@ export async function generateMetadata({ params }: PageProps<"/kursy/[slug]">): 
   const { slug } = await params;
   const course = await getCourseBySlug(slug);
 
-  if (!course || !isCourse(course)) return { title: "Курс не найден" };
+  if (!course || !isCourse(course)) {
+    return { title: "Курс не найден", robots: { index: false, follow: false } };
+  }
 
-  return {
+  const cover = course.media.find((m) => m.kind === "image" && m.path);
+
+  return pageMetadata({
     title: course.seoTitle ?? course.title,
     description: course.seoDescription ?? course.intro,
-    alternates: { canonical: `/kursy/${course.slug}` },
-    openGraph: {
-      title: course.seoTitle ?? course.title,
-      description: course.seoDescription ?? course.intro,
-      type: "article",
-    },
-  };
+    path: `/kursy/${course.slug}`,
+    image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,
+    type: "article",
+  });
 }
 
 export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">) {

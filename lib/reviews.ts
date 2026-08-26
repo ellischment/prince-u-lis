@@ -17,12 +17,16 @@ export const getPublishedReviews = cachedRead(["reviews-home"], [TAGS.reviews], 
   }),
 );
 
-/** Все опубликованные отзывы — для разметки schema.org (SEO.md §9), не только тройка на главной. */
+/**
+ * Оценки всех опубликованных отзывов — для среднего в разметке schema.org
+ * (SEO.md §9). Только rating: дат тут намеренно нет, cachedRead возвращает их
+ * строкой после попадания в кэш, и лишнее поле однажды поедет в `.getTime()`.
+ */
 export const getAllPublishedReviews = cachedRead(["reviews-all"], [TAGS.reviews], async () =>
   prisma.review.findMany({
     where: { status: "published" },
     orderBy: { sort: "asc" },
-    select: { id: true, guestName: true, text: true, rating: true, createdAt: true },
+    select: { rating: true },
   }),
 );
 

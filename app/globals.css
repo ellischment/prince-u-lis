@@ -121,21 +121,6 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   top: 16px;
 }
 
-/* Заголовок для скринридера и поисковика без видимого дубля. Нужна там, где
-   видимый заголовок раздела оформлен не тегом h1 (например Section выводит
-   title как h2) — CLAUDE.md требует ровно один h1 на странице. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* Оболочка публичных страниц (app/(site)/layout.tsx). Держит подвал внизу
    экрана на коротких страницах: пустой блог, 404, тонкий раздел. Без этого под
    подвалом оставалась полоса фона --deep поверх более светлого --navy подвала,

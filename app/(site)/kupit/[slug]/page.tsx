@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { PurchaseForm } from "@/components/PurchaseForm";
 import { COWORKING_LESSON_SLUG } from "@/lib/constants";
 import { breadcrumbSchema, organizationSchema, productSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { getPurchasableBySlug } from "@/lib/shop";
 import styles from "./item.module.css";
 
@@ -24,13 +25,15 @@ export async function generateMetadata({ params }: PageProps<"/kupit/[slug]">): 
   const { slug } = await params;
   if (slug === COWORKING_ALIAS) return { title: "Коворкинг" };
   const item = await getPurchasableBySlug(slug);
-  if (!item) return { title: "Не найдено" };
+  if (!item) return { title: "Не найдено", robots: { index: false, follow: false } };
   const description = item.description.slice(0, 160);
-  return {
+  const cover = item.media.find((m) => m.kind === "image" && m.path);
+  return pageMetadata({
     title: `${item.title} — купить в студии «Принц и Лис»`,
     description,
-    openGraph: { title: item.title, description },
-  };
+    path: `/kupit/${item.slug}`,
+    image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,
+  });
 }
 
 export default async function ItemPage({ params }: PageProps<"/kupit/[slug]">) {

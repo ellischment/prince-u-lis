@@ -3,13 +3,14 @@ import { Container } from "@/components/Container";
 import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Политика обработки персональных данных",
   description:
     "Политика обработки персональных данных и согласие на обработку для студии «Принц и Лис».",
-  alternates: { canonical: "/politika" },
-};
+  path: "/politika",
+});
 
 export default async function PolicyPage() {
   const organization = await organizationSchema();

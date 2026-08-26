@@ -9,14 +9,15 @@ import { lessonHref } from "@/lib/courses";
 import { filterLessons } from "@/lib/filters";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./catalog.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Занятия по керамике, живописи и витражу",
   description:
     "Гончарный круг, лепка, живопись и витраж в студии «Принц и Лис» на Сущёвской. Групповые и индивидуальные занятия с нуля, курсы и абонементы.",
-  alternates: { canonical: "/zanyatiya" },
-};
+  path: "/zanyatiya",
+});
 
 const ANY_DIRECTION = "vse";
 const ANY_FORMAT = "lyuboy";
@@ -73,11 +74,13 @@ export default async function CatalogPage({ searchParams }: PageProps<"/zanyatiy
         ]}
       />
 
-      {/* Section выводит title как h2 (общий для всех разделов заголовок), а
-          странице по CLAUDE.md положен ровно один h1. */}
-      <h1 className="sr-only">Занятия</h1>
-
-      <Section title="Занятия" subtitle="Выберите направление и формат, они работают вместе">
+      {/* Заголовок секции здесь и есть заголовок страницы, поэтому h1
+          (CLAUDE.md: ровно один h1 на страницу). Вид не меняется. */}
+      <Section
+        title="Занятия"
+        titleAs="h1"
+        subtitle="Выберите направление и формат, они работают вместе"
+      >
         <div className={styles.filters}>
           <div className={styles.row} role="group" aria-label="Направление">
             <ChipLink href={catalogHref(ANY_DIRECTION, formatSlug)} active={!direction}>

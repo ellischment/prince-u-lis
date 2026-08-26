@@ -7,14 +7,15 @@ import { REQUEST_TYPES, type RequestType } from "@/lib/constants";
 import { lessonHref } from "@/lib/courses";
 import { getCatalogLessons } from "@/lib/lessons";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./zapis.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Запись на занятие",
   description:
     "Онлайн-запись в студию «Принц и Лис»: выберите занятие, оставьте имя и телефон. Мы свяжемся и подтвердим удобное время.",
-  alternates: { canonical: "/zapis" },
-};
+  path: "/zapis",
+});
 
 export default async function BookingPage({ searchParams }: PageProps<"/zapis">) {
   const params = await searchParams;

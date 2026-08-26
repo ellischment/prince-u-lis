@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { getCourses, lessonHref, nearestRun, formatRunDate, sessionsLabel } from "@/lib/courses";
 import { breadcrumbSchema, organizationSchema, scheduleEventSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { getOpenDays, getWeekSchedule } from "@/lib/schedule";
 import { currentWeekdayIndex, moscowDateKey } from "@/lib/time";
 import { ScheduleCalendar } from "./ScheduleCalendar";
@@ -15,12 +16,12 @@ import styles from "./schedule.module.css";
 // дней зависят от серверного времени (ARCHITECTURE р.3 / PLAN 0.5).
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Расписание занятий",
   description:
     "Расписание групповых занятий студии «Принц и Лис» по дням недели и запись на индивидуальное время.",
-  alternates: { canonical: "/raspisanie" },
-};
+  path: "/raspisanie",
+});
 
 export default async function SchedulePage() {
   const [week, openDays, courses, organization] = await Promise.all([

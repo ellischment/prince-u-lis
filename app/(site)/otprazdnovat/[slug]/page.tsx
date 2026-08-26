@@ -7,18 +7,21 @@ import { JsonLd } from "@/components/JsonLd";
 import { RequestForm } from "@/components/RequestForm";
 import { getCelebrationBySlug } from "@/lib/celebrations";
 import { breadcrumbSchema, organizationSchema, serviceSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "../otprazdnovat.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/otprazdnovat/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const item = await getCelebrationBySlug(slug);
-  if (!item) return { title: "Не найдено" };
+  if (!item) return { title: "Не найдено", robots: { index: false, follow: false } };
   const description = item.intro.slice(0, 160);
-  return {
+  const cover = item.media.find((m) => m.kind === "image" && m.path);
+  return pageMetadata({
     title: `${item.title} в студии «Принц и Лис»`,
     description,
-    openGraph: { title: item.title, description },
-  };
+    path: `/otprazdnovat/${item.slug}`,
+    image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,
+  });
 }
 
 export default async function CelebrationPage({ params }: PageProps<"/otprazdnovat/[slug]">) {

@@ -12,6 +12,7 @@ import {
 } from "@/lib/articles";
 import { findRedirect } from "@/lib/redirects";
 import { articleSchema, breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import { BlogList } from "../BlogList";
 
 /**
@@ -40,11 +41,11 @@ export async function generateMetadata({ params }: PageProps<"/blog/[slug]">): P
 
   const page = asPage(slug);
   if (page !== null) {
-    return {
+    return pageMetadata({
       title: `Блог студии «Принц и Лис», страница ${page}`,
       description: `Статьи студии керамики, живописи и витража. Страница ${page}.`,
-      alternates: { canonical: `/blog/${page}` },
-    };
+      path: `/blog/${page}`,
+    });
   }
 
   const article = await getArticleBySlug(slug);
@@ -54,21 +55,15 @@ export async function generateMetadata({ params }: PageProps<"/blog/[slug]">): P
     return { title: "Статья не найдена", robots: { index: false, follow: false } };
   }
 
-  const title = article.seoTitle ?? article.title;
-  const description = article.seoDescription ?? article.excerpt;
-
-  return {
-    title,
-    description,
-    alternates: { canonical: `/blog/${article.slug}` },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      ...(article.publishedAt ? { publishedTime: article.publishedAt.toISOString() } : {}),
-      ...(article.cover?.path ? { images: [article.cover.path] } : {}),
-    },
-  };
+  return pageMetadata({
+    title: article.seoTitle ?? article.title,
+    description: article.seoDescription ?? article.excerpt,
+    path: `/blog/${article.slug}`,
+    image: article.cover?.path
+      ? { path: article.cover.path, width: article.cover.width, height: article.cover.height }
+      : null,
+    type: "article",
+  });
 }
 
 export default async function ArticlePage({ params }: PageProps<"/blog/[slug]">) {

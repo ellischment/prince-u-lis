@@ -208,7 +208,14 @@ export type Purchasable =
       price: string;
       description: string;
       terms: null;
-      media: { kind: string; path: string | null; url: string | null; alt: string | null }[];
+      media: {
+        kind: string;
+        path: string | null;
+        url: string | null;
+        alt: string | null;
+        width: number | null;
+        height: number | null;
+      }[];
     }
   | {
       kind: "shop";
@@ -217,7 +224,14 @@ export type Purchasable =
       price: string;
       description: string;
       terms: string | null;
-      media: { kind: string; path: string | null; url: string | null; alt: string | null }[];
+      media: {
+        kind: string;
+        path: string | null;
+        url: string | null;
+        alt: string | null;
+        width: number | null;
+        height: number | null;
+      }[];
     };
 
 /**

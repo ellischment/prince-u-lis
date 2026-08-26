@@ -5,14 +5,15 @@ import { OtmCard } from "@/components/OtmCard";
 import { RequestForm } from "@/components/RequestForm";
 import { getPartnerships, getPartnershipReplyTime } from "@/lib/partnerships";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./sotrudnichestvo.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Сотрудничество со студией «Принц и Лис»",
   description:
     "Партнёрства студии керамики: коллаборации с брендами, выездные мастер-классы, съёмки в мастерской, совместные материалы с медиа. Расскажите об идее — заявка уйдёт с нужным контекстом.",
-  alternates: { canonical: "/sotrudnichestvo" },
-};
+  path: "/sotrudnichestvo",
+});
 
 export default async function SotrudnichestvoPage() {
   const [kinds, replyTime, organization] = await Promise.all([

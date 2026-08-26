@@ -4,14 +4,15 @@ import { JsonLd } from "@/components/JsonLd";
 import { MasterCard } from "@/components/MasterCard";
 import { getMasters } from "@/lib/masters";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./komanda.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Команда студии «Принц и Лис»",
   description:
     "Мастера студии керамики, живописи и витража: гончарный круг, лепка, живопись, витраж. Кто ведёт занятия в мастерской на Сущёвской.",
-  alternates: { canonical: "/komanda" },
-};
+  path: "/komanda",
+});
 
 export default async function KomandaPage() {
   const [masters, organization] = await Promise.all([getMasters(), organizationSchema()]);

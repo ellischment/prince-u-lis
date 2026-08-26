@@ -4,14 +4,15 @@ import { JsonLd } from "@/components/JsonLd";
 import { OtmCard } from "@/components/OtmCard";
 import { getCelebrations } from "@/lib/celebrations";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./otprazdnovat.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Отпраздновать в мастерской: дни рождения, свидания, корпоративы",
   description:
     "Праздники под ключ в студии «Принц и Лис»: день рождения, свидание, корпоратив, семейная встреча. Занятие, чай и работы на память. Выберите формат и оставьте заявку.",
-  alternates: { canonical: "/otprazdnovat" },
-};
+  path: "/otprazdnovat",
+});
 
 export default async function OtprazdnovatPage() {
   const [celebrations, organization] = await Promise.all([getCelebrations(), organizationSchema()]);

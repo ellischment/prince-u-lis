@@ -8,18 +8,21 @@ import { JsonLd } from "@/components/JsonLd";
 import { lessonHref } from "@/lib/courses";
 import { getMasterBySlug } from "@/lib/masters";
 import { breadcrumbSchema, organizationSchema, personSchema, websiteSchema } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo-meta";
 import styles from "../komanda.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/komanda/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const master = await getMasterBySlug(slug);
-  if (!master) return { title: "Не найдено" };
+  if (!master) return { title: "Не найдено", robots: { index: false, follow: false } };
   const description = `${master.name} — ${master.speciality}. ${master.experience ?? ""}`.trim().slice(0, 160);
-  return {
+  const cover = master.media.find((m) => m.kind === "image" && m.path);
+  return pageMetadata({
     title: `${master.name} — команда студии «Принц и Лис»`,
     description,
-    openGraph: { title: master.name, description },
-  };
+    path: `/komanda/${master.slug}`,
+    image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,
+  });
 }
 
 export default async function MasterPage({ params }: PageProps<"/komanda/[slug]">) {
