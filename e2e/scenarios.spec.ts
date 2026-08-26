@@ -402,3 +402,12 @@ test("редактор гирлянды: выбираешь нить — вид�
   await expect(page.getByRole("heading", { level: 4, name: "Настройки нити 2" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 4, name: "Настройки нити 1" })).toHaveCount(0);
 });
+
+test("адрес /kupit/kovorking из SPEC отвечает редиректом на страницу коворкинга", async ({ request }) => {
+  // SPEC §3 перечисляет /kupit/kovorking как адрес коворкинга. Коворкинг
+  // смоделирован занятием, его страница — /zanyatiya/kovorking-v-masterskoy;
+  // адрес из SPEC отвечает постоянным редиректом, а не 404 (в sitemap не идёт).
+  const res = await request.get("/kupit/kovorking", { maxRedirects: 0 });
+  expect(res.status()).toBe(308);
+  expect(res.headers()["location"]).toContain("/zanyatiya/kovorking-v-masterskoy");
+});

@@ -16,7 +16,9 @@ export default function robots(): MetadataRoute.Robots {
   }
 
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/admin", "/admin/"] },
+    // /styleguide — служебная витрина токенов (noindex в своих метаданных),
+    // роботу там делать нечего: закрываем и в robots.txt.
+    rules: { userAgent: "*", allow: "/", disallow: ["/admin", "/admin/", "/styleguide"] },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

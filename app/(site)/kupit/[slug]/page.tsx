@@ -1,14 +1,26 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { PurchaseForm } from "@/components/PurchaseForm";
+import { COWORKING_LESSON_SLUG } from "@/lib/constants";
 import { getPurchasableBySlug } from "@/lib/shop";
 import styles from "./item.module.css";
 
+// Адрес /kupit/kovorking из SPEC §3 (таблица маршрутов). Коворкинг в проекте
+// смоделирован как занятие, его полная страница — /zanyatiya/kovorking-v-masterskoy
+// (решение принято при реализации, FEATURES 1.8: коворкинг это услуга-занятие,
+// а не товар каталога). Отдельной страницы с тем же содержимым не заводим:
+// две индексируемые страницы одного текста — санкции поиска. Поэтому адрес из
+// SPEC отвечает постоянным редиректом на каноническую страницу, а не 404.
+// 308 (permanentRedirect) поисковики читают как 301; в sitemap этот адрес не
+// попадает (редирект в карте сайта — ошибка, SPEC §10).
+const COWORKING_ALIAS = "kovorking";
+
 export async function generateMetadata({ params }: PageProps<"/kupit/[slug]">): Promise<Metadata> {
   const { slug } = await params;
+  if (slug === COWORKING_ALIAS) return { title: "Коворкинг" };
   const item = await getPurchasableBySlug(slug);
   if (!item) return { title: "Не найдено" };
   const description = item.description.slice(0, 160);
@@ -21,6 +33,7 @@ export async function generateMetadata({ params }: PageProps<"/kupit/[slug]">): 
 
 export default async function ItemPage({ params }: PageProps<"/kupit/[slug]">) {
   const { slug } = await params;
+  if (slug === COWORKING_ALIAS) permanentRedirect(`/zanyatiya/${COWORKING_LESSON_SLUG}`);
   const item = await getPurchasableBySlug(slug);
   if (!item) notFound();
 
