@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
 import { Garland } from "@/components/Garland";
@@ -9,10 +9,13 @@ import { saveGarland, type ContentState } from "./actions";
 import styles from "./content.module.css";
 import ed from "./garland-editor.module.css";
 
-// Ширины предпросмотра: десктоп (>920 → десктопная композиция) и узкий
-// (<920 → узкая композиция segN с коэффициентами планшета/телефона).
-const PREVIEW_DESKTOP = 1100;
-const PREVIEW_NARROW = 380;
+// Опорные размеры первого экрана в НАТУРАЛЬНУЮ величину. Канвас строится в них,
+// а потом целиком ужимается одним scale(k) под ширину панели — так гирлянда,
+// медальон и отступы масштабируются согласованно (замечание заказчика). Десктоп
+// 1280 (>920 → десктопная композиция гирлянды), телефон 390 (<920 → узкая segN);
+// высоты — представительный первый экран (100svh-88 / 100svh-64 у .hero).
+const REF_DESKTOP = { w: 1280, h: 720 };
+const REF_NARROW = { w: 390, h: 780 };
 
 // Пресеты из garland-lab.html, переведённые в модель (seg вместо x0/x1).
 // segN по умолчанию равен seg (узкий диапазон совпадает с десктопным, пока не
@@ -126,6 +129,32 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
   // приходится листать десятки ползунков (запрос заказчика).
   const [active, setActive] = useState(0);
 
+  // Ширина окна предпросмотра: по ней считаем масштаб канваса hero. Меряем сам
+  // .frame через ResizeObserver (реагирует и на сворачивание панели). До первого
+  // замера basis=0 — канвас не рендерим, лишнего кадра «в полную величину» нет.
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [basis, setBasis] = useState(0);
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      if (width > 0) setBasis(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const ref = narrowPreview ? REF_NARROW : REF_DESKTOP;
+  // Масштаб канваса: по ширине (десктоп — во всю панель; телефон — не шире
+  // реальных 390) и с потолком по высоте, чтобы липкий предпросмотр не занял
+  // весь экран при кручении ползунков. Меньший из двоих — единый k на всё.
+  const PREVIEW_MAX_H = 460;
+  const fitWidth = narrowPreview ? Math.min(basis, ref.w) : basis;
+  const scale = basis > 0 ? Math.min(fitWidth / ref.w, PREVIEW_MAX_H / ref.h) : 0;
+  const stageWidth = Math.round(ref.w * scale);
+  const stageHeight = Math.round(ref.h * scale);
+
   // Выбранная нить могла исчезнуть (пресет с меньшим числом нитей, удаление):
   // тогда берём последнюю существующую, чтобы индекс не указывал в пустоту.
   const activeIndex = Math.min(active, strands.length - 1);
@@ -183,21 +212,43 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
           </button>
         </div>
 
-        {/* Живой предпросмотр: тот же компонент, что и на сайте. Настраиваемая
-            нить подсвечена ярче, остальные приглушены — видно, что меняешь. */}
-        <div className={`${ed.stage} ${narrowPreview ? ed.stageNarrow : ""}`}>
-          <Garland
-            strands={strands}
-            previewWidth={narrowPreview ? PREVIEW_NARROW : PREVIEW_DESKTOP}
-            highlightIndex={activeIndex}
-          />
-          <div className={ed.stageContent}>
-            <div className={ed.stageText}>
-              <div className={ed.stageEyebrow}>Художественная студия · Москва</div>
-              <div className={ed.stageTitle}>Там, где рождается творчество</div>
+        {/* Живой предпросмотр: канвас первого экрана в натуральную величину,
+            ужатый одним scale под ширину панели. Настраиваемая нить подсвечена
+            ярче, остальные приглушены — видно, что меняешь. */}
+        <div ref={frameRef} className={ed.frame}>
+          {scale > 0 ? (
+            <div
+              className={ed.stage}
+              style={{ width: stageWidth, height: stageHeight, marginInline: "auto" }}
+            >
+              <div
+                className={`${ed.canvas} ${narrowPreview ? ed.narrow : ""}`}
+                style={{ width: ref.w, height: ref.h, transform: `scale(${scale})` }}
+              >
+                <Garland
+                  strands={strands}
+                  previewWidth={ref.w}
+                  highlightIndex={activeIndex}
+                />
+                <div className={ed.heroPad}>
+                  <div className={ed.heroWrap}>
+                    <div className={ed.heroGrid}>
+                      <div className={ed.heroText}>
+                        <div className={ed.hEyebrow}>Художественная студия · Москва</div>
+                        <div className={ed.hTitle}>Там, где рождается творчество</div>
+                        <div className={ed.hLead}>
+                          Керамика, живопись и витраж в тёплой мастерской в центре Москвы.
+                        </div>
+                      </div>
+                      <div className={ed.hScene}>
+                        <div className={ed.hMedallion} aria-hidden="true" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className={ed.stageMedallion} aria-hidden="true" />
-          </div>
+          ) : null}
         </div>
       </div>
 

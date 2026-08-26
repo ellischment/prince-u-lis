@@ -1,67 +1,110 @@
-/* Живой предпросмотр гирлянды в панели. Сцена повторяет первый экран сайта в
-   уменьшенном виде: тот же градиент, надзаголовок, заголовок и медальон,
-   а поверх — тот же компонент Garland, что и на сайте, поэтому предпросмотр
-   совпадает с результатом. */
-/* Высота и верхний отступ повторяют первый экран сайта (page.module.css .hero:
-   гирлянда занимает фиксированную полосу 420px сверху, текст отодвинут
-   padding-top 180px и оказывается ПОД флажками). Гирлянда по вертикали не
-   масштабируется (SVG height 420px), поэтому единственный способ показать
-   правдивое перекрытие текста флажками — поставить текст на ту же отметку. */
-.stage {
-  position: relative;
-  overflow: hidden;
-  height: 420px;
-  border-radius: 16px;
-  border: 1px solid var(--line2);
-  background:
-    radial-gradient(circle at 85% 0%, rgba(143, 184, 216, 0.14), transparent 40%),
-    var(--deep);
+/* Живой предпросмотр гирлянды в панели. Честная уменьшенная копия первого
+   экрана сайта: канвас построен в РЕАЛЬНЫХ размерах hero (ширина REF_W, тот же
+   Container 1160/24, padding 180px, сетка 1.15/0.85 и медальон max-width 430),
+   а поверх — тот же Garland с previewWidth=REF_W, поэтому флажки в настоящих px.
+   Весь канвас ужимается ОДНИМ transform: scale(k) под ширину панели, так что
+   флажки, медальон и отступы масштабируются согласованно (замечание заказчика:
+   раньше по горизонтали канвас сжимался, а флажки и медальон — нет). Коэффициент
+   k считает GarlandForm по измеренной ширине .frame. */
+.frame {
+  width: 100%;
   margin-bottom: 16px;
 }
 
-.stageContent {
+/* Видимое окно предпросмотра: обрезает вынесенный за край масштабированный
+   канвас, держит рамку и скругление. Ширину/высоту (= размеры hero × k) задаёт
+   GarlandForm инлайном. */
+.stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--line2);
+  background: var(--deep);
+}
+
+/* Канвас в натуральную величину hero. transform-origin слева-сверху, чтобы
+   scale прижимал его к углу окна. Градиент — тот же, что у .hero на сайте. */
+.canvas {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(143, 184, 216, 0.14), transparent 40%),
+    var(--deep);
+}
+
+/* Дальше — копия геометрии .hero сайта (page.module.css): верхний отступ 180px
+   уводит текст ПОД полосу гирлянды, Container 1160/24, сетка 1.15/0.85. */
+.heroPad {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 180px 0 64px;
+}
+
+.heroWrap {
+  max-width: 1160px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.heroGrid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 24px;
-  align-items: start;
-  /* 180px — как padding-top у .hero: текст встаёт ниже полосы гирлянды. */
-  padding: 180px 28px 0;
+  gap: 48px;
+  align-items: center;
+  height: 100%;
 }
 
 /* Текст поверх переднего слоя гирлянды (.front = 2), как на сайте. */
-.stageText {
+.heroText {
   position: relative;
   z-index: 5;
 }
 
-.stageEyebrow {
-  font-size: 11px;
+.hEyebrow {
+  margin: 0 0 12px;
+  color: var(--fox-soft);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--fox-soft);
-  margin-bottom: 8px;
+  font-size: 12.5px;
 }
 
-.stageTitle {
+.hTitle {
   font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 26px;
-  line-height: 1.1;
+  font-size: 60px;
+  line-height: 1.05;
+  margin: 0 0 20px;
   color: var(--paper);
 }
 
-/* Медальон под передним слоем гирлянды (z-index 1 < .front 2). Реальное фото
-   (то же /medallion.jpg, что на сайте), а не абстрактный круг: предпросмотр
-   должен совпадать с первым экраном, иначе гирлянду сверяешь с чужой сценой.
-   Фона нет — падает на --deep, круг остаётся видимым. */
-.stageMedallion {
+.hLead {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+/* Медальон под передним слоем гирлянды (z-index 1 < .front 2): гирлянда
+   драпируется поверх него, как на сайте. Реальное фото /medallion.jpg и тот же
+   размер max-width 430 — теперь масштаб верный (замечание заказчика: было
+   фиксированные 130px). Свечение/halo с сайта не переносим: там сырой rgba, а он
+   допустим только в токен-файлах — на верность размера/положения не влияет. */
+.hScene {
   position: relative;
   z-index: 1;
-  width: 130px;
-  height: 130px;
+  aspect-ratio: 1;
+  max-width: 430px;
+  width: 100%;
+  margin: 6px auto 0;
+}
+
+.hMedallion {
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: 50%;
-  margin-left: auto;
   border: 2px solid var(--gold);
   background-color: var(--deep);
   background-image: url("/medallion.jpg");
@@ -104,32 +147,31 @@
   font-weight: 600;
 }
 
-/* Узкая сцена: рамка «телефон» по центру, содержимое в одну колонку,
-   медальон над текстом — как первый экран на телефоне. Ширина ЯВНАЯ (равна
-   ширине предпросмотра PREVIEW_NARROW=380, чтобы флажки не растягивались): без
-   неё flex-элемент с авто-margin по бокам схлопывается до ширины контента, а
-   контент весь абсолютный — сцена вырождалась в 2px-полоску. max-width держит
-   её в пределах узкой панели. */
-.stageNarrow {
-  width: 380px;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+/* Узкий предпросмотр (Планшет и телефон): канвас построен в размерах телефона
+   (REF_W_N=390), поэтому Garland берёт узкую композицию segN. Геометрия — как
+   первый экран на телефоне: сетка в одну колонку, медальон НАД текстом и меньше
+   (max-width 340), padding 120/16 повторяют .hero и Container при <560. */
+.narrow .heroPad {
+  padding: 120px 0 48px;
 }
 
-.stageNarrow .stageContent {
+.narrow .heroWrap {
+  padding: 0 16px;
+}
+
+.narrow .heroGrid {
   grid-template-columns: 1fr;
   align-items: start;
-  /* 120px — как padding-top у .hero на телефоне; узкая гирлянда мельче (×0.62),
-     флажки доходят до ~124px, текст встаёт под ними, как на сайте. */
-  padding: 120px 18px 0;
 }
 
-.stageNarrow .stageMedallion {
+.narrow .hScene {
   order: -1;
+  max-width: 340px;
   margin: 0 0 10px;
-  width: 96px;
-  height: 96px;
+}
+
+.narrow .hTitle {
+  font-size: 38px;
 }
 
 .presets {
