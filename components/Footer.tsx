@@ -56,7 +56,9 @@ export async function Footer() {
 
         <div className={styles.bottom}>
           <span>
-            © {year} {STUDIO_LEGAL_NAME}. Студия «{STUDIO_NAME}»
+            {/* STUDIO_LEGAL_NAME уже кончается точкой («…Е. В.»), своей не
+                добавляем: иначе «В.. Студия». Разделитель — пробел, как в макете. */}
+            © {year} {STUDIO_LEGAL_NAME} Студия «{STUDIO_NAME}»
           </span>
           <span>
             {STUDIO_ADDRESS}

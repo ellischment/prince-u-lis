@@ -155,7 +155,7 @@ function flagPath(shape: number, w: number, h: number, fold: number): string {
   return `M-${hw} ${top} L${hw} ${top} L0 ${h.toFixed(1)} Z`;
 }
 
-function StrandSvg({ strand, width, reducedMotion, filterId }: { strand: Strand; width: number; reducedMotion: boolean; filterId: string }) {
+function StrandSvg({ strand, width, reducedMotion, filterId, dim }: { strand: Strand; width: number; reducedMotion: boolean; filterId: string; dim?: boolean }) {
   const { path, flags, yAtX0, yAtX1, x0, x1, startVisible, endVisible, shadowStrength } = computeStrand(
     strand,
     width,
@@ -164,7 +164,9 @@ function StrandSvg({ strand, width, reducedMotion, filterId }: { strand: Strand;
   const hasShadow = shadowStrength > 0.02;
 
   return (
-    <svg viewBox={`0 0 ${width} 420`} preserveAspectRatio="none" className={styles.svg}>
+    // dim приглушает не выбранную в редакторе нить: на сайте highlightIndex не
+    // передаётся, dim всегда undefined — вид не меняется.
+    <svg viewBox={`0 0 ${width} 420`} preserveAspectRatio="none" className={styles.svg} style={dim ? { opacity: 0.22 } : undefined}>
       {hasShadow ? (
         <defs>
           <filter id={filterId} x="-40%" y="-30%" width="190%" height="190%">
@@ -250,11 +252,15 @@ function narrowStrand(strand: Strand): Strand {
 export function Garland({
   strands: source = DEFAULT_STRANDS,
   previewWidth,
+  highlightIndex,
 }: {
   strands?: GarlandStrand[];
   /** Ширина для предпросмотра в панели. Ниже 920 покажет узкую композицию
    *  (segN), выше — десктопную: тот же порог, что и на сайте. */
   previewWidth?: number;
+  /** Предпросмотр редактора: выделить нить с этим индексом (остальные
+   *  приглушить). На сайте не передаётся — все нити равны. */
+  highlightIndex?: number;
 }) {
   const winWidth = useWindowWidth();
   const reducedMotion = useReducedMotion();
@@ -262,34 +268,40 @@ export function Garland({
 
   if (width === 0) return null;
 
+  // Исходный индекс нити тащим сквозь фильтры узкого режима и разбивку по слоям:
+  // по нему редактор подсвечивает выбранную нить (highlightIndex).
+  let items = source.map((strand, index) => ({ strand, index }));
   // Два режима, как в макете. Узкий: задняя нить (слой 0) убирается, остальные
   // берут узкую композицию segN с коэффициентами планшета/телефона. Но если
   // передних нитей нет (композиция целиком в слое 0 — так делают пресеты
   // редактора), прятать нечего: показываем все нити, иначе экран будет пустым.
-  let strands: Strand[] = source;
   if (width < NARROW_AT) {
-    const front = source.filter((strand) => strand.layer === 1);
-    strands = (front.length > 0 ? front : source).map(narrowStrand);
+    const front = items.filter((item) => item.strand.layer === 1);
+    items = (front.length > 0 ? front : items).map((item) => ({
+      strand: narrowStrand(item.strand),
+      index: item.index,
+    }));
   }
 
-  const back = strands.filter((strand) => strand.layer === 0);
-  const front = strands.filter((strand) => strand.layer === 1);
+  const back = items.filter((item) => item.strand.layer === 0);
+  const front = items.filter((item) => item.strand.layer === 1);
+  const dimmed = (index: number) => highlightIndex !== undefined && index !== highlightIndex;
 
   return (
     <div className={styles.wrap} aria-hidden="true">
       {back.length > 0 ? (
         <div className={`${styles.layer} ${styles.back}`}>
-          {back.map((strand, i) => (
-            <Fragment key={i}>
-              <StrandSvg strand={strand} width={width} reducedMotion={reducedMotion} filterId={`garland-shadow-back-${i}`} />
+          {back.map((item) => (
+            <Fragment key={item.index}>
+              <StrandSvg strand={item.strand} width={width} reducedMotion={reducedMotion} filterId={`garland-shadow-back-${item.index}`} dim={dimmed(item.index)} />
             </Fragment>
           ))}
         </div>
       ) : null}
       <div className={`${styles.layer} ${styles.front}`}>
-        {front.map((strand, i) => (
-          <Fragment key={i}>
-            <StrandSvg strand={strand} width={width} reducedMotion={reducedMotion} filterId={`garland-shadow-front-${i}`} />
+        {front.map((item) => (
+          <Fragment key={item.index}>
+            <StrandSvg strand={item.strand} width={width} reducedMotion={reducedMotion} filterId={`garland-shadow-front-${item.index}`} dim={dimmed(item.index)} />
           </Fragment>
         ))}
       </div>

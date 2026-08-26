@@ -122,6 +122,14 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
   const [state, formAction] = useActionState<ContentState, FormData>(saveGarland, {});
   const [strands, setStrands] = useState<GarlandStrand[]>(current);
   const [narrowPreview, setNarrowPreview] = useState(false);
+  // Настраивается ОДНА выбранная нить: её ползунки, а не всех сразу. Так не
+  // приходится листать десятки ползунков (запрос заказчика).
+  const [active, setActive] = useState(0);
+
+  // Выбранная нить могла исчезнуть (пресет с меньшим числом нитей, удаление):
+  // тогда берём последнюю существующую, чтобы индекс не указывал в пустоту.
+  const activeIndex = Math.min(active, strands.length - 1);
+  const activeStrand = strands[activeIndex];
 
   function update(index: number, patch: Partial<GarlandStrand>) {
     setStrands((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
@@ -133,10 +141,12 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
       ...prev,
       strand({ seg: [0, 1], yL: 20, yR: 60, sag: 50, shift: prev.length % 6 }),
     ]);
+    setActive(strands.length); // выбрать только что добавленную
   }
 
   function removeStrand(index: number) {
     setStrands((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+    setActive((prev) => (prev >= index && prev > 0 ? prev - 1 : prev));
   }
 
   return (
@@ -152,35 +162,42 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
         </p>
       ) : null}
 
-      {/* Переключатель ширины предпросмотра. */}
-      <div className={ed.previewTabs} role="group" aria-label="Ширина предпросмотра">
-        <button
-          type="button"
-          className={`${ed.previewTab} ${narrowPreview ? "" : ed.previewTabActive}`}
-          onClick={() => setNarrowPreview(false)}
-          aria-pressed={!narrowPreview}
-        >
-          Десктоп
-        </button>
-        <button
-          type="button"
-          className={`${ed.previewTab} ${narrowPreview ? ed.previewTabActive : ""}`}
-          onClick={() => setNarrowPreview(true)}
-          aria-pressed={narrowPreview}
-        >
-          Планшет и телефон
-        </button>
-      </div>
+      {/* Предпросмотр закреплён сверху: виден, пока крутишь ползунки нити. */}
+      <div className={ed.previewSticky}>
+        <div className={ed.previewTabs} role="group" aria-label="Ширина предпросмотра">
+          <button
+            type="button"
+            className={`${ed.previewTab} ${narrowPreview ? "" : ed.previewTabActive}`}
+            onClick={() => setNarrowPreview(false)}
+            aria-pressed={!narrowPreview}
+          >
+            Десктоп
+          </button>
+          <button
+            type="button"
+            className={`${ed.previewTab} ${narrowPreview ? ed.previewTabActive : ""}`}
+            onClick={() => setNarrowPreview(true)}
+            aria-pressed={narrowPreview}
+          >
+            Планшет и телефон
+          </button>
+        </div>
 
-      {/* Живой предпросмотр: тот же компонент, что и на сайте. */}
-      <div className={`${ed.stage} ${narrowPreview ? ed.stageNarrow : ""}`}>
-        <Garland strands={strands} previewWidth={narrowPreview ? PREVIEW_NARROW : PREVIEW_DESKTOP} />
-        <div className={ed.stageContent}>
-          <div className={ed.stageText}>
-            <div className={ed.stageEyebrow}>Художественная студия · Москва</div>
-            <div className={ed.stageTitle}>Там, где рождается творчество</div>
+        {/* Живой предпросмотр: тот же компонент, что и на сайте. Настраиваемая
+            нить подсвечена ярче, остальные приглушены — видно, что меняешь. */}
+        <div className={`${ed.stage} ${narrowPreview ? ed.stageNarrow : ""}`}>
+          <Garland
+            strands={strands}
+            previewWidth={narrowPreview ? PREVIEW_NARROW : PREVIEW_DESKTOP}
+            highlightIndex={activeIndex}
+          />
+          <div className={ed.stageContent}>
+            <div className={ed.stageText}>
+              <div className={ed.stageEyebrow}>Художественная студия · Москва</div>
+              <div className={ed.stageTitle}>Там, где рождается творчество</div>
+            </div>
+            <div className={ed.stageMedallion} aria-hidden="true" />
           </div>
-          <div className={ed.stageMedallion} aria-hidden="true" />
         </div>
       </div>
 
@@ -190,14 +207,33 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
             key={name}
             type="button"
             className={ed.presetButton}
-            onClick={() => setStrands(PRESETS[name])}
+            onClick={() => {
+              setStrands(PRESETS[name]);
+              setActive(0);
+            }}
           >
             {name}
           </button>
         ))}
+      </div>
+
+      {/* Выбор нити: вкладки. Настройки ниже — только выбранной нити. */}
+      <div className={ed.strandTabs} role="tablist" aria-label="Нить гирлянды">
+        {strands.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            role="tab"
+            aria-selected={index === activeIndex}
+            className={`${ed.strandTab} ${index === activeIndex ? ed.strandTabActive : ""}`}
+            onClick={() => setActive(index)}
+          >
+            Нить {index + 1}
+          </button>
+        ))}
         <button
           type="button"
-          className={ed.presetButton}
+          className={ed.strandAdd}
           onClick={addStrand}
           disabled={strands.length >= 5}
         >
@@ -205,48 +241,59 @@ export function GarlandForm({ current }: { current: GarlandStrand[] }) {
         </button>
       </div>
 
-      {strands.map((s, index) => (
-        <fieldset key={index} className={ed.strand}>
-          <div className={ed.strandHead}>
-            <h4>Нить {index + 1}</h4>
-            {strands.length > 1 ? (
-              <button type="button" className={ed.remove} onClick={() => removeStrand(index)}>
-                убрать
-              </button>
-            ) : null}
-          </div>
+      <fieldset className={ed.strand}>
+        <div className={ed.strandHead}>
+          <h4>Настройки нити {activeIndex + 1}</h4>
+          {strands.length > 1 ? (
+            <button
+              type="button"
+              className={ed.remove}
+              onClick={() => removeStrand(activeIndex)}
+            >
+              убрать нить
+            </button>
+          ) : null}
+        </div>
 
-          {GROUPS.map((group) => (
-            <div key={group.group}>
-              <div className={ed.groupLabel}>{group.group}</div>
-              {group.controls.map((control) => {
-                const value = readControl(s, control.key);
-                return (
-                  <label key={String(control.key)} className={ed.slider}>
-                    <span>{control.label}</span>
-                    <input
-                      type="range"
-                      min={control.min}
-                      max={control.max}
-                      step={1}
-                      value={value}
-                      onChange={(e) => update(index, patchControl(s, control.key, Number(e.target.value)))}
-                    />
-                    <span className={ed.value}>{formatValue(control.key, value)}</span>
-                  </label>
-                );
-              })}
-            </div>
-          ))}
-        </fieldset>
-      ))}
+        {GROUPS.map((group) => (
+          <div key={group.group}>
+            <div className={ed.groupLabel}>{group.group}</div>
+            {group.controls.map((control) => {
+              const value = readControl(activeStrand, control.key);
+              return (
+                <label key={String(control.key)} className={ed.slider}>
+                  <span>{control.label}</span>
+                  <input
+                    type="range"
+                    min={control.min}
+                    max={control.max}
+                    step={1}
+                    value={value}
+                    onChange={(e) =>
+                      update(activeIndex, patchControl(activeStrand, control.key, Number(e.target.value)))
+                    }
+                  />
+                  <span className={ed.value}>{formatValue(control.key, value)}</span>
+                </label>
+              );
+            })}
+          </div>
+        ))}
+      </fieldset>
 
       {/* Полная конфигурация уезжает одним полем: сервер строго её проверяет. */}
       <input type="hidden" name="strands" value={JSON.stringify(strands)} readOnly />
 
       <div className={styles.actions}>
         <Submit />
-        <Button type="button" variant="ghost" onClick={() => setStrands(DEFAULT_STRANDS)}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setStrands(DEFAULT_STRANDS);
+            setActive(0);
+          }}
+        >
           Вернуть утверждённую
         </Button>
       </div>

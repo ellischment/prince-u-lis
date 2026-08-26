@@ -57,6 +57,17 @@
   background: radial-gradient(circle at 40% 35%, var(--green), var(--deep));
 }
 
+/* Предпросмотр закреплён сверху: виден, пока крутишь ползунки выбранной нити.
+   Фон под ним — цвет панели, чтобы ползунки не просвечивали при прокрутке. */
+.previewSticky {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  padding-top: 8px;
+  margin-bottom: 12px;
+  background: var(--navy);
+}
+
 .previewTabs {
   display: flex;
   gap: 6px;
@@ -128,6 +139,58 @@
 .presetButton:hover {
   color: var(--cream);
   border-color: var(--gold);
+}
+
+/* Вкладки выбора нити: настраивается только выбранная (запрос заказчика —
+   чтобы не листать ползунки всех нитей сразу). */
+.strandTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.strandTab {
+  background: none;
+  border: 1px solid var(--line2);
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.18s var(--ease);
+}
+
+.strandTab:hover {
+  color: var(--cream);
+  border-color: var(--gold);
+}
+
+.strandTabActive {
+  background: var(--gold-soft);
+  border-color: var(--gold-soft);
+  color: var(--deep);
+  font-weight: 600;
+}
+
+.strandAdd {
+  background: none;
+  border: 1px dashed var(--line2);
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.strandAdd:hover:not(:disabled) {
+  color: var(--cream);
+  border-color: var(--gold);
+}
+
+.strandAdd:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .strand {

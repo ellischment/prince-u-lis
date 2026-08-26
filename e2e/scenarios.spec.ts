@@ -387,3 +387,18 @@ test("«Настройки и доступы»: владелец заводит 
   // Новый доступ появился в таблице пользователей.
   await expect(page.getByRole("cell", { name: email })).toBeVisible();
 });
+
+test("редактор гирлянды: выбираешь нить — видишь её настройки", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin/content");
+
+  // Настраивается одна выбранная нить (запрос заказчика): на экране ровно один
+  // блок настроек, по умолчанию — первой нити.
+  await expect(page.getByRole("heading", { level: 4, name: "Настройки нити 1" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 4, name: "Настройки нити 2" })).toHaveCount(0);
+
+  // Выбор второй нити переключает блок настроек на неё.
+  await page.getByRole("tab", { name: "Нить 2" }).click();
+  await expect(page.getByRole("heading", { level: 4, name: "Настройки нити 2" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 4, name: "Настройки нити 1" })).toHaveCount(0);
+});
