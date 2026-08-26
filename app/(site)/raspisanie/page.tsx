@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ButtonLink } from "@/components/Button";
+import { BookLink } from "@/components/BookLink";
 import { Container } from "@/components/Container";
 import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
@@ -90,14 +90,14 @@ export default async function SchedulePage() {
                           </Link>
                           {/* Запись подставляет занятие и время в форму: slug берём из
                               адреса занятия, время из слота (FEATURES.md 1.7). */}
-                          <ButtonLink
+                          <BookLink
                             small
                             className={styles.rowBtn}
                             href={`/zapis?zanyatie=${row.href.split("/").pop()}&vremya=${encodeURIComponent(row.time)}`}
                             ariaLabel={`Записаться: ${row.title}, ${row.time}`}
                           >
                             Записаться
-                          </ButtonLink>
+                          </BookLink>
                         </li>
                       ))}
                     </ul>

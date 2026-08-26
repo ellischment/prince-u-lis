@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ButtonLink } from "./Button";
+import { BookLink } from "./BookLink";
 import styles from "./StickyPrice.module.css";
 
 /**
@@ -24,9 +24,9 @@ export function StickyPrice({ price, title, href }: { price: string; title: stri
   return (
     <div className={shown ? styles.barShown : styles.bar} aria-hidden={!shown}>
       <span className={styles.price}>{price}</span>
-      <ButtonLink href={href} ariaLabel={`Записаться: ${title}`}>
+      <BookLink href={href} ariaLabel={`Записаться: ${title}`}>
         Записаться
-      </ButtonLink>
+      </BookLink>
     </div>
   );
 }

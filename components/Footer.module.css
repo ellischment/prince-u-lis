@@ -65,6 +65,24 @@
   color: var(--paper);
 }
 
+/* Кнопка «Файлы cookie» выглядит как ссылка колонки: подвал серверный,
+   а открыть баннер можно только на клиенте (components/CookieReopen.tsx). */
+.linkButton {
+  align-self: flex-start;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--paper);
+}
+
 .bottom {
   display: flex;
   justify-content: space-between;

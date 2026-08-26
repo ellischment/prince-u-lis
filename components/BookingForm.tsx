@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "./Button";
+import { track } from "@/lib/analytics";
 import { CHANNEL_LABELS, type RequestInput } from "@/lib/validation/request";
 import { REQUEST_CHANNELS, type RequestChannel, type RequestType } from "@/lib/constants";
 import styles from "./BookingForm.module.css";
@@ -49,6 +50,14 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<null | { lessonTitle?: string; duplicate: boolean }>(null);
 
+  // Событие booking_start — один раз при первом касании формы (SPEC р.18).
+  const started = useRef(false);
+  function markStart() {
+    if (started.current) return;
+    started.current = true;
+    track("booking_start");
+  }
+
   const pickerRef = useRef<HTMLDivElement>(null);
   const pickBtnRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -79,6 +88,7 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
   }, [open]);
 
   function choose(id: string) {
+    markStart();
     setLessonId(id);
     setOpen(false);
     setErrors((e) => ({ ...e, lessonId: undefined }));
@@ -132,6 +142,7 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
         return;
       }
       setDone({ lessonTitle: selected?.title, duplicate: Boolean(data.duplicate) });
+      track("booking_submit");
     } catch {
       setErrors({ form: "Нет связи с сервером. Попробуйте ещё раз." });
     } finally {
@@ -253,7 +264,10 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
               ref={nameRef}
               className={`${styles.input} ${errors.name ? styles.invalid : ""}`}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                markStart();
+                setName(e.target.value);
+              }}
               placeholder="Как к вам обращаться"
               aria-invalid={Boolean(errors.name)}
             />
@@ -267,7 +281,10 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
               ref={phoneRef}
               className={`${styles.input} ${errors.phone ? styles.invalid : ""}`}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                markStart();
+                setPhone(e.target.value);
+              }}
               placeholder="+7 900 000-00-00"
               inputMode="tel"
               aria-invalid={Boolean(errors.phone)}
@@ -289,7 +306,10 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
               type="button"
               className={`${styles.channel} ${channel === ch ? styles.channelOn : ""}`}
               aria-pressed={channel === ch}
-              onClick={() => setChannel(ch)}
+              onClick={() => {
+                markStart();
+                setChannel(ch);
+              }}
             >
               {CHANNEL_LABELS[ch]}
             </button>
@@ -298,7 +318,10 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
         <textarea
           className={styles.textarea}
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onChange={(e) => {
+            markStart();
+            setComment(e.target.value);
+          }}
           placeholder="Комментарий: попросить преподавателя, предупредить про день рождения или особенности"
           rows={3}
         />

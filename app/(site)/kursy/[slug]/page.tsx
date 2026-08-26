@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ButtonLink } from "@/components/Button";
+import { BookLink } from "@/components/BookLink";
 import { JsonLd } from "@/components/JsonLd";
 import { LessonArticle } from "@/components/LessonArticle";
 import { Section } from "@/components/Section";
+import { TrackView } from "@/components/TrackView";
 import {
   formatRunDate,
   getCourseBySlug,
@@ -71,12 +72,12 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
             Открытых наборов пока нет. Оставьте заявку, и мы позовём вас, как только откроется
             следующий.
           </p>
-          <ButtonLink
+          <BookLink
             href={`/zapis?zanyatie=${course.slug}`}
             ariaLabel={`Сообщить о наборе: ${course.title}`}
           >
             Сообщить о наборе
-          </ButtonLink>
+          </BookLink>
         </div>
       ) : (
         <ul className={styles.runs}>
@@ -89,12 +90,12 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
                 </span>
                 {run.note ? <span className={styles.note}>{run.note}</span> : null}
               </div>
-              <ButtonLink
+              <BookLink
                 href={`/zapis?zanyatie=${course.slug}&potok=${encodeURIComponent(formatRunDate(run.startDate))}`}
                 ariaLabel={`Записаться на поток с ${formatRunDate(run.startDate)}: ${course.title}`}
               >
                 Записаться на поток
-              </ButtonLink>
+              </BookLink>
             </li>
           ))}
         </ul>
@@ -107,6 +108,8 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
       <a className="skip-link" href="#potoki">
         Перейти к ближайшим потокам
       </a>
+
+      <TrackView event="lesson_view" />
 
       <JsonLd
         items={[

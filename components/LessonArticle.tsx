@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ButtonLink } from "./Button";
+import { BookLink } from "./BookLink";
 import { Container } from "./Container";
 import { LessonCard } from "./LessonCard";
 import { Gallery, type GalleryItem } from "./Gallery";
@@ -90,9 +90,9 @@ export function LessonArticle({ lesson, similar, bookHref, afterHero }: Props) {
               Это заявка, а не бронь. Мы перезвоним и подтвердим время.
             </p>
           </div>
-          <ButtonLink href={bookHref} ariaLabel={`Записаться: ${lesson.title}`}>
+          <BookLink href={bookHref} ariaLabel={`Записаться: ${lesson.title}`}>
             Записаться
-          </ButtonLink>
+          </BookLink>
         </div>
       </Section>
 
@@ -169,9 +169,9 @@ export function LessonArticle({ lesson, similar, bookHref, afterHero }: Props) {
               поэтому здесь она только на десктопе: SPEC.md раздел 6 — внизу
               «повтор цены», отдельная кнопка не обязательна. */}
           <div className={styles.priceRepeatCta}>
-            <ButtonLink href={bookHref} ariaLabel={`Записаться: ${lesson.title}`}>
+            <BookLink href={bookHref} ariaLabel={`Записаться: ${lesson.title}`}>
               Записаться
-            </ButtonLink>
+            </BookLink>
           </div>
         </div>
       </Container>

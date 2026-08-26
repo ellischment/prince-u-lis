@@ -17,6 +17,9 @@ type ButtonProps = CommonProps &
 type LinkProps = CommonProps & {
   href: string;
   ariaLabel?: string;
+  /** Необязательный обработчик клика: аналитика booking_click (SPEC р.18).
+   *  Переход по ссылке не отменяется — только шлём событие по дороге. */
+  onClick?: () => void;
 };
 
 function classes(variant: Variant, small: boolean, extra?: string): string {
@@ -48,9 +51,15 @@ export function ButtonLink({
   small = false,
   className,
   ariaLabel,
+  onClick,
 }: LinkProps) {
   return (
-    <Link href={href} className={classes(variant, small, className)} aria-label={ariaLabel}>
+    <Link
+      href={href}
+      className={classes(variant, small, className)}
+      aria-label={ariaLabel}
+      onClick={onClick}
+    >
       {children}
     </Link>
   );

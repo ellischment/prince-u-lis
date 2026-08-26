@@ -2,14 +2,19 @@
    уменьшенном виде: тот же градиент, надзаголовок, заголовок и медальон,
    а поверх — тот же компонент Garland, что и на сайте, поэтому предпросмотр
    совпадает с результатом. */
+/* Высота и верхний отступ повторяют первый экран сайта (page.module.css .hero:
+   гирлянда занимает фиксированную полосу 420px сверху, текст отодвинут
+   padding-top 180px и оказывается ПОД флажками). Гирлянда по вертикали не
+   масштабируется (SVG height 420px), поэтому единственный способ показать
+   правдивое перекрытие текста флажками — поставить текст на ту же отметку. */
 .stage {
   position: relative;
   overflow: hidden;
-  height: 300px;
+  height: 420px;
   border-radius: 16px;
   border: 1px solid var(--line2);
   background:
-    radial-gradient(60% 80% at 72% -8%, color-mix(in srgb, var(--card2) 70%, transparent), transparent 60%),
+    radial-gradient(circle at 85% 0%, rgba(143, 184, 216, 0.14), transparent 40%),
     var(--deep);
   margin-bottom: 16px;
 }
@@ -20,8 +25,9 @@
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 24px;
-  align-items: center;
-  padding: 40px 28px 0;
+  align-items: start;
+  /* 180px — как padding-top у .hero: текст встаёт ниже полосы гирлянды. */
+  padding: 180px 28px 0;
 }
 
 /* Текст поверх переднего слоя гирлянды (.front = 2), как на сайте. */
@@ -45,7 +51,10 @@
   color: var(--paper);
 }
 
-/* Медальон под передним слоем гирлянды (z-index 1 < .front 2). */
+/* Медальон под передним слоем гирлянды (z-index 1 < .front 2). Реальное фото
+   (то же /medallion.jpg, что на сайте), а не абстрактный круг: предпросмотр
+   должен совпадать с первым экраном, иначе гирлянду сверяешь с чужой сценой.
+   Фона нет — падает на --deep, круг остаётся видимым. */
 .stageMedallion {
   position: relative;
   z-index: 1;
@@ -54,7 +63,10 @@
   border-radius: 50%;
   margin-left: auto;
   border: 2px solid var(--gold);
-  background: radial-gradient(circle at 40% 35%, var(--green), var(--deep));
+  background-color: var(--deep);
+  background-image: url("/medallion.jpg");
+  background-size: cover;
+  background-position: center;
 }
 
 /* Предпросмотр закреплён сверху: виден, пока крутишь ползунки выбранной нити.
@@ -108,7 +120,9 @@
 .stageNarrow .stageContent {
   grid-template-columns: 1fr;
   align-items: start;
-  padding: 28px 18px 0;
+  /* 120px — как padding-top у .hero на телефоне; узкая гирлянда мельче (×0.62),
+     флажки доходят до ~124px, текст встаёт под ними, как на сайте. */
+  padding: 120px 18px 0;
 }
 
 .stageNarrow .stageMedallion {

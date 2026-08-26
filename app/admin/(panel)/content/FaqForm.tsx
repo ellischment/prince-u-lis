@@ -88,7 +88,7 @@ export function FaqForm({ current }: { current: FaqItem[] }) {
           <label className={styles.field}>
             <span className={styles.label}>Ответ</span>
             <textarea
-              className={styles.textarea}
+              className={`${styles.input} ${styles.textarea}`}
               value={row.answer}
               onChange={(event) => update(row.key, "answer", event.target.value)}
               rows={2}

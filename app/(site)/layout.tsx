@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { CookieConsent } from "@/components/CookieConsent";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getButtonColor } from "@/lib/appearance-read";
@@ -33,6 +34,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       <Header />
       {children}
       <Footer />
+      <CookieConsent />
     </div>
   );
 }

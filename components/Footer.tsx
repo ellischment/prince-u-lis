@@ -8,6 +8,7 @@
 // поле, которое нечем заполнить, не выводится.
 
 import Link from "next/link";
+import { CookieReopen } from "@/components/CookieReopen";
 import { getStudioHours } from "@/lib/studio-hours";
 import { STUDIO_ADDRESS, STUDIO_LEGAL_NAME, STUDIO_NAME, STUDIO_PHONE, STUDIO_PHONE_HREF, formatStudioHours } from "@/lib/studio";
 import styles from "./Footer.module.css";
@@ -51,6 +52,7 @@ export async function Footer() {
             <a href={STUDIO_PHONE_HREF}>{STUDIO_PHONE}</a>
             <Link href="/politika">Политика и согласие</Link>
             <Link href="/voprosy">Вопросы</Link>
+            <CookieReopen className={styles.linkButton} />
           </div>
         </div>
 

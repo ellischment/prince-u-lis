@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/Button";
+import { track } from "@/lib/analytics";
 import { STUDIO_PHONE, STUDIO_PHONE_HREF } from "@/lib/studio";
 import type { OpenDay } from "@/lib/schedule";
 import styles from "./schedule.module.css";
@@ -111,6 +112,7 @@ export function ScheduleCalendar({ openDays, todayKey }: { openDays: OpenDay[]; 
         return;
       }
       setDone(`${selectedLabel}, ${effectiveTime}`);
+      track("freetime_submit");
     } catch {
       setError("Нет связи с сервером. Попробуйте ещё раз.");
     } finally {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { LessonArticle } from "@/components/LessonArticle";
+import { TrackView } from "@/components/TrackView";
 import { COURSE_FORMAT_SLUG } from "@/lib/constants";
 import { isCourse } from "@/lib/courses";
 import { getLessonBySlug, getLessonSlugs, getSimilarLessons } from "@/lib/lessons";
@@ -63,6 +64,8 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
       <a className="skip-link" href="#kak-prohodit">
         Перейти к описанию занятия
       </a>
+
+      <TrackView event="lesson_view" />
 
       <JsonLd
         items={[

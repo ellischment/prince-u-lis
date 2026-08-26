@@ -1,0 +1,34 @@
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 300;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 16px clamp(16px, 4vw, 40px);
+  background: var(--navy);
+  border-top: 1px solid var(--line2);
+}
+
+.text {
+  margin: 0;
+  max-width: 640px;
+  color: var(--paper);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.link {
+  color: var(--cream);
+  text-decoration: underline;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
