@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
+import { JsonLd } from "@/components/JsonLd";
 import { LessonArticle } from "@/components/LessonArticle";
 import { COURSE_FORMAT_SLUG } from "@/lib/constants";
 import { isCourse } from "@/lib/courses";
 import { getLessonBySlug, getLessonSlugs, getSimilarLessons } from "@/lib/lessons";
-import { parseDuration, parsePrice } from "@/lib/price";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+import { breadcrumbSchema, courseSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 
 // Страница занятия статическая с тегами по ARCHITECTURE.md раздел 3.
 // Занятие, добавленное после сборки, отрисуется при первом заходе.
@@ -56,44 +55,7 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
   if (isCourse(lesson)) permanentRedirect(`/kursy/${lesson.slug}`);
 
   const similar = await getSimilarLessons(lesson.id, lesson.directionId);
-
-  const price = parsePrice(lesson.price);
-  const workload = parseDuration(lesson.duration);
-
-  // Разметка по SEO.md раздел 3. Поле, которое нечем заполнить, не выводится:
-  // выдуманные значения приводят к санкциям поисковика.
-  const schema: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    name: lesson.title,
-    description: lesson.intro,
-    ...(SITE_URL ? { provider: { "@id": `${SITE_URL}/#studio` } } : {}),
-    ...(price.amount !== null
-      ? {
-          offers: {
-            "@type": "Offer",
-            price: String(price.amount),
-            priceCurrency: "RUB",
-            availability: "https://schema.org/InStock",
-            ...(SITE_URL ? { url: `${SITE_URL}/zanyatiya/${lesson.slug}` } : {}),
-            ...(price.isFrom
-              ? {
-                  priceSpecification: {
-                    "@type": "PriceSpecification",
-                    minPrice: price.amount,
-                  },
-                }
-              : {}),
-          },
-        }
-      : {}),
-    hasCourseInstance: {
-      "@type": "CourseInstance",
-      courseMode: "onsite",
-      ...(workload ? { courseWorkload: workload } : {}),
-      ...(SITE_URL ? { location: { "@id": `${SITE_URL}/#studio` } } : {}),
-    },
-  };
+  const organization = await organizationSchema();
 
   return (
     <main id="main">
@@ -101,9 +63,17 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
         Перейти к описанию занятия
       </a>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Занятия", path: "/zanyatiya" },
+            { name: lesson.title },
+          ]),
+          courseSchema(lesson, `/zanyatiya/${lesson.slug}`),
+        ]}
       />
 
       <LessonArticle lesson={lesson} similar={similar} bookHref={`/zapis?zanyatie=${lesson.slug}`} />

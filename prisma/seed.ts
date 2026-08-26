@@ -968,18 +968,21 @@ async function seedReviews(): Promise<void> {
       kind: "text",
       text: "Пришла впервые, боялась испортить. В итоге увезла две чашки и записалась на курс.",
       consentReceived: true,
+      rating: 5,
     },
     {
       guestName: "Дмитрий",
       kind: "text",
       text: "Брали занятие вдвоём на годовщину. Спокойно, без суеты, мастер всё время рядом.",
       consentReceived: true,
+      rating: 5,
     },
     {
       guestName: "Ирина",
       kind: "text",
       text: "Водила дочку на детскую керамику. Ребёнок доволен, работу забрали через три недели.",
       consentReceived: true,
+      rating: 4,
     },
   ];
 
@@ -991,6 +994,7 @@ async function seedReviews(): Promise<void> {
         kind: review.kind,
         text: review.text,
         consentReceived: review.consentReceived,
+        rating: review.rating,
         status: "published",
         sort: sort++,
       },

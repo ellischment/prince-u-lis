@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { getCourses, lessonHref, nearestRun, formatRunDate, sessionsLabel } from "@/lib/courses";
+import { breadcrumbSchema, organizationSchema, scheduleEventSchema, websiteSchema } from "@/lib/schema";
 import { getOpenDays, getWeekSchedule } from "@/lib/schedule";
 import { currentWeekdayIndex, moscowDateKey } from "@/lib/time";
 import { ScheduleCalendar } from "./ScheduleCalendar";
@@ -17,15 +19,22 @@ export const metadata: Metadata = {
   title: "Расписание занятий",
   description:
     "Расписание групповых занятий студии «Принц и Лис» по дням недели и запись на индивидуальное время.",
+  alternates: { canonical: "/raspisanie" },
 };
 
 export default async function SchedulePage() {
-  const [week, openDays, courses] = await Promise.all([
+  const [week, openDays, courses, organization] = await Promise.all([
     getWeekSchedule(),
     getOpenDays(),
     getCourses(),
+    organizationSchema(),
   ]);
   const today = currentWeekdayIndex();
+
+  // SEO.md раздел 1: «Расписание: Event для каждого занятия недели».
+  const slotRows = week.flatMap((day) =>
+    day.rows.map((row) => ({ weekday: day.weekday, time: row.time, title: row.title, href: row.href })),
+  );
 
   // Ближайший курс: среди всех курсов берём самый ранний будущий поток.
   const nearest = courses
@@ -38,6 +47,15 @@ export default async function SchedulePage() {
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Расписание" }]),
+          ...scheduleEventSchema(slotRows),
+        ]}
+      />
+
       <Container>
         <Section>
           <h1 className={styles.title}>Расписание</h1>

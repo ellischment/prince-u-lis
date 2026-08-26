@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/Container";
 import { EventCard } from "@/components/EventCard";
+import { JsonLd } from "@/components/JsonLd";
 import { getEvents } from "@/lib/events";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { startOfTodayMoscow } from "@/lib/time";
 import styles from "./sobytiya.module.css";
 
@@ -11,10 +13,11 @@ export const metadata: Metadata = {
   title: "События студии «Принц и Лис»",
   description:
     "Маркеты, открытые обжиги и вечера в мастерской на Сущёвской. Что скоро и что уже было в студии керамики, живописи и витража.",
+  alternates: { canonical: "/sobytiya" },
 };
 
 export default async function SobytiyaPage() {
-  const events = await getEvents();
+  const [events, organization] = await Promise.all([getEvents(), organizationSchema()]);
   const today = startOfTodayMoscow().getTime();
 
   const future = events
@@ -24,6 +27,14 @@ export default async function SobytiyaPage() {
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "События" }]),
+        ]}
+      />
+
       <Container>
         <div className={styles.head}>
           <p className={styles.eyebrow}>События</p>

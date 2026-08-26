@@ -16,3 +16,27 @@ export const getPublishedReviews = cachedRead(["reviews-home"], [TAGS.reviews], 
     include: { media: { select: { path: true, alt: true } } },
   }),
 );
+
+/** Все опубликованные отзывы — для разметки schema.org (SEO.md §9), не только тройка на главной. */
+export const getAllPublishedReviews = cachedRead(["reviews-all"], [TAGS.reviews], async () =>
+  prisma.review.findMany({
+    where: { status: "published" },
+    orderBy: { sort: "asc" },
+    select: { id: true, guestName: true, text: true, rating: true, createdAt: true },
+  }),
+);
+
+/**
+ * Средняя оценка и число оценённых отзывов. SEO.md §9: aggregateRating выводится,
+ * только если настоящих отзывов с оценкой не меньше пяти — придуманный рейтинг
+ * ведёт к санкциям. Отзывы без rating (поле необязательно) в среднее не входят.
+ */
+export function reviewStats(reviews: { rating: number | null }[]): {
+  count: number;
+  average: number | null;
+} {
+  const rated = reviews.filter((r): r is { rating: number } => r.rating !== null);
+  if (rated.length === 0) return { count: 0, average: null };
+  const sum = rated.reduce((total, r) => total + r.rating, 0);
+  return { count: rated.length, average: sum / rated.length };
+}

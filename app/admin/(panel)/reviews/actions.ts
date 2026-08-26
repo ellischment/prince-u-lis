@@ -46,6 +46,7 @@ const saveCore = panelAction({
       mediaId: input.mediaId,
       consentReceived: input.consentReceived,
       status: input.status,
+      rating: input.rating,
     };
 
     if (input.id) {
@@ -76,6 +77,7 @@ export async function saveReview(_p: SectionState, form: FormData): Promise<Sect
       mediaId: String(form.get("mediaId") ?? ""),
       consentReceived: form.get("consentReceived") === "on" || form.get("consentReceived") === "true",
       status: String(form.get("status") ?? "draft"),
+      rating: form.get("rating") ? String(form.get("rating")) : undefined,
     }),
   );
 }

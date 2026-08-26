@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
+import { breadcrumbSchema, faqSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { getFaqItems } from "@/lib/site-texts";
 import styles from "./voprosy.module.css";
 
@@ -16,31 +18,18 @@ export const metadata: Metadata = {
 };
 
 export default async function VoprosyPage() {
-  const items = await getFaqItems();
-
-  // Разметка FAQPage по SEO.md §9: каждый вопрос — Question с одним ответом.
-  // Пустой список схему не отдаёт: выдуманных вопросов быть не должно.
-  const schema =
-    items.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: items.map((item) => ({
-            "@type": "Question",
-            name: item.question,
-            acceptedAnswer: { "@type": "Answer", text: item.answer },
-          })),
-        }
-      : null;
+  const [items, organization] = await Promise.all([getFaqItems(), organizationSchema()]);
 
   return (
     <main id="main">
-      {schema ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-      ) : null}
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Вопросы" }]),
+          faqSchema(items),
+        ]}
+      />
 
       <Container>
         <div className={styles.head}>

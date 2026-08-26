@@ -34,6 +34,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
+    // Расписание меняется часто (рендерится динамически), но адрес публичный
+    // и постоянный (SPEC §3) — в карте сайта должен быть, как и любая другая
+    // страница из таблицы маршрутов.
+    { url: `${SITE_URL}/raspisanie`, changeFrequency: "daily", priority: 0.7 },
     { url: `${SITE_URL}/zanyatiya`, changeFrequency: "weekly", priority: 0.9 },
     ...regular.map((lesson) => ({
       url: `${SITE_URL}/zanyatiya/${lesson.slug}`,
@@ -117,5 +121,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...(faq.length > 0
       ? [{ url: `${SITE_URL}/voprosy`, changeFrequency: "monthly" as const, priority: 0.5 }]
       : []),
+    // Политика — статическая страница, есть всегда (SPEC §3).
+    { url: `${SITE_URL}/politika`, changeFrequency: "yearly", priority: 0.3 },
   ];
 }

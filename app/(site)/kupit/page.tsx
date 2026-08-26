@@ -4,12 +4,14 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/Button";
 import { ShopCard } from "@/components/ShopCard";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import {
   CERTIFICATES_CATEGORY_SLUG,
   COWORKING_ANCHOR,
   COWORKING_LESSON_SLUG,
 } from "@/lib/constants";
 import { getLessonBySlug } from "@/lib/lessons";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import {
   filterWorks,
   getShopCategories,
@@ -26,6 +28,7 @@ export const metadata: Metadata = {
   title: "Купить: работы, сертификаты и материалы для керамики",
   description:
     "Готовые работы студии «Принц и Лис», подарочные сертификаты, абонементы и материалы для керамистов. Заявка на покупку без предоплаты.",
+  alternates: { canonical: "/kupit" },
 };
 
 const WORKS_TAB = "raboty";
@@ -60,12 +63,13 @@ function MeshTile({ title, href, cover }: { title: string; href: string; cover: 
 
 export default async function KupitPage({ searchParams }: PageProps<"/kupit">) {
   const params = await searchParams;
-  const [works, workFilters, categories, items, coworking] = await Promise.all([
+  const [works, workFilters, categories, items, coworking, organization] = await Promise.all([
     getWorks(),
     getWorkFilters(),
     getShopCategories(),
     getShopItems(),
     getLessonBySlug(COWORKING_LESSON_SLUG),
+    organizationSchema(),
   ]);
 
   // Вкладки: «Работы» (если есть работы) плюс каждая непустая категория первого
@@ -86,6 +90,14 @@ export default async function KupitPage({ searchParams }: PageProps<"/kupit">) {
       <a className="skip-link" href="#catalog">
         Перейти к каталогу
       </a>
+
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Купить" }]),
+        ]}
+      />
 
       <Container>
         <div className={styles.head}>

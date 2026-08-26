@@ -38,6 +38,7 @@ export default async function ReviewsPanelPage() {
     photoPath: r.media?.path ?? null,
     consentReceived: r.consentReceived,
     status: r.status,
+    rating: r.rating,
   }));
 
   return (

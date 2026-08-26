@@ -19,6 +19,7 @@ export type ReviewView = {
   photoPath: string | null;
   consentReceived: boolean;
   status: string;
+  rating: number | null;
 };
 
 const KIND_LABEL: Record<string, string> = { text: "текст", photo: "фото", video: "видео" };
@@ -153,6 +154,18 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
           </div>
         </div>
 
+        <label className={styles.field}>
+          <span className={styles.label}>Оценка гостя</span>
+          <select name="rating" className={styles.select} defaultValue={d?.rating ? String(d.rating) : ""}>
+            <option value="">без оценки</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
         {state.errors ? (
           <p className={content.error} role="alert">
             {state.errors.consentReceived ??
@@ -185,6 +198,7 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
               <span className={styles.listMeta}>
                 {STATUS_LABEL[r.status] ?? r.status}
                 {r.consentReceived ? " · согласие есть" : " · без согласия"}
+                {r.rating ? ` · оценка ${r.rating}` : ""}
               </span>
             </span>
             <span className={styles.rowActions}>

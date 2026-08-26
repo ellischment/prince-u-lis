@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Gallery } from "@/components/Gallery";
+import { JsonLd } from "@/components/JsonLd";
 import { RequestForm } from "@/components/RequestForm";
 import { getCelebrationBySlug } from "@/lib/celebrations";
+import { breadcrumbSchema, organizationSchema, serviceSchema, websiteSchema } from "@/lib/schema";
 import styles from "../otprazdnovat.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/otprazdnovat/[slug]">): Promise<Metadata> {
@@ -23,9 +25,23 @@ export default async function CelebrationPage({ params }: PageProps<"/otprazdnov
   const { slug } = await params;
   const item = await getCelebrationBySlug(slug);
   if (!item) notFound();
+  const organization = await organizationSchema();
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Отпраздновать", path: "/otprazdnovat" },
+            { name: item.title },
+          ]),
+          serviceSchema({ title: item.title, priceHint: item.priceHint }),
+        ]}
+      />
+
       <Container>
         <div className={styles.back}>
           <ButtonLink href="/otprazdnovat" variant="ghost">

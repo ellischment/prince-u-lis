@@ -9,7 +9,25 @@ export type ReviewItem = {
   text: string;
   videoUrl: string | null;
   media: { path: string | null; alt: string | null } | null;
+  rating: number | null;
 };
+
+/**
+ * Оценка звёздочками. Показывается на странице рядом с разметкой Review
+ * (SEO.md §9): поисковики требуют, чтобы отмеченный в schema.org рейтинг был
+ * виден гостю, а не существовал только в разметке.
+ */
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className={styles.stars} aria-label={`Оценка ${rating} из 5`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i} aria-hidden="true" className={i < rating ? styles.starFull : styles.starEmpty}>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
 
 /**
  * Три отзыва тремя форматами (FEATURES 1.11): текст — цитатой, фото — снимком,
@@ -44,7 +62,10 @@ export function Reviews({ items }: { items: ReviewItem[] }) {
           ) : null}
 
           <blockquote className={styles.quote}>{r.text}</blockquote>
-          <figcaption className={styles.name}>{r.guestName}</figcaption>
+          <figcaption className={styles.name}>
+            {r.guestName}
+            {r.rating ? <Stars rating={r.rating} /> : null}
+          </figcaption>
         </figure>
       ))}
     </div>

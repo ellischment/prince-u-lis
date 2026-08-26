@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
+import { JsonLd } from "@/components/JsonLd";
 import { LessonArticle } from "@/components/LessonArticle";
 import { Section } from "@/components/Section";
 import {
@@ -12,10 +13,8 @@ import {
   upcomingRuns,
 } from "@/lib/courses";
 import { getSimilarLessons } from "@/lib/lessons";
-import { parseDuration, parsePrice } from "@/lib/price";
+import { breadcrumbSchema, courseWithRunsSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./runs.module.css";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
 // Показываются два-три ближайших потока: FEATURES.md раздел 1.8a.
 const RUNS_SHOWN = 3;
@@ -58,44 +57,9 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
   if (!isCourse(course)) notFound();
 
   const similar = await getSimilarLessons(course.id, course.directionId);
+  const organization = await organizationSchema();
 
   const runs = upcomingRuns(course.runs).slice(0, RUNS_SHOWN);
-  const price = parsePrice(course.price);
-  const workload = parseDuration(course.duration);
-
-  // У курса каждый открытый поток это отдельный CourseInstance с датой начала:
-  // SEO.md раздел 4. Именно это позволяет курсу показаться в выдаче с датами
-  // набора. Потоков нет: массив не выводится вовсе, выдуманных дат не бывает.
-  const instances = runs.map((run) => ({
-    "@type": "CourseInstance",
-    courseMode: "onsite",
-    startDate: run.startDate.toISOString().slice(0, 10),
-    ...(workload ? { courseWorkload: workload } : {}),
-    ...(SITE_URL ? { location: { "@id": `${SITE_URL}/#studio` } } : {}),
-  }));
-
-  const schema: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    name: course.title,
-    description: course.intro,
-    ...(SITE_URL ? { provider: { "@id": `${SITE_URL}/#studio` } } : {}),
-    ...(price.amount !== null
-      ? {
-          offers: {
-            "@type": "Offer",
-            price: String(price.amount),
-            priceCurrency: "RUB",
-            availability: "https://schema.org/InStock",
-            ...(SITE_URL ? { url: `${SITE_URL}/kursy/${course.slug}` } : {}),
-            ...(price.isFrom
-              ? { priceSpecification: { "@type": "PriceSpecification", minPrice: price.amount } }
-              : {}),
-          },
-        }
-      : {}),
-    ...(instances.length > 0 ? { hasCourseInstance: instances } : {}),
-  };
 
   const runsBlock = (
     <Section title="Ближайшие потоки" tone="navy" id="potoki">
@@ -142,9 +106,17 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
         Перейти к ближайшим потокам
       </a>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Курсы", path: "/kursy" },
+            { name: course.title },
+          ]),
+          courseWithRunsSchema(course, runs, `/kursy/${course.slug}`),
+        ]}
       />
 
       <LessonArticle lesson={course} similar={similar} bookHref={`/zapis?zanyatie=${course.slug}`} afterHero={runsBlock} />

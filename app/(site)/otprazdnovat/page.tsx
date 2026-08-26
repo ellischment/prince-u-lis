@@ -1,20 +1,31 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { OtmCard } from "@/components/OtmCard";
 import { getCelebrations } from "@/lib/celebrations";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./otprazdnovat.module.css";
 
 export const metadata: Metadata = {
   title: "Отпраздновать в мастерской: дни рождения, свидания, корпоративы",
   description:
     "Праздники под ключ в студии «Принц и Лис»: день рождения, свидание, корпоратив, семейная встреча. Занятие, чай и работы на память. Выберите формат и оставьте заявку.",
+  alternates: { canonical: "/otprazdnovat" },
 };
 
 export default async function OtprazdnovatPage() {
-  const celebrations = await getCelebrations();
+  const [celebrations, organization] = await Promise.all([getCelebrations(), organizationSchema()]);
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Отпраздновать" }]),
+        ]}
+      />
+
       <Container>
         <div className={styles.head}>
           <p className={styles.eyebrow}>Отпраздновать</p>

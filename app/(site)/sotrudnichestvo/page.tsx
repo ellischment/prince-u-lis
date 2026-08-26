@@ -1,21 +1,36 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { OtmCard } from "@/components/OtmCard";
 import { RequestForm } from "@/components/RequestForm";
 import { getPartnerships, getPartnershipReplyTime } from "@/lib/partnerships";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./sotrudnichestvo.module.css";
 
 export const metadata: Metadata = {
   title: "Сотрудничество со студией «Принц и Лис»",
   description:
     "Партнёрства студии керамики: коллаборации с брендами, выездные мастер-классы, съёмки в мастерской, совместные материалы с медиа. Расскажите об идее — заявка уйдёт с нужным контекстом.",
+  alternates: { canonical: "/sotrudnichestvo" },
 };
 
 export default async function SotrudnichestvoPage() {
-  const [kinds, replyTime] = await Promise.all([getPartnerships(), getPartnershipReplyTime()]);
+  const [kinds, replyTime, organization] = await Promise.all([
+    getPartnerships(),
+    getPartnershipReplyTime(),
+    organizationSchema(),
+  ]);
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Сотрудничество" }]),
+        ]}
+      />
+
       <Container>
         <div className={styles.head}>
           <p className={styles.eyebrow}>Сотрудничество</p>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import {
   ARTICLES_PAGE_SIZE,
   blogPageHref,
@@ -10,6 +11,7 @@ import {
   parseShown,
   selectPage,
 } from "@/lib/articles";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./blog.module.css";
 
 /**
@@ -24,7 +26,7 @@ import styles from "./blog.module.css";
  * положено быть статической с тегом articles (ARCHITECTURE.md раздел 3).
  */
 export async function BlogList({ page, shown }: { page: number; shown?: string }) {
-  const all = await getPublishedArticles();
+  const [all, organization] = await Promise.all([getPublishedArticles(), organizationSchema()]);
   const view = selectPage(all, page, parseShown(shown));
 
   // Пустой блог это нормальное состояние (статей студия ещё не прислала), а вот
@@ -33,6 +35,18 @@ export async function BlogList({ page, shown }: { page: number; shown?: string }
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema(
+            page > 1
+              ? [{ name: "Главная", path: "/" }, { name: "Блог", path: "/blog" }, { name: `Страница ${page}` }]
+              : [{ name: "Главная", path: "/" }, { name: "Блог" }],
+          ),
+        ]}
+      />
+
       <Container>
         <div className={styles.head}>
           <p className={styles.eyebrow}>Блог</p>

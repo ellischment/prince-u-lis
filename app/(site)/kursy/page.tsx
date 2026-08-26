@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { LessonCard } from "@/components/LessonCard";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { formatRunDate, getCourses, nearestRun, sessionsLabel } from "@/lib/courses";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./courses.module.css";
 
 export const metadata: Metadata = {
@@ -13,13 +15,21 @@ export const metadata: Metadata = {
 };
 
 export default async function CoursesPage() {
-  const courses = await getCourses();
+  const [courses, organization] = await Promise.all([getCourses(), organizationSchema()]);
 
   return (
     <main id="main">
       <a className="skip-link" href="#kursy">
         Перейти к списку курсов
       </a>
+
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Курсы" }]),
+        ]}
+      />
 
       <Section>
         <h1>Курсы</h1>

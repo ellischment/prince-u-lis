@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { BookingForm, type LessonGroup, type Prefill } from "@/components/BookingForm";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { REQUEST_TYPES, type RequestType } from "@/lib/constants";
 import { lessonHref } from "@/lib/courses";
 import { getCatalogLessons } from "@/lib/lessons";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./zapis.module.css";
 
 export const metadata: Metadata = {
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function BookingPage({ searchParams }: PageProps<"/zapis">) {
   const params = await searchParams;
-  const lessons = await getCatalogLessons();
+  const [lessons, organization] = await Promise.all([getCatalogLessons(), organizationSchema()]);
 
   // Список для своего выпадающего меню: сгруппирован по направлениям, порядок — как
   // в каталоге. Курсы тоже здесь: гость записывается на курс через ту же форму.
@@ -70,6 +72,14 @@ export default async function BookingPage({ searchParams }: PageProps<"/zapis">)
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Запись" }]),
+        ]}
+      />
+
       <Container>
         <Section>
           <p className={styles.eyebrow}>Запись</p>

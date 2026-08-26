@@ -12,6 +12,7 @@ import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
 import { Garland } from "@/components/Garland";
 import { HomeSchedule, type HomeCourseTeaser } from "@/components/HomeSchedule";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
@@ -20,7 +21,8 @@ import { TASK_TAGS, type TaskTag } from "@/lib/constants";
 import { HOME_ARTICLES, getPublishedArticles } from "@/lib/articles";
 import { getEvents, pickHomeEvents } from "@/lib/events";
 import { getMasters } from "@/lib/masters";
-import { getPublishedReviews } from "@/lib/reviews";
+import { getAllPublishedReviews, getPublishedReviews } from "@/lib/reviews";
+import { organizationSchema, reviewsSchema, websiteSchema } from "@/lib/schema";
 import { getHomeWorks } from "@/lib/shop";
 import {
   getCourses,
@@ -97,6 +99,8 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     allEvents,
     articles,
     reviews,
+    allReviews,
+    organization,
   ] = await Promise.all([
     getHeroTexts(),
     getTrustItems(),
@@ -115,6 +119,8 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     getEvents(),
     getPublishedArticles(),
     getPublishedReviews(),
+    getAllPublishedReviews(),
+    organizationSchema(),
   ]);
 
   const homeEvents = pickHomeEvents(allEvents);
@@ -476,11 +482,19 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     ),
   };
 
+  const reviews_ = reviewsSchema(
+    reviews.map((r) => ({ guestName: r.guestName, text: r.text, rating: r.rating })),
+    allReviews,
+  );
+
   return (
     <main id="main">
       <a className="skip-link" href="#catalog">
         Перейти к содержанию
       </a>
+
+      <JsonLd items={[{ ...organization, ...reviews_ }, websiteSchema()]} />
+
       {order.filter(showBlock).map((id) => sections[id])}
     </main>
   );

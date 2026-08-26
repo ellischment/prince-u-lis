@@ -1,20 +1,31 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { MasterCard } from "@/components/MasterCard";
 import { getMasters } from "@/lib/masters";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./komanda.module.css";
 
 export const metadata: Metadata = {
   title: "Команда студии «Принц и Лис»",
   description:
     "Мастера студии керамики, живописи и витража: гончарный круг, лепка, живопись, витраж. Кто ведёт занятия в мастерской на Сущёвской.",
+  alternates: { canonical: "/komanda" },
 };
 
 export default async function KomandaPage() {
-  const masters = await getMasters();
+  const [masters, organization] = await Promise.all([getMasters(), organizationSchema()]);
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Команда" }]),
+        ]}
+      />
+
       <Container>
         <div className={styles.head}>
           <p className={styles.eyebrow}>Команда</p>

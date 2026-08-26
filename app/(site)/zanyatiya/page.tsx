@@ -3,16 +3,19 @@ import { LessonCard } from "@/components/LessonCard";
 import { ButtonLink } from "@/components/Button";
 import { ChipLink } from "@/components/Chip";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
 import { lessonHref } from "@/lib/courses";
 import { filterLessons } from "@/lib/filters";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "./catalog.module.css";
 
 export const metadata: Metadata = {
   title: "Занятия по керамике, живописи и витражу",
   description:
     "Гончарный круг, лепка, живопись и витраж в студии «Принц и Лис» на Сущёвской. Групповые и индивидуальные занятия с нуля, курсы и абонементы.",
+  alternates: { canonical: "/zanyatiya" },
 };
 
 const ANY_DIRECTION = "vse";
@@ -54,12 +57,25 @@ export default async function CatalogPage({ searchParams }: PageProps<"/zanyatiy
       );
 
   const isEmpty = !isCoworking && visible.length === 0;
+  const organization = await organizationSchema();
 
   return (
     <main id="main">
       <a className="skip-link" href="#spisok">
         Перейти к списку занятий
       </a>
+
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Занятия" }]),
+        ]}
+      />
+
+      {/* Section выводит title как h2 (общий для всех разделов заголовок), а
+          странице по CLAUDE.md положен ровно один h1. */}
+      <h1 className="sr-only">Занятия</h1>
 
       <Section title="Занятия" subtitle="Выберите направление и формат, они работают вместе">
         <div className={styles.filters}>

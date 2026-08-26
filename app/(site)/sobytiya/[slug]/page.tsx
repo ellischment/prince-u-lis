@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Gallery } from "@/components/Gallery";
+import { JsonLd } from "@/components/JsonLd";
 import { getEventBySlug } from "@/lib/events";
+import { breadcrumbSchema, eventSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { startOfTodayMoscow } from "@/lib/time";
 import styles from "../sobytiya.module.css";
 
@@ -32,9 +34,24 @@ export default async function EventPage({ params }: PageProps<"/sobytiya/[slug]"
   if (!event) notFound();
 
   const isPast = event.date.getTime() < startOfTodayMoscow().getTime();
+  const cover = event.media.find((m) => m.kind === "image" && m.path) ?? null;
+  const organization = await organizationSchema();
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "События", path: "/sobytiya" },
+            { name: event.title },
+          ]),
+          eventSchema({ title: event.title, date: event.date, coverPath: cover?.path ?? null }),
+        ]}
+      />
+
       <Container>
         <div className={styles.back}>
           <ButtonLink href="/sobytiya" variant="ghost">

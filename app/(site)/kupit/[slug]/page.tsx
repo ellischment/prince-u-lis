@@ -3,8 +3,10 @@ import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { PurchaseForm } from "@/components/PurchaseForm";
 import { COWORKING_LESSON_SLUG } from "@/lib/constants";
+import { breadcrumbSchema, organizationSchema, productSchema, websiteSchema } from "@/lib/schema";
 import { getPurchasableBySlug } from "@/lib/shop";
 import styles from "./item.module.css";
 
@@ -38,9 +40,26 @@ export default async function ItemPage({ params }: PageProps<"/kupit/[slug]">) {
   if (!item) notFound();
 
   const cover = item.media.find((m) => m.kind === "image" && m.path) ?? null;
+  const images = item.media
+    .filter((m): m is typeof m & { path: string } => m.kind === "image" && Boolean(m.path))
+    .map((m) => m.path);
+  const organization = await organizationSchema();
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Купить", path: "/kupit" },
+            { name: item.title },
+          ]),
+          productSchema({ title: item.title, description: item.description, price: item.price, images }, `/kupit/${item.slug}`),
+        ]}
+      />
+
       <Container>
         <div className={styles.back}>
           <ButtonLink href="/kupit" variant="ghost">

@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { RequestForm } from "@/components/RequestForm";
 import { getPartnershipBySlug, getPartnershipReplyTime } from "@/lib/partnerships";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import styles from "../sotrudnichestvo.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/sotrudnichestvo/[slug]">): Promise<Metadata> {
@@ -20,11 +22,27 @@ export async function generateMetadata({ params }: PageProps<"/sotrudnichestvo/[
 
 export default async function PartnershipPage({ params }: PageProps<"/sotrudnichestvo/[slug]">) {
   const { slug } = await params;
-  const [item, replyTime] = await Promise.all([getPartnershipBySlug(slug), getPartnershipReplyTime()]);
+  const [item, replyTime, organization] = await Promise.all([
+    getPartnershipBySlug(slug),
+    getPartnershipReplyTime(),
+    organizationSchema(),
+  ]);
   if (!item) notFound();
 
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Сотрудничество", path: "/sotrudnichestvo" },
+            { name: item.title },
+          ]),
+        ]}
+      />
+
       <Container>
         <div className={styles.back}>
           <ButtonLink href="/sotrudnichestvo" variant="ghost">

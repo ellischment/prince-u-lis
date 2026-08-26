@@ -56,9 +56,27 @@
 }
 
 .name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--fox-soft);
   font-size: 13.5px;
   letter-spacing: 0.04em;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 1px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.starFull {
+  color: var(--gold);
+}
+
+.starEmpty {
+  color: var(--line2);
 }
 
 @media (min-width: 720px) {

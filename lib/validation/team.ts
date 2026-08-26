@@ -36,6 +36,13 @@ export const reviewSchema = z
     mediaId: optional(60),
     consentReceived: z.coerce.boolean(),
     status: z.enum(REVIEW_STATUSES),
+    // Оценка гостя 1..5, необязательна: не у каждого отзыва она есть.
+    // Пустая строка из формы значит «без оценки», а не 0.
+    rating: z
+      .string()
+      .optional()
+      .transform((v) => (v && v.length > 0 ? Number(v) : null))
+      .pipe(z.number().int().min(1).max(5).nullable()),
   })
   // Ключевое правило (SPEC §2, FEATURES 1.11): опубликовать фото/видео-отзыв без
   // отметки о согласии нельзя. Проверка на сервере, а не только в интерфейсе.

@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { Gallery } from "@/components/Gallery";
+import { JsonLd } from "@/components/JsonLd";
 import { lessonHref } from "@/lib/courses";
 import { getMasterBySlug } from "@/lib/masters";
+import { breadcrumbSchema, organizationSchema, personSchema, websiteSchema } from "@/lib/schema";
 import styles from "../komanda.module.css";
 
 export async function generateMetadata({ params }: PageProps<"/komanda/[slug]">): Promise<Metadata> {
@@ -25,8 +27,24 @@ export default async function MasterPage({ params }: PageProps<"/komanda/[slug]"
   const master = await getMasterBySlug(slug);
   if (!master) notFound();
 
+  const photo = master.media.find((m) => m.kind === "image" && m.path) ?? null;
+  const organization = await organizationSchema();
+
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Команда", path: "/komanda" },
+            { name: master.name },
+          ]),
+          personSchema({ name: master.name, speciality: master.speciality, photoPath: photo?.path ?? null }),
+        ]}
+      />
+
       <Container>
         <div className={styles.back}>
           <ButtonLink href="/komanda" variant="ghost">

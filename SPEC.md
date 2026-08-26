@@ -121,9 +121,13 @@ Media[]
 ### Review (отзыв)
 ```
 id, guestName, kind (text|photo|video), text, videoUrl, mediaId,
-consentReceived (bool), status (draft|published|blocked)
+consentReceived (bool), status (draft|published|blocked), rating (1..5, nullable)
 ```
 Правило: `status=published` невозможен при `kind in (photo,video)` и `consentReceived=false`.
+`rating` необязателен (не у каждого гостя есть оценка числом). Добавлено на этапе 9.1 для
+`aggregateRating` в разметке schema.org (SEO.md §9): агрегированный рейтинг выводится только
+когда опубликованных отзывов с оценкой не меньше пяти, и рейтинг всегда показывается на
+странице визуально рядом с разметкой — невидимая разметка запрещена правилами поисковиков.
 
 ### ScheduleSlot (сетка недели)
 ```

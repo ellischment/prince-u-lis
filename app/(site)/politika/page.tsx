@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/Container";
+import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
+import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Политика обработки персональных данных",
@@ -9,9 +11,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/politika" },
 };
 
-export default function PolicyPage() {
+export default async function PolicyPage() {
+  const organization = await organizationSchema();
+
   return (
     <main id="main">
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([{ name: "Главная", path: "/" }, { name: "Политика" }]),
+        ]}
+      />
+
       <Container>
         <Section>
           <h1>Политика обработки персональных данных</h1>

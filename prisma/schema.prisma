@@ -350,6 +350,7 @@ model Review {
   media            Media?  @relation("ReviewMedia", fields: [mediaId], references: [id])
   consentReceived  Boolean @default(false)
   status           String  @default("draft") // draft | published | blocked
+  rating           Int? // 1..5, необязательно: не у каждого отзыва есть оценка
   sort             Int     @default(0)
 
   createdAt DateTime @default(now())

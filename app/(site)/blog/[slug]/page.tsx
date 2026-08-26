@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArticleView } from "@/components/ArticleView";
+import { JsonLd } from "@/components/JsonLd";
 import {
   ARTICLES_PAGE_SIZE,
   getArticleBySlug,
@@ -10,9 +11,8 @@ import {
   parsePageSegment,
 } from "@/lib/articles";
 import { findRedirect } from "@/lib/redirects";
+import { articleSchema, breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { BlogList } from "../BlogList";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
 /**
  * Один адрес обслуживает и статью, и страницу списка: `/blog/2` требует SPEC §3
@@ -100,30 +100,28 @@ export default async function ArticlePage({ params }: PageProps<"/blog/[slug]">)
     notFound();
   }
 
-  // Разметка Article по SEO.md раздел 6. Поле, которое нечем заполнить, не
-  // выводится: выдуманные значения приводят к санкциям поисковика.
-  const schema: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
-    description: article.seoDescription ?? article.excerpt,
-    ...(article.cover?.path && SITE_URL ? { image: [`${SITE_URL}${article.cover.path}`] } : {}),
-    ...(article.publishedAt ? { datePublished: article.publishedAt.toISOString() } : {}),
-    dateModified: article.updatedAt.toISOString(),
-    ...(SITE_URL
-      ? {
-          author: { "@id": `${SITE_URL}/#studio` },
-          publisher: { "@id": `${SITE_URL}/#studio` },
-          mainEntityOfPage: `${SITE_URL}/blog/${article.slug}`,
-        }
-      : {}),
-  };
+  const organization = await organizationSchema();
 
   return (
     <main id="main">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      <JsonLd
+        items={[
+          organization,
+          websiteSchema(),
+          breadcrumbSchema([
+            { name: "Главная", path: "/" },
+            { name: "Блог", path: "/blog" },
+            { name: article.title },
+          ]),
+          articleSchema({
+            title: article.title,
+            description: article.seoDescription ?? article.excerpt,
+            slug: article.slug,
+            coverPath: article.cover?.path ?? null,
+            publishedAt: article.publishedAt,
+            updatedAt: article.updatedAt,
+          }),
+        ]}
       />
 
       <ArticleView article={article} />
