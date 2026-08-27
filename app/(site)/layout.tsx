@@ -3,6 +3,7 @@ import { CookieConsent } from "@/components/CookieConsent";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Snow } from "@/components/Snow";
+import { Stars } from "@/components/Stars";
 import { getButtonColor } from "@/lib/appearance-read";
 import { getSeason } from "@/lib/site-texts";
 
@@ -32,6 +33,10 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
   // экран): в «зиму» звёзды прячутся (globals.css) и идёт снег; иначе — звёзды.
   return (
     <div className={`site-shell season-${season}`} style={buttonVars}>
+      {/* Сквозной звёздный слой на весь сайт (за содержимым): даёт небо на
+          страницах без секций. На страницах с секциями его перекрывает их фон,
+          там звёзды рисует Stars внутри каждой секции. В «зиму» скрыт (CSS). */}
+      <Stars count={40} />
       <a className="skip-link" href="#main">
         Перейти к содержанию
       </a>
