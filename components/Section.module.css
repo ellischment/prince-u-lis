@@ -1,6 +1,13 @@
 .section {
   padding: 62px 0;
   position: relative;
+  overflow: hidden;
+}
+
+/* Содержимое секции над звёздным слоем (Stars .wrap = z-index 0). */
+.inner {
+  position: relative;
+  z-index: 1;
 }
 
 .deep {

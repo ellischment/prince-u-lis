@@ -20,6 +20,7 @@ export type ReviewView = {
   consentReceived: boolean;
   status: string;
   rating: number | null;
+  updatedAt: string;
 };
 
 const KIND_LABEL: Record<string, string> = { text: "текст", photo: "фото", video: "видео" };
@@ -40,17 +41,20 @@ function SubmitButton({ editing }: { editing: boolean }) {
 
 export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
   const [state, formAction] = useActionState<SectionState, FormData>(saveReview, {});
-  const [edit, setEdit] = useState<ReviewView | null>(null);
-  const [kind, setKind] = useState(edit?.kind ?? "text");
-  const [photo, setPhoto] = useState<{ id: string; path: string } | null>(
-    edit?.mediaId && edit.photoPath ? { id: edit.mediaId, path: edit.photoPath } : null,
-  );
+  // Храним только id правимого отзыва, а сам объект берём из свежего пропа
+  // reviews. Так после сохранения (React 19 сам сбрасывает форму к defaultValue)
+  // поля показывают актуальные данные, а не снимок ДО сохранения: иначе оценка,
+  // очищенная гостю, «возвращалась» к прежней (баг заказчика).
+  const [editId, setEditId] = useState<string | null>(null);
+  const edit = editId ? (reviews.find((r) => r.id === editId) ?? null) : null;
+  const [kind, setKind] = useState("text");
+  const [photo, setPhoto] = useState<{ id: string; path: string } | null>(null);
   const [photoPending, startPhotoUpload] = useTransition();
   const [photoError, setPhotoError] = useState<string | null>(null);
   const d = edit;
 
   function pickEdit(r: ReviewView | null) {
-    setEdit(r);
+    setEditId(r?.id ?? null);
     setKind(r?.kind ?? "text");
     setPhoto(r?.mediaId && r.photoPath ? { id: r.mediaId, path: r.photoPath } : null);
     setPhotoError(null);
@@ -75,7 +79,7 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
 
   return (
     <div>
-      <form key={edit?.id ?? "new"} action={formAction} className={styles.card} noValidate>
+      <form key={edit ? `${edit.id}:${edit.updatedAt}` : "new"} action={formAction} className={styles.card} noValidate>
         <input type="hidden" name="id" value={edit?.id ?? ""} />
         <input type="hidden" name="mediaId" value={photo?.id ?? ""} />
         <div className={styles.grid2}>

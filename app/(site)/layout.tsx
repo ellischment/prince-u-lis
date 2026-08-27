@@ -2,7 +2,9 @@ import type { CSSProperties } from "react";
 import { CookieConsent } from "@/components/CookieConsent";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { Snow } from "@/components/Snow";
 import { getButtonColor } from "@/lib/appearance-read";
+import { getSeason } from "@/lib/site-texts";
 
 // Шапка и подвал общие для всех публичных страниц, SPEC.md раздел 4.
 // Раньше их не было вовсе: у каждой страницы своё содержимое без общей рамки.
@@ -20,19 +22,22 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
   // Цвет кнопок из панели (раздел «Контент и оформление»). Сервер выбрал фон и
   // текст по макету, здесь только раскладываем токены в переменные. Наведение
   // затемняет заливку в Button.module.css, отдельного токена не нужно.
-  const button = await getButtonColor();
+  const [button, season] = await Promise.all([getButtonColor(), getSeason()]);
   const buttonVars: ButtonVars = {
     "--btn-bg": `var(--${button.bg})`,
     "--btn-fg": `var(--${button.fg})`,
   };
 
+  // Класс сезона включает/выключает оформление на ВЕСЬ сайт (не только первый
+  // экран): в «зиму» звёзды прячутся (globals.css) и идёт снег; иначе — звёзды.
   return (
-    <div className="site-shell" style={buttonVars}>
+    <div className={`site-shell season-${season}`} style={buttonVars}>
       <a className="skip-link" href="#main">
         Перейти к содержанию
       </a>
       <Header />
       {children}
+      {season === "winter" ? <Snow /> : null}
       <Footer />
       <CookieConsent />
     </div>

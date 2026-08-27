@@ -1,9 +1,12 @@
+/* Снег на весь сайт: fixed по вьюпорту, поэтому идёт по всей странице при
+   прокрутке (референс: .snow{position:fixed}). Поверх содержимого, но клики
+   пропускает (pointer-events:none). Рендерит оболочка сайта только в «зиму». */
 .wrap {
-  position: absolute;
+  position: fixed;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 0;
+  z-index: 40;
 }
 
 .flake {
@@ -26,7 +29,7 @@
     opacity: 0.55;
   }
   100% {
-    transform: translate(var(--drift), 340px);
+    transform: translate(var(--drift), 100vh);
     opacity: 0.15;
   }
 }

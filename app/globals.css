@@ -140,6 +140,13 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   flex: 1 0 auto;
 }
 
+/* Режим «зима»: вместо звёздного неба по всему сайту идёт снег. Класс season-*
+   ставит оболочка сайта (app/(site)/layout.tsx). Все звёздные слои (data-sky:
+   первый экран и каждая секция) в зиму прячутся — остаётся снег. */
+.season-winter [data-sky] {
+  display: none;
+}
+
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
 section { padding: 62px 0; position: relative; }
 

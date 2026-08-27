@@ -15,7 +15,6 @@ import { Garland } from "@/components/Garland";
 import { HomeSchedule, type HomeCourseTeaser } from "@/components/HomeSchedule";
 import { JsonLd } from "@/components/JsonLd";
 import { Section } from "@/components/Section";
-import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
 import { TaskOption } from "@/components/TaskOption";
 import { TASK_TAGS, type TaskTag } from "@/lib/constants";
@@ -192,7 +191,6 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <section className={styles.hero} key="hero">
         <Stars shooting />
         {season === "flags" ? <Garland strands={garland} /> : null}
-        {season === "winter" ? <Snow /> : null}
         <Container>
           <div className={styles.heroInner}>
             <div className={styles.heroGrid}>

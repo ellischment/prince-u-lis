@@ -39,6 +39,10 @@ export default async function ReviewsPanelPage() {
     consentReceived: r.consentReceived,
     status: r.status,
     rating: r.rating,
+    // Меняется при каждом сохранении: форма правки по нему перемонтируется и
+    // показывает свежие значения (иначе неконтролируемые поля залипали бы на
+    // снимке ДО сохранения — оценка «возвращалась» к прежней).
+    updatedAt: r.updatedAt.toISOString(),
   }));
 
   return (
