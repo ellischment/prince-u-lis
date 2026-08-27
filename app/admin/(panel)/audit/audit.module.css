@@ -1,0 +1,12 @@
+.nowrap {
+  white-space: nowrap;
+}
+
+.target {
+  color: var(--paper);
+}
+
+.id {
+  color: var(--muted);
+  font-size: 12px;
+}
