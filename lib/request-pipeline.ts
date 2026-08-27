@@ -67,39 +67,38 @@ export async function processRequest(input: RequestInput, ip?: string): Promise<
 }
 
 async function deliver(id: string, input: RequestInput, lessonTitle?: string): Promise<void> {
-  // Интеграции ещё не настроены (этап 10): не трогаем статус, заявка остаётся
-  // pending и не уходит в повторы. Это не ошибка отправки, а отсутствие настройки.
-  if (!isAmoConfigured()) return;
-
   let dealId: string | undefined;
-  try {
-    dealId = await sendToAmo({ ...input, lessonTitle });
-    await prisma.request.update({
-      where: { id },
-      data: { amoStatus: "sent", amoDealId: dealId, attempts: { increment: 1 } },
-    });
-  } catch (e) {
-    await prisma.request.update({
-      where: { id },
-      data: {
-        amoStatus: "failed",
-        attempts: { increment: 1 },
-        lastError: String(e).slice(0, 500),
-        nextTryAt: new Date(Date.now() + 60_000),
-      },
-    });
+
+  // amoCRM: только если настроено. Не настроено — статус остаётся pending (это не
+  // ошибка отправки, а отсутствие настройки), заявка спокойно лежит в базе.
+  if (isAmoConfigured()) {
+    try {
+      dealId = await sendToAmo({ ...input, lessonTitle });
+      await prisma.request.update({
+        where: { id },
+        data: { amoStatus: "sent", amoDealId: dealId, attempts: { increment: 1 } },
+      });
+    } catch (e) {
+      await prisma.request.update({
+        where: { id },
+        data: {
+          amoStatus: "failed",
+          attempts: { increment: 1 },
+          lastError: String(e).slice(0, 500),
+          nextTryAt: new Date(Date.now() + 60_000),
+        },
+      });
+    }
   }
 
-  try {
-    await notifyTelegram({
-      type: input.type,
-      lessonTitle,
-      dateText: input.dateText,
-      timeText: input.timeText,
-      channel: input.channel,
-      dealId,
-    });
-  } catch {
-    // Ошибка уведомления логируется на этапе 10, но заявку не трогает.
-  }
+  // Telegram независим от amoCRM и сам решает, настроен ли он. Не бросает: ошибка
+  // уведомления не должна трогать заявку.
+  await notifyTelegram({
+    type: input.type,
+    lessonTitle,
+    dateText: input.dateText,
+    timeText: input.timeText,
+    channel: input.channel,
+    dealId,
+  });
 }

@@ -45,5 +45,17 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    // ВАЖНО: интеграции в e2e отключены (пустые ключи). Иначе тест «заявка
+    // проходит конвейер» создал бы реальную сделку в боевой amoCRM и отправил
+    // сообщение в рабочий Telegram. Реальная отправка проверяется юнит-тестами
+    // на моках (lib/amo.test.ts, lib/telegram.test.ts).
+    env: {
+      ...process.env,
+      AMO_SUBDOMAIN: "",
+      AMO_BASE_URL: "",
+      AMO_ACCESS_TOKEN: "",
+      TELEGRAM_BOT_TOKEN: "",
+      TELEGRAM_CHAT_ID: "",
+    },
   },
 });

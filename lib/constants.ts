@@ -57,6 +57,15 @@ export const REQUEST_TYPES = [
 ] as const;
 export type RequestType = (typeof REQUEST_TYPES)[number];
 
+/** Русские подписи типов заявки для amoCRM и Telegram (этап 10). */
+export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
+  booking: "Запись на занятие",
+  free_time: "Запись (индивидуальное время)",
+  celebration: "Праздник",
+  purchase: "Покупка",
+  partnership: "Сотрудничество",
+};
+
 export const REQUEST_CHANNELS = ["call", "telegram", "whatsapp", "max", "sms"] as const;
 export type RequestChannel = (typeof REQUEST_CHANNELS)[number];
 

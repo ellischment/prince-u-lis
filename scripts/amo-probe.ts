@@ -103,7 +103,7 @@ async function main(): Promise<void> {
   push();
 
   // 1. Аккаунт — заодно проверка, что токен принят.
-  const account = await api("/account?with=users,task_types");
+  const account = await api("/account?with=task_types,version");
   if (account.status === 401) {
     console.error("401 Unauthorized: токен не принят. Проверь, что это долгосрочный токен ВНЕШНЕЙ интеграции и он не отозван.");
     process.exit(1);
