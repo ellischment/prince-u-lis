@@ -58,6 +58,14 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
 ];
 
+// Тестовый домен закрывается от индексации целиком: DEPLOY.md стадия A4.
+// robots.txt уже отдаёт полный запрет (app/robots.ts), а заголовок X-Robots-Tag
+// закрывает ещё и отдельные ответы (картинки, файлы), до которых robots.txt не
+// достаёт. Ставится только при NEXT_PUBLIC_NOINDEX=1 — на боевом домене его нет.
+if (process.env.NEXT_PUBLIC_NOINDEX === "1") {
+  securityHeaders.push({ key: "X-Robots-Tag", value: "noindex, nofollow" });
+}
+
 const nextConfig: NextConfig = {
   // Без standalone в образ пришлось бы класть весь node_modules.
   // Dockerfile копирует .next/standalone, см. ARCHITECTURE.md раздел 2a.

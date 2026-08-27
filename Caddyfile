@@ -7,12 +7,11 @@ princulissart.ru, www.princulissart.ru {
 		max_size 12MB
 	}
 
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		X-Frame-Options "SAMEORIGIN"
-	}
+	# Заголовки безопасности (CSP, HSTS, X-Content-Type-Options, Referrer-Policy,
+	# X-Frame-Options) ставит само приложение в next.config.ts — единый источник,
+	# и только там есть CSP. Дублировать их здесь нельзя: заголовки задвоятся, а
+	# X-Frame-Options c разными значениями (SAMEORIGIN у Caddy против DENY у app)
+	# браузер может счесть конфликтом. Caddy отвечает за TLS, сжатие и лимит тела.
 
 	reverse_proxy app:3000
 }
