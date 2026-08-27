@@ -1,12 +1,42 @@
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 16px;
+}
+
+.filter,
+.filterOn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.filter:hover {
+  color: var(--paper);
+  border-color: var(--cream);
+}
+
+.filterOn {
+  background: var(--fox);
+  border-color: var(--fox);
+  color: var(--paper);
+}
+
 .nowrap {
   white-space: nowrap;
+  color: var(--muted);
 }
 
 .target {
   color: var(--paper);
 }
 
-.id {
+.count {
   color: var(--muted);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }

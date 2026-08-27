@@ -412,17 +412,35 @@ test("адрес /kupit/kovorking из SPEC отвечает редиректо�
   expect(res.headers()["location"]).toContain("/zanyatiya/kovorking-v-masterskoy");
 });
 
-test("«Журнал действий»: действие в панели попадает в журнал", async ({ page }) => {
+test("«Журнал действий»: читаемое название, вкладки-фильтры, входы", async ({ page }) => {
   await loginPanel(page);
 
-  // Просмотр журнала заявок пишет строку в журнал действий (requests.view).
-  await page.goto("/admin/requests");
-  await expect(page.getByRole("heading", { level: 1, name: "Журнал заявок" })).toBeVisible();
+  // Создаём доступ — изменение с человекочитаемой целью (Доступ «email»).
+  await page.goto("/admin/settings");
+  const email = `jrnl-${Date.now()}@princ-lis.test`;
+  const createForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить доступ" }) });
+  await createForm.getByLabel("Почта").fill(email);
+  await createForm.getByLabel("Пароль").fill("nadezhno-1234");
+  await createForm.locator("select").selectOption("admin");
+  await page.getByRole("button", { name: "Добавить доступ" }).click();
+  await expect(page.getByRole("cell", { name: email })).toBeVisible();
 
+  // Вкладка «Изменения» (по умолчанию): действие с русской подписью и НАЗВАНИЕМ, не cuid.
   await page.goto("/admin/audit");
   await expect(page.getByRole("heading", { level: 1, name: "Журнал действий" })).toBeVisible();
-  // Действие видно в журнале с человеческой подписью, а не кодом.
+  await expect(page.getByText("Создан доступ в панель").first()).toBeVisible();
+  await expect(page.getByText(`Доступ «${email}»`)).toBeVisible();
+
+  // Просмотры данных скрыты из «Изменений», но есть на своей вкладке.
+  await page.goto("/admin/requests");
+  await page.goto("/admin/audit");
+  await expect(page.getByText("Просмотр журнала заявок")).toHaveCount(0);
+  await page.goto("/admin/audit?vid=prosmotry");
   await expect(page.getByText("Просмотр журнала заявок").first()).toBeVisible();
+
+  // Вкладка «Входы»: успешный вход владельца виден (по адресу и результату).
+  await page.goto("/admin/audit?vid=vhody");
+  await expect(page.getByText("Успешно").first()).toBeVisible();
 });
 
 test("«Система и безопасность»: показывает копии, ошибки, входы и завершение сессий", async ({ page }) => {
