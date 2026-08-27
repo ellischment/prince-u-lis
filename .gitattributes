@@ -1,0 +1,7 @@
+# Shell-скрипты исполняются на Linux-сервере. CRLF в них ломает запуск
+# («bad interpreter»), поэтому в репозитории они всегда хранятся с LF,
+# независимо от core.autocrlf на машине разработчика (Windows).
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+Dockerfile text eol=lf
+Caddyfile text eol=lf
