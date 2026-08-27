@@ -411,3 +411,31 @@ test("адрес /kupit/kovorking из SPEC отвечает редиректо�
   expect(res.status()).toBe(308);
   expect(res.headers()["location"]).toContain("/zanyatiya/kovorking-v-masterskoy");
 });
+
+test("«Журнал действий»: действие в панели попадает в журнал", async ({ page }) => {
+  await loginPanel(page);
+
+  // Просмотр журнала заявок пишет строку в журнал действий (requests.view).
+  await page.goto("/admin/requests");
+  await expect(page.getByRole("heading", { level: 1, name: "Журнал заявок" })).toBeVisible();
+
+  await page.goto("/admin/audit");
+  await expect(page.getByRole("heading", { level: 1, name: "Журнал действий" })).toBeVisible();
+  // Действие видно в журнале с человеческой подписью, а не кодом.
+  await expect(page.getByText("Просмотр журнала заявок").first()).toBeVisible();
+});
+
+test("«Система и безопасность»: показывает копии, ошибки, входы и завершение сессий", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin/system");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Система и безопасность" })).toBeVisible();
+  await expect(page.getByText("Резервная копия базы")).toBeVisible();
+  await expect(page.getByText("Заявки с ошибкой отправки")).toBeVisible();
+  // На демо-сиде неотправленных заявок нет.
+  await expect(page.getByText("Нет ошибок")).toBeVisible();
+  // exact: во вводном абзаце тоже есть «входы в панель» — берём именно заголовок панели.
+  await expect(page.getByText("Входы в панель", { exact: true })).toBeVisible();
+  // Кнопка завершения сессий есть; НЕ нажимаем — иначе разлогинит сессию теста.
+  await expect(page.getByRole("button", { name: "Завершить все сессии" })).toBeVisible();
+});
