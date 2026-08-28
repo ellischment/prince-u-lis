@@ -77,6 +77,8 @@ describe("buildComplexLead", () => {
       contacts: { name: string; custom_fields_values: { field_code: string; values: { value: string }[] }[] }[];
     };
     expect(embedded.tags[0].name).toBe("Сайт");
+    // Второй тег — тип заявки (SPEC §14): по нему отделяют покупки от записей.
+    expect(embedded.tags[1].name).toBe("Запись");
     expect(embedded.contacts[0].name).toBe("Мария");
     expect(embedded.contacts[0].custom_fields_values[0].field_code).toBe("PHONE");
     expect(embedded.contacts[0].custom_fields_values[0].values[0].value).toBe("+79161234567");
@@ -91,6 +93,22 @@ describe("buildComplexLead", () => {
     const lead = (buildComplexLead(makeInput()) as Array<Record<string, unknown>>)[0];
     expect(lead.pipeline_id).toBe(10908222);
     expect(lead.status_id).toBe(85798258);
+  });
+
+  it("свою воронку типа (AMO_PIPELINE_ID_PURCHASE) получают только покупки", () => {
+    vi.stubEnv("AMO_PIPELINE_ID", "10908222");
+    vi.stubEnv("AMO_STATUS_ID", "85798258");
+    vi.stubEnv("AMO_PIPELINE_ID_PURCHASE", "777");
+
+    const purchase = (buildComplexLead(makeInput({ type: "purchase" })) as Array<Record<string, unknown>>)[0];
+    // Покупка уходит в свою воронку, общий статус (из другой воронки) не тащим.
+    expect(purchase.pipeline_id).toBe(777);
+    expect(purchase.status_id).toBeUndefined();
+
+    const booking = (buildComplexLead(makeInput()) as Array<Record<string, unknown>>)[0];
+    // Остальное — в общую воронку с общим статусом.
+    expect(booking.pipeline_id).toBe(10908222);
+    expect(booking.status_id).toBe(85798258);
   });
 });
 

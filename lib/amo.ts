@@ -4,7 +4,7 @@
 // таймаутом и обработкой ошибки: падение amoCRM не должно ронять заявку
 // (CLAUDE.md). Токен долгосрочный (Bearer), в код и логи не попадает.
 
-import { REQUEST_TYPE_LABELS } from "./constants";
+import { REQUEST_TYPE_LABELS, REQUEST_TYPE_TAGS, type RequestType } from "./constants";
 import type { RequestInput } from "./validation/request";
 import { CHANNEL_LABELS } from "./validation/request";
 
@@ -50,14 +50,33 @@ export function noteText(input: AmoInput): string {
  * pipeline_id/status_id ставятся, только если заданы в окружении; иначе amoCRM
  * кладёт сделку в основную воронку на первый этап.
  */
+/**
+ * Воронка и этап для типа заявки. Общие берутся из AMO_PIPELINE_ID/AMO_STATUS_ID.
+ * Для отдельной воронки под тип (например, продажи работ) заводится
+ * AMO_PIPELINE_ID_PURCHASE — покупки уйдут туда, остальное в общую. Если у типа
+ * своя воронка, общий статус не подставляем (он принадлежит другой воронке):
+ * без своего статуса amoCRM кладёт на первый этап выбранной воронки.
+ */
+export function amoRouting(type: RequestType): { pipelineId?: number; statusId?: number } {
+  const up = type.toUpperCase();
+  const typePipeline = Number(process.env[`AMO_PIPELINE_ID_${up}`]) || undefined;
+  const typeStatus = Number(process.env[`AMO_STATUS_ID_${up}`]) || undefined;
+
+  const pipelineId = typePipeline ?? (Number(process.env.AMO_PIPELINE_ID) || undefined);
+  const statusId =
+    typeStatus ?? (typePipeline ? undefined : Number(process.env.AMO_STATUS_ID) || undefined);
+
+  return { pipelineId, statusId };
+}
+
 export function buildComplexLead(input: AmoInput): unknown[] {
-  const pipelineId = Number(process.env.AMO_PIPELINE_ID) || undefined;
-  const statusId = Number(process.env.AMO_STATUS_ID) || undefined;
+  const { pipelineId, statusId } = amoRouting(input.type);
 
   const lead: Record<string, unknown> = {
     name: dealName(input),
     _embedded: {
-      tags: [{ name: "Сайт" }],
+      // «Сайт» — общий источник, второй тег — тип заявки (SPEC §14).
+      tags: [{ name: "Сайт" }, { name: REQUEST_TYPE_TAGS[input.type] ?? input.type }],
       contacts: [
         {
           name: input.name,

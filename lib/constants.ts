@@ -66,6 +66,16 @@ export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
   partnership: "Сотрудничество",
 };
 
+// Короткий тег сделки по типу заявки (SPEC §14 «Тег по типу заявки»): по нему в
+// amoCRM отделяют, например, продажи работ («Покупка») от записей на занятия.
+export const REQUEST_TYPE_TAGS: Record<RequestType, string> = {
+  booking: "Запись",
+  free_time: "Свободное время",
+  celebration: "Праздник",
+  purchase: "Покупка",
+  partnership: "Сотрудничество",
+};
+
 export const REQUEST_CHANNELS = ["call", "telegram", "whatsapp", "max", "sms"] as const;
 export type RequestChannel = (typeof REQUEST_CHANNELS)[number];
 
