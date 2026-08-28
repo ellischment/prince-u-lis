@@ -24,19 +24,26 @@ export function isAmoConfigured(): boolean {
 
 type AmoInput = RequestInput & { lessonTitle?: string };
 
-/** Имя сделки: тип и, если есть, занятие. Коротко, остальное уходит в примечание. */
+/**
+ * Имя сделки: короткий тип и предмет — «Покупка: Чашка «Утро»», «Запись:
+ * Гончарный круг», «Праздник: День рождения». Так в списке сделок сразу видно,
+ * о чём заявка. Предмет — из subject (товар/повод/вид) или из занятия. Без
+ * хвоста «(сайт)»: источник несёт тег. Детали — в примечании.
+ */
 export function dealName(input: AmoInput): string {
-  const label = REQUEST_TYPE_LABELS[input.type] ?? "Заявка с сайта";
-  return input.lessonTitle ? `${label}: ${input.lessonTitle}` : `${label} (сайт)`;
+  const prefix = REQUEST_TYPE_TAGS[input.type] ?? REQUEST_TYPE_LABELS[input.type] ?? "Заявка";
+  const subject = input.subject ?? input.lessonTitle;
+  return subject ? `${prefix}: ${subject}` : prefix;
 }
 
 /** Тело примечания к сделке: все детали заявки одним текстом. */
 export function noteText(input: AmoInput): string {
   const channel = CHANNEL_LABELS[input.channel] ?? input.channel;
   const when = [input.dateText, input.timeText].filter(Boolean).join(" ");
+  // Строку «Тип» не дублируем — её несёт тег сделки. Предмет виден в названии
+  // и в комментарии, занятие — отдельной строкой для записи.
   const lines = [
     "Заявка с сайта «Принц и Лис»",
-    `Тип: ${REQUEST_TYPE_LABELS[input.type] ?? input.type}`,
     input.lessonTitle ? `Занятие: ${input.lessonTitle}` : null,
     when ? `Желаемое время: ${when}` : null,
     `Связь: ${channel}`,
@@ -75,8 +82,9 @@ export function buildComplexLead(input: AmoInput): unknown[] {
   const lead: Record<string, unknown> = {
     name: dealName(input),
     _embedded: {
-      // «Сайт» — общий источник, второй тег — тип заявки (SPEC §14).
-      tags: [{ name: "Сайт" }, { name: REQUEST_TYPE_TAGS[input.type] ?? input.type }],
+      // Один понятный тег — тип заявки (SPEC §14): по нему фильтруют и строят
+      // воронки. Служебный «Сайт» убран по просьбе студии.
+      tags: [{ name: REQUEST_TYPE_TAGS[input.type] ?? input.type }],
       contacts: [
         {
           name: input.name,

@@ -33,6 +33,10 @@ export const requestSchema = z.object({
   phone: phoneSchema,
   channel: z.enum(CHANNELS).default("call"),
   comment: z.string().max(1000).optional(),
+  // Предмет заявки для названия сделки в amoCRM: товар у покупки, повод у
+  // праздника, вид у сотрудничества. Транзиентное поле — в базу не пишется, идёт
+  // только в CRM/уведомление. Занятие у записи берётся из lessonId на сервере.
+  subject: z.string().max(200).optional(),
   consent: z.boolean().refine((v) => v === true, "Нужно согласие на обработку данных"),
   consentVersion: z.string(),
 });

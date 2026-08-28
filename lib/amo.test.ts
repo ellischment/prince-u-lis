@@ -45,18 +45,22 @@ describe("isAmoConfigured", () => {
 });
 
 describe("dealName и noteText", () => {
-  it("имя сделки включает занятие, если оно есть", () => {
-    expect(dealName(makeInput({ lessonTitle: "Гончарный круг" }))).toBe(
-      "Запись на занятие: Гончарный круг",
+  it("имя сделки: короткий тип и предмет, без «(сайт)»", () => {
+    // Занятие у записи берётся из lessonTitle.
+    expect(dealName(makeInput({ lessonTitle: "Гончарный круг" }))).toBe("Запись: Гончарный круг");
+    // Предмет из subject (товар у покупки).
+    expect(dealName(makeInput({ type: "purchase", subject: "Чашка «Утро»" }))).toBe(
+      "Покупка: Чашка «Утро»",
     );
-    expect(dealName(makeInput())).toBe("Запись на занятие (сайт)");
+    // Нет предмета — только короткий тип, без «(сайт)».
+    expect(dealName(makeInput())).toBe("Запись");
   });
 
-  it("примечание собирает детали и пропускает пустые", () => {
+  it("примечание собирает детали, без дублирующей строки «Тип»", () => {
     const text = noteText(
       makeInput({ lessonTitle: "Лепка", dateText: "5 сентября", timeText: "18:00", comment: "вдвоём" }),
     );
-    expect(text).toContain("Тип: Запись на занятие");
+    expect(text).not.toContain("Тип:");
     expect(text).toContain("Занятие: Лепка");
     expect(text).toContain("Желаемое время: 5 сентября 18:00");
     expect(text).toContain("Связь: Telegram");
@@ -67,18 +71,18 @@ describe("dealName и noteText", () => {
 });
 
 describe("buildComplexLead", () => {
-  it("кладёт телефон в поле PHONE и метку «Сайт»", () => {
+  it("кладёт телефон в PHONE и один тег типа (без «Сайт»)", () => {
     vi.stubEnv("AMO_PIPELINE_ID", "");
     vi.stubEnv("AMO_STATUS_ID", "");
-    const body = buildComplexLead(makeInput()) as Array<Record<string, unknown>>;
+    const body = buildComplexLead(makeInput({ type: "purchase" })) as Array<Record<string, unknown>>;
     const lead = body[0];
     const embedded = lead._embedded as {
       tags: { name: string }[];
       contacts: { name: string; custom_fields_values: { field_code: string; values: { value: string }[] }[] }[];
     };
-    expect(embedded.tags[0].name).toBe("Сайт");
-    // Второй тег — тип заявки (SPEC §14): по нему отделяют покупки от записей.
-    expect(embedded.tags[1].name).toBe("Запись");
+    // Ровно один тег — тип заявки (SPEC §14), служебного «Сайт» нет.
+    expect(embedded.tags).toHaveLength(1);
+    expect(embedded.tags[0].name).toBe("Покупка");
     expect(embedded.contacts[0].name).toBe("Мария");
     expect(embedded.contacts[0].custom_fields_values[0].field_code).toBe("PHONE");
     expect(embedded.contacts[0].custom_fields_values[0].values[0].value).toBe("+79161234567");

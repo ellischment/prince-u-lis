@@ -71,6 +71,8 @@ export function RequestForm({
           name,
           phone,
           channel,
+          // Повод/вид — в название сделки («Праздник: …», «Партнёрство: …»).
+          subject: subjectValue || undefined,
           comment: fullComment,
           consent,
           consentVersion: "",

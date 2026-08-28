@@ -60,6 +60,8 @@ export function PurchaseForm({ itemTitle, itemPrice }: { itemTitle: string; item
           name,
           phone,
           channel,
+          // Товар — в название сделки («Покупка: …»); цена и заметка гостя в комментарии.
+          subject: itemTitle,
           comment: fullComment,
           consent,
           consentVersion: "",
