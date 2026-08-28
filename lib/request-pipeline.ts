@@ -95,10 +95,13 @@ async function deliver(id: string, input: RequestInput, lessonTitle?: string): P
   // уведомления не должна трогать заявку.
   await notifyTelegram({
     type: input.type,
+    name: input.name,
+    phone: input.phone,
     lessonTitle,
     dateText: input.dateText,
     timeText: input.timeText,
     channel: input.channel,
+    comment: input.comment,
     dealId,
   });
 }

@@ -14,10 +14,13 @@ export function isTelegramConfigured(): boolean {
 
 export type TelegramPayload = {
   type: string;
+  name: string;
+  phone: string;
   lessonTitle?: string;
   dateText?: string;
   timeText?: string;
   channel: string;
+  comment?: string;
   dealId?: string;
 };
 
@@ -28,18 +31,25 @@ function dealLink(dealId?: string): string | null {
   return `https://${sub}.amocrm.ru/leads/detail/${dealId}`;
 }
 
-/** Текст уведомления. Простой текст без разметки, чтобы ничего не экранировать. */
+/**
+ * Текст уведомления. Простой текст без разметки (ничего не экранируется) и без
+ * смайликов. Порядок: что за заявка, кто и как связаться, детали, ссылка на
+ * сделку. Состав по SPEC §15: тип, имя, телефон, канал, занятие/повод, время,
+ * комментарий, ссылка. У покупки товар и цена приходят в комментарии.
+ */
 export function buildTelegramText(payload: TelegramPayload): string {
   const typeLabel = REQUEST_TYPE_LABELS[payload.type as RequestType] ?? payload.type;
   const channelLabel = CHANNEL_LABELS[payload.channel as keyof typeof CHANNEL_LABELS] ?? payload.channel;
   const when = [payload.dateText, payload.timeText].filter(Boolean).join(" ");
   const link = dealLink(payload.dealId);
   const lines = [
-    "🔔 Новая заявка с сайта",
-    `Тип: ${typeLabel}`,
-    payload.lessonTitle ? `Занятие: ${payload.lessonTitle}` : null,
-    when ? `Желаемое время: ${when}` : null,
+    `Новая заявка с сайта: ${typeLabel}`,
+    `Имя: ${payload.name}`,
+    `Телефон: ${payload.phone}`,
     `Связь: ${channelLabel}`,
+    payload.lessonTitle ? `Занятие: ${payload.lessonTitle}` : null,
+    when ? `Время: ${when}` : null,
+    payload.comment ? `Комментарий: ${payload.comment}` : null,
     link ? `Сделка: ${link}` : "Сделка: в amoCRM пока не ушла, заявка в базе сайта",
   ];
   return lines.filter(Boolean).join("\n");
