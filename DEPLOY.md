@@ -300,7 +300,15 @@ docker compose up -d --build
 
 # Проверка восстановления из копии — раз в месяц, 1-го числа в 05:00.
 0 5 1 * * cd ~/app && docker compose exec -T app sh scripts/restore-check.sh
+
+# Уборка осиротевших файлов uploads — раз в неделю, воскресенье 04:30.
+30 4 * * 0 curl -fsS -H "x-cron-secret: ВАШ-КЛЮЧ" "https://princulissart.ru/api/cron?task=prune-media" >/dev/null
 ```
+
+Про «архив событий» из `ARCHITECTURE.md` раздел 10 отдельной задачи нет и не
+нужно: прошедшие события уводятся из показа не флагом, а по дате (`lib/events.ts`
+считает это на лету при каждом запросе). Добавлять cron и поле-флаг значило бы
+дублировать уже работающую логику.
 
 Проверить вручную до постановки в cron:
 `curl -H "x-cron-secret: КЛЮЧ" "https://ДОМЕН/api/cron?task=retry-requests"` — ответ JSON;

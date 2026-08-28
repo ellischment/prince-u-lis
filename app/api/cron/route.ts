@@ -13,6 +13,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { retryFailedRequests } from "@/lib/retry";
+import { pruneOrphanedMedia } from "@/lib/media-prune";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +42,15 @@ async function handle(req: Request): Promise<Response> {
       const result = await retryFailedRequests();
       return NextResponse.json({ task, ...result });
     }
+    // Еженедельная уборка осиротевших файлов uploads (PLAN 11.2): повторные
+    // импорты и загрузки оставляют мусор, том и резервные копии пухнут.
+    case "prune-media": {
+      const result = await pruneOrphanedMedia({ apply: true });
+      return NextResponse.json({ task, ...result });
+    }
     default:
       return NextResponse.json(
-        { error: "Неизвестная задача", supported: ["retry-requests"] },
+        { error: "Неизвестная задача", supported: ["retry-requests", "prune-media"] },
         { status: 400 },
       );
   }
