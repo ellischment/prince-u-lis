@@ -1,0 +1,26 @@
+.status {
+  margin: 4px 0 16px;
+  font-size: 15px;
+}
+
+.testForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.error {
+  color: var(--fox-soft);
+  font-size: 14px;
+}
+
+.saved {
+  color: var(--sky);
+  font-size: 14px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}

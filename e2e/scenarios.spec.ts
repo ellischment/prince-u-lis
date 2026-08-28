@@ -462,3 +462,14 @@ test("«Система и безопасность»: показывает ко�
   // Кнопка завершения сессий есть; НЕ нажимаем — иначе разлогинит сессию теста.
   await expect(page.getByRole("button", { name: "Завершить все сессии" })).toBeVisible();
 });
+
+test("«Уведомления Telegram»: статус и кнопка тестового уведомления", async ({ page }) => {
+  await loginPanel(page);
+  await page.goto("/admin/telegram");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Уведомления Telegram" })).toBeVisible();
+  // В e2e окружении интеграции обнулены — раздел показывает «Не настроено».
+  await expect(page.getByText("Не настроено")).toBeVisible();
+  // Кнопка тестового уведомления есть (SPEC §15), в этом окружении неактивна.
+  await expect(page.getByRole("button", { name: "Отправить тестовое уведомление" })).toBeVisible();
+});

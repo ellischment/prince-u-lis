@@ -55,6 +55,40 @@ export function buildTelegramText(payload: TelegramPayload): string {
   return lines.filter(Boolean).join("\n");
 }
 
+/**
+ * Тестовое уведомление из панели (SPEC §15 «кнопка тестового уведомления»).
+ * В отличие от notifyTelegram возвращает результат, чтобы панель показала, дошло
+ * или нет. Ничего в базе не трогает, шлёт одно понятное сообщение в тот же чат.
+ */
+export async function sendTestNotification(): Promise<{ ok: boolean; error?: string }> {
+  if (!isTelegramConfigured()) {
+    return { ok: false, error: "Не настроено: нет токена бота или chat_id в переменных окружения." };
+  }
+
+  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: "Тестовое уведомление с сайта «Принц и Лис». Уведомления о новых заявках будут приходить в этот чат.",
+        disable_web_page_preview: true,
+      }),
+      signal: controller.signal,
+    });
+    if (res.ok) return { ok: true };
+    const detail = await res.text().catch(() => "");
+    return { ok: false, error: `Telegram ответил ${res.status}. ${detail.slice(0, 160)}` };
+  } catch (error) {
+    return { ok: false, error: `Не удалось отправить: ${String(error).slice(0, 160)}` };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function notifyTelegram(payload: TelegramPayload): Promise<void> {
   if (!isTelegramConfigured()) return;
 

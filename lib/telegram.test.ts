@@ -2,7 +2,7 @@
 // настройки ничего не отправляется, а ошибка не бросается. Сеть на моках.
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildTelegramText, isTelegramConfigured, notifyTelegram } from "./telegram";
+import { buildTelegramText, isTelegramConfigured, notifyTelegram, sendTestNotification } from "./telegram";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -88,5 +88,25 @@ describe("notifyTelegram", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.stubGlobal("fetch", vi.fn(async () => new Response("bad", { status: 400 })));
     await expect(notifyTelegram({ type: "booking", name: "Мария", phone: "+79161234567", channel: "call" })).resolves.toBeUndefined();
+  });
+});
+
+describe("sendTestNotification", () => {
+  it("без настройки возвращает ошибку и не трогает сеть", async () => {
+    vi.stubEnv("TELEGRAM_BOT_TOKEN", "");
+    vi.stubEnv("TELEGRAM_CHAT_ID", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const r = await sendTestNotification();
+    expect(r.ok).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("при успехе Bot API возвращает ok", async () => {
+    vi.stubEnv("TELEGRAM_BOT_TOKEN", "123:abc");
+    vi.stubEnv("TELEGRAM_CHAT_ID", "-100777");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 200 })));
+    const r = await sendTestNotification();
+    expect(r.ok).toBe(true);
   });
 });
