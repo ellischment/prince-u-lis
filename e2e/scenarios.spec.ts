@@ -344,6 +344,11 @@ test("раздел «Сегодня»: поиск, «что стоит пров�
 
   await expect(page.getByRole("heading", { level: 1, name: "Сегодня" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Быстрые действия" })).toBeVisible();
+  // Быстрые действия с подписью (макет), а не только заголовок.
+  await expect(page.getByText("Название, цена, фото и программа")).toBeVisible();
+  // Блок «Где что искать»: ориентир amoCRM ↔ эта панель.
+  await expect(page.getByRole("heading", { name: "Где что искать" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "amoCRM" }).first()).toBeVisible();
 
   // Поиск по содержимому ведёт в нужный раздел: демо-занятие находится.
   await page.getByRole("searchbox").fill("Гончарный круг");

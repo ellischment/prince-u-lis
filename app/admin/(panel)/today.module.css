@@ -1,4 +1,7 @@
-/* Раздел «Сегодня»: поиск, расписание дня, «что стоит проверить», действия. */
+/* Раздел «Сегодня»: поиск, что проверить, расписание дня, действия, где искать.
+   Блоки идут сверху вниз (как в макете admin-4-2-2), каждый по своему
+   содержимому: пустой блок остаётся короткой строкой, а не тянется на всю
+   высоту соседнего. Цвета только var(--*). */
 
 .search {
   display: flex;
@@ -23,15 +26,9 @@
   border-color: var(--cream);
 }
 
-.columns {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 18px;
-}
-
 .block {
-  margin-bottom: 24px;
-  padding: 18px 20px;
+  margin-bottom: 20px;
+  padding: 20px;
   background: var(--card);
   border: 1px solid var(--line2);
   border-radius: var(--r);
@@ -41,9 +38,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 14px;
+  margin: 0 0 4px;
   font-size: 18px;
   color: var(--paper);
+}
+
+.hint {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .empty {
@@ -51,8 +54,51 @@
   color: var(--muted);
 }
 
+.inlineLink {
+  color: var(--cream);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nowrap {
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* ---------- Что стоит проверить ---------- */
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.checkText {
+  flex: 1;
+  color: var(--paper);
+  line-height: 1.45;
+}
+
+.checkCta {
+  flex-shrink: 0;
+}
+
+/* ---------- Расписание на сегодня ---------- */
+
 .schedule,
-.checklist,
 .hits {
   list-style: none;
   margin: 0;
@@ -82,31 +128,7 @@
   color: var(--cream);
 }
 
-.check {
-  padding-left: 16px;
-  position: relative;
-}
-
-.check::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 9px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--fox);
-}
-
-.checkLink {
-  color: var(--paper);
-}
-
-.checkLink:hover {
-  color: var(--cream);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+/* ---------- Поиск ---------- */
 
 .hit {
   display: flex;
@@ -128,29 +150,40 @@
   color: var(--cream);
 }
 
+/* ---------- Быстрые действия ---------- */
+
 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 10px;
 }
 
 .action {
-  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
   background: var(--navy);
   border: 1px solid var(--line2);
-  border-radius: 999px;
-  color: var(--paper);
-  font-size: 14px;
+  border-radius: 12px;
 }
 
 .action:hover {
   background: var(--card2);
   border-color: var(--cream);
+}
+
+.actionTitle {
+  color: var(--paper);
+  font-size: 14.5px;
+}
+
+.action:hover .actionTitle {
   color: var(--cream);
 }
 
-@media (min-width: 900px) {
-  .columns {
-    grid-template-columns: 1fr 1fr;
-  }
+.actionNote {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
 }
