@@ -49,7 +49,10 @@ docker compose up -d --build
 
 echo "==> Ожидание готовности приложения"
 i=0
-until docker compose exec -T app wget -qO- http://localhost:3000/ >/dev/null 2>&1; do
+# Адрес именно 127.0.0.1, а не localhost: в контейнере localhost сначала
+# резолвится в IPv6 (::1), а Next слушает IPv4, и проверка молча висела до
+# таймаута. Скрипт писал «Приложение не ответило», хотя сайт работал.
+until docker compose exec -T app wget -qO- --timeout=5 http://127.0.0.1:3000/ >/dev/null 2>&1; do
   i=$((i + 1))
   if [ "$i" -gt 30 ]; then
     echo "Приложение не ответило за 60с. Логи: docker compose logs app"
