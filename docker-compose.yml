@@ -11,6 +11,13 @@ services:
         NEXT_PUBLIC_METRIKA_ID: ${NEXT_PUBLIC_METRIKA_ID:-}
     restart: unless-stopped
     env_file: .env
+    environment:
+      # Next standalone слушает адрес из HOSTNAME, а Docker кладёт туда
+      # идентификатор контейнера: сервер садится на его личный адрес, и
+      # localhost:3000 ВНУТРИ контейнера не отвечает. Снаружи (app:3000) всё
+      # работало, поэтому промах виден только на проверке готовности в
+      # scripts/deploy.sh, которая ходит на localhost и всегда падала по таймауту.
+      HOSTNAME: 0.0.0.0
     volumes:
       # База и загруженные файлы живут в томах.
       # Обновление образа их не трогает.
