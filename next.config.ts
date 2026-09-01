@@ -56,6 +56,13 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // Дублирует frame-ancestors 'none' для старых проверок (DEPLOY.md B1 перечисляет обе).
   { key: "X-Frame-Options", value: "DENY" },
+  // Отключаем возможности браузера, которыми сайт не пользуется (замечание ZAP
+  // 10063 на стадии B). Полноэкранный режим не трогаем: он нужен встроенным
+  // плеерам видео (frame-src выше).
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  },
 ];
 
 // Тестовый домен закрывается от индексации целиком: DEPLOY.md стадия A4.
@@ -70,6 +77,9 @@ const nextConfig: NextConfig = {
   // Без standalone в образ пришлось бы класть весь node_modules.
   // Dockerfile копирует .next/standalone, см. ARCHITECTURE.md раздел 2a.
   output: "standalone",
+  // Next по умолчанию отдаёт X-Powered-By со своим именем: лишняя подсказка
+  // о стеке для того, кто ищет известные дыры (замечание ZAP 10037, стадия B).
+  poweredByHeader: false,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
