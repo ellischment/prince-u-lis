@@ -7,6 +7,11 @@ import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schem
 import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./komanda.module.css";
 
+// Страница читает базу и должна отражать текущие данные тома, а не пустую
+// сборочную базу Docker-образа (DEPLOY.md стадия A, 0.6). Данные всё равно
+// кэшируются через unstable_cache по тегам, ревалидация из панели работает.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = pageMetadata({
   title: "Команда студии «Принц и Лис»",
   description:

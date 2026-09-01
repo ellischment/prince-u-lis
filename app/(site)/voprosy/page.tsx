@@ -8,6 +8,11 @@ import { pageMetadata } from "@/lib/seo-meta";
 import { getFaqItems } from "@/lib/site-texts";
 import styles from "./voprosy.module.css";
 
+// Страница читает базу и должна отражать текущие данные тома, а не пустую
+// сборочную базу Docker-образа (DEPLOY.md стадия A, 0.6). Данные всё равно
+// кэшируются через unstable_cache по тегам, ревалидация из панели работает.
+export const dynamic = "force-dynamic";
+
 // Статическая с тегом texts: правка в «Контент и оформление» сбрасывает texts
 // и /voprosy (ARCHITECTURE §3, карта сброса — строка «Тексты и оформление»).
 

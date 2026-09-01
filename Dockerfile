@@ -12,7 +12,14 @@ COPY prisma ./prisma
 RUN npx prisma generate
 
 COPY . .
-RUN npm run build
+# Сборка читает базу: часть страниц (SSG и статические, например /komanda,
+# /kursy) при сборке выполняют запросы к Prisma. Тома с базой при сборке ещё
+# нет и DATABASE_URL из .env недоступен, поэтому поднимаем временную пустую базу
+# со схемой: запросы вернут пусто, страницы соберутся. В рантайме используется
+# примонтированная база (том db-data, см. docker-entrypoint.sh); этот файл
+# остаётся в стадии builder и в финальный образ не попадает.
+ENV DATABASE_URL="file:/tmp/build.db"
+RUN npx prisma migrate deploy && npm run build
 
 # Запуск
 FROM node:20-alpine AS runner
