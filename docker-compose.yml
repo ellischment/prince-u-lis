@@ -1,6 +1,14 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      # NEXT_PUBLIC_* нужны Next во время сборки (robots.txt, sitemap.xml,
+      # заголовки, канонические ссылки). Значения берутся из .env — docker compose
+      # читает его для подстановки ${...}. Пусто — соберётся без индекс-запрета.
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_NOINDEX: ${NEXT_PUBLIC_NOINDEX:-}
+        NEXT_PUBLIC_METRIKA_ID: ${NEXT_PUBLIC_METRIKA_ID:-}
     restart: unless-stopped
     env_file: .env
     volumes:
