@@ -4,7 +4,6 @@
 // уведомления не трогает заявку: логируем и молча выходим, не бросаем.
 
 import { REQUEST_TYPE_LABELS, type RequestType } from "./constants";
-import { CHANNEL_LABELS } from "./validation/request";
 
 const TIMEOUT_MS = 8_000;
 
@@ -32,25 +31,27 @@ function dealLink(dealId?: string): string | null {
 }
 
 /**
- * Текст уведомления. Простой текст без разметки (ничего не экранируется) и без
- * смайликов. Порядок: что за заявка, кто и как связаться, детали, ссылка на
- * сделку. Состав по SPEC §15: тип, имя, телефон, канал, занятие/повод, время,
- * комментарий, ссылка. У покупки товар и цена приходят в комментарии.
+ * Текст уведомления. Простой текст без разметки и без смайликов.
+ *
+ * ВАЖНО (152-ФЗ, решение заказчика 2026-09-02, SPEC §15 обновлён): персональные
+ * данные — имя, телефон, канал связи, комментарий — в уведомление НЕ включаются.
+ * Уведомление уходит в Telegram за границу, а вынос ПДн за рубеж это трансграничная
+ * передача (ст. 12 152-ФЗ), которой мы избегаем минимизацией. ПДн остаются в РФ:
+ * в базе на сервере и в amoCRM. Команда открывает их по ссылке на сделку.
+ * В сообщении только не-персональное: тип заявки, занятие/повод, желаемое время
+ * (о услуге, не о человеке) и ссылка на сделку.
  */
 export function buildTelegramText(payload: TelegramPayload): string {
   const typeLabel = REQUEST_TYPE_LABELS[payload.type as RequestType] ?? payload.type;
-  const channelLabel = CHANNEL_LABELS[payload.channel as keyof typeof CHANNEL_LABELS] ?? payload.channel;
   const when = [payload.dateText, payload.timeText].filter(Boolean).join(" ");
   const link = dealLink(payload.dealId);
   const lines = [
     `Новая заявка с сайта: ${typeLabel}`,
-    `Имя: ${payload.name}`,
-    `Телефон: ${payload.phone}`,
-    `Связь: ${channelLabel}`,
-    payload.lessonTitle ? `Занятие: ${payload.lessonTitle}` : null,
-    when ? `Время: ${when}` : null,
-    payload.comment ? `Комментарий: ${payload.comment}` : null,
-    link ? `Сделка: ${link}` : "Сделка: в amoCRM пока не ушла, заявка в базе сайта",
+    payload.lessonTitle ? `Занятие или повод: ${payload.lessonTitle}` : null,
+    when ? `Желаемое время: ${when}` : null,
+    link
+      ? `Детали и контакты — в сделке amoCRM: ${link}`
+      : "Детали и контакты — в Журнале заявок панели (в amoCRM появится после доставки).",
   ];
   return lines.filter(Boolean).join("\n");
 }

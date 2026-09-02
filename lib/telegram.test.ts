@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe("buildTelegramText", () => {
-  it("собирает уведомление и ссылку на сделку", () => {
+  it("собирает уведомление БЕЗ персональных данных, со ссылкой на сделку (152-ФЗ)", () => {
     vi.stubEnv("AMO_SUBDOMAIN", "lizapintora");
     const text = buildTelegramText({
       type: "booking",
@@ -25,22 +25,24 @@ describe("buildTelegramText", () => {
       dealId: "555",
     });
     expect(text).toContain("Новая заявка с сайта: Запись на занятие");
-    expect(text).toContain("Имя: Мария");
-    expect(text).toContain("Телефон: +7 916 123-45-67");
-    expect(text).toContain("Занятие: Гончарный круг");
-    expect(text).toContain("Время: 5 сентября 18:00");
-    expect(text).toContain("Связь: Telegram");
-    expect(text).toContain("Комментарий: вдвоём");
+    expect(text).toContain("Занятие или повод: Гончарный круг");
+    expect(text).toContain("Желаемое время: 5 сентября 18:00");
     expect(text).toContain("https://lizapintora.amocrm.ru/leads/detail/555");
+    // ПДн в уведомление НЕ попадают: имя, телефон, канал связи, комментарий.
+    expect(text).not.toContain("Мария");
+    expect(text).not.toContain("916");
+    expect(text).not.toContain("вдвоём");
     // Без смайликов (правило панели/сообщений).
     expect(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(text)).toBe(false);
   });
 
-  it("без id сделки честно пишет, что в amoCRM не ушла", () => {
+  it("без id сделки отсылает к панели, без ссылки и без ПДн", () => {
     vi.stubEnv("AMO_SUBDOMAIN", "lizapintora");
     const text = buildTelegramText({ type: "purchase", name: "Пётр", phone: "+79990000000", channel: "call" });
-    expect(text).toContain("в amoCRM пока не ушла");
+    expect(text).toContain("Журнале заявок");
     expect(text).not.toContain("/leads/detail/");
+    expect(text).not.toContain("Пётр");
+    expect(text).not.toContain("79990000000");
   });
 });
 
