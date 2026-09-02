@@ -7,6 +7,16 @@ import { REQUEST_TYPE_LABELS, type RequestType } from "./constants";
 
 const TIMEOUT_MS = 8_000;
 
+/**
+ * База Telegram Bot API. По умолчанию api.telegram.org. На РФ-сервере, где Telegram
+ * режется по IP, ставим TELEGRAM_API_BASE = адрес релея (Cloudflare Worker),
+ * который прозрачно проксирует запрос на api.telegram.org. Токен бота остаётся в
+ * env и подставляется в путь запроса, до релея идёт по TLS. ПДн в уведомлении нет.
+ */
+function telegramBase(): string {
+  return (process.env.TELEGRAM_API_BASE || "https://api.telegram.org").replace(/\/+$/, "");
+}
+
 export function isTelegramConfigured(): boolean {
   return Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
 }
@@ -66,7 +76,7 @@ export async function sendTestNotification(): Promise<{ ok: boolean; error?: str
     return { ok: false, error: "Не настроено: нет токена бота или chat_id в переменных окружения." };
   }
 
-  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const url = `${telegramBase()}/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -93,7 +103,7 @@ export async function sendTestNotification(): Promise<{ ok: boolean; error?: str
 export async function notifyTelegram(payload: TelegramPayload): Promise<void> {
   if (!isTelegramConfigured()) return;
 
-  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const url = `${telegramBase()}/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
