@@ -41,11 +41,14 @@ export async function retryFailedRequests(now: Date = new Date()): Promise<Retry
   let failed = 0;
 
   for (const r of items) {
-    // Отодвигаем nextTryAt сразу, чтобы пересекающийся запуск cron не отправил дважды.
-    await prisma.request.update({
-      where: { id: r.id },
+    // Аренда строки атомарным updateMany с условием на nextTryAt из снимка: если
+    // пересекающийся запуск cron уже сдвинул её, наш update не совпадёт (count 0),
+    // и мы пропускаем заявку. Иначе оба прогона создали бы дубль сделки в amoCRM.
+    const lease = await prisma.request.updateMany({
+      where: { id: r.id, amoStatus: "failed", nextTryAt: r.nextTryAt },
       data: { nextTryAt: new Date(now.getTime() + 10 * 60_000) },
     });
+    if (lease.count === 0) continue;
 
     try {
       const dealId = await sendToAmo({
@@ -79,7 +82,9 @@ export async function retryFailedRequests(now: Date = new Date()): Promise<Retry
       await prisma.request.update({
         where: { id: r.id },
         data: {
-          attempts,
+          // Инкремент атомарный, а не запись r.attempts+1 из снимка: иначе
+          // параллельный писатель (фоновый deliver) потерял бы свой шаг.
+          attempts: { increment: 1 },
           lastError: String(e).slice(0, 500),
           // Попытки исчерпаны — оставляем failed без nextTryAt: заявка в базе цела,
           // видна в «Система и безопасность» и журнале, дальше вручную.

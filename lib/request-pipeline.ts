@@ -60,8 +60,12 @@ export async function processRequest(input: RequestInput, ip?: string): Promise<
     comment: saved.comment ?? undefined,
   });
 
-  // 8-9. Внешние системы в фоне: их падение не влияет на ответ гостю.
-  void deliver(saved.id, input, saved.lesson?.title);
+  // 8-9. Внешние системы в фоне: их падение не влияет на ответ гостю. Свой catch,
+  // чтобы ошибка фоновой доставки попала в лог понятной строкой, а не всплыла
+  // необработанным отклонением промиса.
+  void deliver(saved.id, input, saved.lesson?.title).catch((e) => {
+    console.error("Фоновая доставка заявки не удалась:", saved.id, e);
+  });
 
   return { id: saved.id, duplicate: false };
 }

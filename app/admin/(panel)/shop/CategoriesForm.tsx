@@ -151,12 +151,30 @@ function CategoryRow({ node, isRoot }: { node: CategoryNode; isRoot: boolean }) 
             {node.visible ? "скрыть" : "показать"}
           </button>
         </form>
-        <form action={deleteShopCategory}>
-          <input type="hidden" name="id" value={node.id} />
-          <button type="submit" className={styles.removeBtn}>
+        {node.itemCount === 0 && node.children.length === 0 ? (
+          <form action={deleteShopCategory}>
+            <input type="hidden" name="id" value={node.id} />
+            <button type="submit" className={styles.removeBtn}>
+              удалить
+            </button>
+          </form>
+        ) : (
+          // Сервер всё равно откажет (в категории есть товары или подкатегории),
+          // но там результат теряется в форме без useActionState, и сотрудник видел
+          // «ничего не произошло». Гасим кнопку и объясняем причину.
+          <button
+            type="button"
+            className={styles.removeBtn}
+            disabled
+            title={
+              node.itemCount > 0
+                ? "Сначала уберите товары из категории"
+                : "Сначала удалите подкатегории"
+            }
+          >
             удалить
           </button>
-        </form>
+        )}
       </span>
     </div>
   );

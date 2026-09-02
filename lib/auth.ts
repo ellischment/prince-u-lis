@@ -11,6 +11,11 @@ const MAX_ATTEMPTS = 5;
 const LOCK_MINUTES = 60;
 const ATTEMPT_WINDOW_MINUTES = 60;
 
+// Настоящий 60-символьный bcrypt-хэш, а не заглушка неверной длины: bcrypt.compare
+// должен делать полную работу и для несуществующей почты, иначе по времени ответа
+// видно, есть ли такой адрес. Считается один раз при загрузке модуля.
+const ABSENT_USER_HASH = bcrypt.hashSync("absent-account-placeholder", 12);
+
 export type SessionUser = {
   id: string;
   email: string;
@@ -116,7 +121,7 @@ export async function verifyCredentials(
 
   // Хэш сверяется даже когда пользователя нет: иначе по времени ответа
   // можно перебрать существующие адреса.
-  const hash = user?.passwordHash ?? "$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidinv";
+  const hash = user?.passwordHash ?? ABSENT_USER_HASH;
   const match = await bcrypt.compare(password, hash);
 
   if (!user || !match || !user.active || !isRole(user.role)) return null;

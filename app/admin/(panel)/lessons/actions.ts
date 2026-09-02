@@ -43,6 +43,14 @@ export const saveLesson = panelAction({
       throw new ActionError("Занятие не найдено");
     }
 
+    // Адрес приходит из формы (slugify заголовка), два похожих названия дают один
+    // slug. Ловим до записи и с понятным текстом, иначе ошибка уникальности упала
+    // бы в общий обработчик с ложным советом «попробуйте ещё раз».
+    const taken = await tx.lesson.findUnique({ where: { slug: input.slug } });
+    if (taken && taken.id !== existing?.id) {
+      throw new ActionError("Такой адрес уже занят другим занятием. Измените заголовок или адрес");
+    }
+
     const readiness = await computeReadiness(tx, input.id, input);
 
     const data = {

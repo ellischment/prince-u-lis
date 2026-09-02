@@ -41,7 +41,10 @@ export type PruneResult = {
  * сравнение по базовому имени без суффикса размера, иначе снесло бы нужные
  * next/image версии. Без apply — только отчёт, ничего не трогает.
  */
-export async function pruneOrphanedMedia(opts: { apply: boolean }): Promise<PruneResult> {
+export async function pruneOrphanedMedia(
+  opts: { apply: boolean },
+  now: number = Date.now(),
+): Promise<PruneResult> {
   const media = await prisma.media.findMany({
     where: { path: { not: null } },
     select: { path: true },
@@ -51,15 +54,22 @@ export async function pruneOrphanedMedia(opts: { apply: boolean }): Promise<Prun
   const files = await listFiles(UPLOAD_ROOT);
   const orphans = files.filter((f) => !used.has(baseName(f)));
 
+  // Свежие файлы не трогаем: загрузка пишет три webp и только ПОТОМ создаёт строку
+  // Media, поэтому файл младше часа может быть не сиротой, а загрузкой в процессе —
+  // его базового имени ещё нет в снимке базы, снести его значило бы битую картинку.
+  const MIN_AGE_MS = 60 * 60_000;
   let bytes = 0;
+  const deletable: string[] = [];
   for (const f of orphans) {
     const info = await stat(f).catch(() => null);
-    if (info) bytes += info.size;
+    if (!info) continue;
+    bytes += info.size;
+    if (now - info.mtimeMs >= MIN_AGE_MS) deletable.push(f);
   }
 
   let deleted = 0;
   if (opts.apply) {
-    for (const f of orphans) {
+    for (const f of deletable) {
       await unlink(f).catch(() => undefined);
       deleted += 1;
     }
