@@ -213,8 +213,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 </div>
                 <p className={`${styles.hand} hand`}>{hero.hand}</p>
               </div>
-              {/* Медальон ниже гирлянды по слоям: гирлянда драпируется поверх него
-                  (FEATURES 1.14), а текст слева остаётся над гирляндой и читаем. */}
+              {/* Медальон ВЫШЕ гирлянды по слоям (page.module.css .scene
+                  z-index 3): флажки уходят за эмблему. Это правка по просьбе
+                  студии, она расходится с FEATURES 1.14, где гирлянда
+                  «драпируется поверх» медальона. Текст слева по-прежнему над
+                  гирляндой и читаем. */}
               <div className={styles.scene}>
                 <div className={styles.halo} aria-hidden="true" />
                 <div className={styles.medallion}>
