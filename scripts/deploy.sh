@@ -36,8 +36,12 @@ echo "$CURRENT" > "$PREV_FILE"
 echo "==> Текущая версия сохранена для отката: $CURRENT"
 
 echo "==> Обновление кода"
-git fetch --all --tags --prune
+# Раньше было git fetch --all --tags --prune, но с deploy-ключом на приватном репо
+# оно падало ("fatal: Could not read from remote repository") — тянем строго origin,
+# а теги только когда явно выкатываем метку, чтобы не рушить обычный git pull.
+git fetch origin --prune
 if [ -n "$TARGET" ]; then
+  git fetch origin --tags 2>/dev/null || true
   git checkout "$TARGET"
   git pull --ff-only origin "$TARGET" 2>/dev/null || true
 else
