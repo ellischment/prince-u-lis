@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Button } from "./Button";
 import { CHANNEL_LABELS, type RequestInput } from "@/lib/validation/request";
 import { REQUEST_CHANNELS, type RequestChannel, type RequestType } from "@/lib/constants";
@@ -43,6 +43,11 @@ export function RequestForm({
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    await submit();
+  }
 
   async function submit() {
     setErrors({});
@@ -116,7 +121,8 @@ export function RequestForm({
   }
 
   return (
-    <div className={styles.form}>
+    // Настоящий <form>, а не <div>: отправка по Enter с клавиатуры.
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <div className={styles.step}>
         <div className={styles.stepHead}>
           <span className={styles.stepNum}>1</span> Как вас зовут и куда звонить
@@ -200,9 +206,9 @@ export function RequestForm({
       {errors.consent ? <p className={styles.error}>{errors.consent}</p> : null}
       {errors.form ? <p className={styles.error}>{errors.form}</p> : null}
 
-      <Button type="button" onClick={submit} disabled={pending}>
+      <Button type="submit" disabled={pending}>
         {pending ? "Отправляем..." : submitLabel}
       </Button>
-    </div>
+    </form>
   );
 }

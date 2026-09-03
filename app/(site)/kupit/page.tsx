@@ -6,7 +6,7 @@ import { ShopCard } from "@/components/ShopCard";
 import { Container } from "@/components/Container";
 import { JsonLd } from "@/components/JsonLd";
 import {
-  CERTIFICATES_CATEGORY_SLUG,
+  COWORKING_CATEGORY_SLUG,
   COWORKING_ANCHOR,
   COWORKING_LESSON_SLUG,
 } from "@/lib/constants";
@@ -75,7 +75,15 @@ export default async function KupitPage({ searchParams }: PageProps<"/kupit">) {
 
   // Вкладки: «Работы» (если есть работы) плюс каждая непустая категория первого
   // уровня. Пустая категория вкладку не показывает (FEATURES.md 1.8, SPEC §9).
-  const shopTabs = categories.filter((cat) => itemsOfCategory(items, cat.id).length > 0);
+  // Исключение — категория коворкинга: у неё своя врезка (часы и абонементы),
+  // которая ценна и без товаров, поэтому вкладка показывается, пока есть данные
+  // коворкинга, даже если товаров в категории ещё нет. Иначе пункт меню
+  // «Коворкинг» вёл бы в пустоту, пока студия не заведёт товар.
+  const shopTabs = categories.filter(
+    (cat) =>
+      itemsOfCategory(items, cat.id).length > 0 ||
+      (cat.slug === COWORKING_CATEGORY_SLUG && coworking !== null),
+  );
   const tabs = [
     ...(works.length > 0 ? [{ key: WORKS_TAB, title: "Работы" }] : []),
     ...shopTabs.map((cat) => ({ key: cat.slug, title: cat.title })),
@@ -254,7 +262,7 @@ function ShopTab({
   const inCategory = itemsOfCategory(items, category.id);
   const visible = sub ? inCategory.filter((i) => i.categoryId === sub.id) : inCategory;
   const isShowcase = category.display === "showcase";
-  const isCertificates = category.slug === CERTIFICATES_CATEGORY_SLUG;
+  const isCoworkingCategory = category.slug === COWORKING_CATEGORY_SLUG;
 
   const subHref = (slug?: string) => {
     const p = new URLSearchParams({ vkladka: category.slug });
@@ -277,11 +285,11 @@ function ShopTab({
         </div>
       ) : null}
 
-      {visible.length === 0 ? (
+      {visible.length === 0 && !(isCoworkingCategory && coworking) ? (
         <div className={styles.hint}>
           <p>Здесь пока пусто. Загляните в другой раздел каталога или напишите нам.</p>
         </div>
-      ) : isShowcase ? (
+      ) : visible.length === 0 ? null : isShowcase ? (
         <div className={styles.mesh}>
           {visible.map((i) => (
             <MeshTile key={i.id} title={i.title} href={`/kupit/${i.slug}`} cover={i.cover} />
@@ -302,7 +310,7 @@ function ShopTab({
         </div>
       )}
 
-      {isCertificates && coworking ? (
+      {isCoworkingCategory && coworking ? (
         <div className={styles.coworking} id={COWORKING_ANCHOR}>
           <p className={styles.eyebrow}>Коворкинг</p>
           <h2 className={styles.coworkingTitle}>Часы и абонементы</h2>

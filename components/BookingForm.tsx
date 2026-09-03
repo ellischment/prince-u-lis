@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Button } from "./Button";
 import { track } from "@/lib/analytics";
 import { CHANNEL_LABELS, type RequestInput } from "@/lib/validation/request";
@@ -95,6 +95,11 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
     pickBtnRef.current?.focus();
   }
 
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    await submit();
+  }
+
   async function submit() {
     setErrors({});
     // Клиентская подсветка обязательных — для удобства; сервер проверяет заново.
@@ -183,7 +188,9 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
   }
 
   return (
-    <div className={styles.form}>
+    // Настоящий <form>, а не <div>: даёт отправку по Enter с клавиатуры
+    // (в т.ч. кнопка «Готово» на телефоне) и правильную семантику формы.
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
       {prefill?.fromContext ? <p className={styles.context}>{prefill.fromContext}</p> : null}
 
       {/* Шаг 1: выбор занятия своим списком */}
@@ -348,9 +355,9 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
       {errors.consent ? <p className={styles.error}>{errors.consent}</p> : null}
       {errors.form ? <p className={styles.error}>{errors.form}</p> : null}
 
-      <Button type="button" onClick={submit} disabled={pending}>
+      <Button type="submit" disabled={pending}>
         {pending ? "Отправляем..." : "Отправить заявку"}
       </Button>
-    </div>
+    </form>
   );
 }

@@ -36,14 +36,16 @@ export const CATEGORY_REQUEST_KIND_LABELS: Record<CategoryRequestKind, string> =
 export const COURSE_FORMAT_SLUG = "kursy";
 
 /**
- * Адрес категории «Сертификаты и курсы» (kind=shop, первый уровень) и адрес
- * занятия-коворкинга. На вкладке этой категории показывается блок коворкинга с
- * якорем #coworking (FEATURES.md 1.8, пункт меню «Коворкинг» ведёт сюда).
- * Значения завязаны на seed. Если студия переименует адрес в справочнике, блок
- * коворкинга просто не покажется — не «чинится» догадкой, как и COURSE_FORMAT_SLUG.
+ * Адрес категории каталога, на вкладке которой показывается блок коворкинга с
+ * якорем #coworking, и адрес самого занятия-коворкинга (FEATURES.md 1.8, пункт
+ * меню «Коворкинг» ведёт сюда). Значения должны совпадать с реальным контентом:
+ * студия завела категорию «Курсы и абонементы» (kursy-i-abonementy) и занятие
+ * «Коворкинг» (kovorking). Прежние значения (sertifikaty-i-kursy,
+ * kovorking-v-masterskoy) остались от сида и ни на что не указывали, из-за чего
+ * блок коворкинга не показывался, а пункт меню вёл на пустой якорь.
  */
-export const CERTIFICATES_CATEGORY_SLUG = "sertifikaty-i-kursy";
-export const COWORKING_LESSON_SLUG = "kovorking-v-masterskoy";
+export const COWORKING_CATEGORY_SLUG = "kursy-i-abonementy";
+export const COWORKING_LESSON_SLUG = "kovorking";
 export const COWORKING_ANCHOR = "coworking";
 
 export const TASK_TAGS = ["duo", "kids", "gift", "self", "company", "practice"] as const;
