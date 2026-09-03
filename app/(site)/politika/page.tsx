@@ -5,6 +5,13 @@ import { Section } from "@/components/Section";
 import { breadcrumbSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { pageMetadata } from "@/lib/seo-meta";
 
+// Страница текстовая, но разметка LocalBusiness и подвал берут часы работы из
+// базы. При сборке база пустая, поэтому статическая версия уезжала на сервер без
+// часов: в подвале пропадало «ежедневно 11-22», а в JSON-LD не было
+// openingHoursSpecification. Остальные страницы сайта считаются на запрос,
+// эта теперь тоже.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = pageMetadata({
   title: "Политика обработки персональных данных",
   description:
