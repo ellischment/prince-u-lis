@@ -1,0 +1,43 @@
+/* Индикатор загрузки страницы (Next.js app/loading.tsx). Тонкая полоска сверху
+   в фирменном оранжевом var(--fox), едет по горизонтали. Ничего не блокирует,
+   не появляется поверх контента — только тонкая линия наверху вьюпорта. */
+
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: color-mix(in oklab, var(--fox) 30%, transparent);
+  overflow: hidden;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--fox), transparent);
+  animation: slide 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* Без движения — статичная полоска, без анимации (правило SPEC.md §12). */
+@media (prefers-reduced-motion: reduce) {
+  .bar::before {
+    animation: none;
+    width: 100%;
+    background: var(--fox);
+  }
+}

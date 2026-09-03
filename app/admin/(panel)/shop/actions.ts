@@ -6,6 +6,7 @@ import { slugify } from "@/lib/slug";
 import {
   idSchema,
   moveSchema,
+  shopCategoryKindSchema,
   shopCategorySchema,
   shopItemSchema,
   toggleSchema,
@@ -60,12 +61,14 @@ const saveShopCategoryCore = panelAction({
       const existing = await tx.category.findUnique({ where: { id: input.id } });
       if (!existing || existing.kind !== "shop") throw new ActionError("Категория не найдена");
       // Переименование не меняет slug: адрес вкладки и ссылки на неё остаются
-      // стабильными. Тип отображения меняется только у первого уровня.
+      // стабильными. Тип отображения и тип заявки — только у первого уровня;
+      // у подкатегории оба игнорируются (наследует у родителя).
       await tx.category.update({
         where: { id: input.id },
         data: {
           title: input.title,
           display: existing.parentId ? null : input.display,
+          ...(existing.parentId ? {} : { requestKind: input.requestKind }),
         },
       });
       return { id: input.id };
@@ -90,6 +93,8 @@ const saveShopCategoryCore = panelAction({
         kind: "shop",
         parentId: input.parentId,
         display: input.parentId ? null : input.display,
+        // Подкатегория наследует тип заявки у родителя — свой не хранит.
+        requestKind: input.parentId ? "purchase" : input.requestKind,
         sort: (last?.sort ?? -1) + 1,
       },
     });
@@ -105,6 +110,7 @@ export async function saveShopCategory(_prev: ShopState, formData: FormData): Pr
       title: String(formData.get("title") ?? ""),
       parentId: String(formData.get("parentId") ?? ""),
       display: String(formData.get("display") ?? "cards"),
+      requestKind: String(formData.get("requestKind") ?? "purchase"),
     }),
   );
 }
@@ -126,6 +132,30 @@ export async function toggleShopCategory(formData: FormData): Promise<void> {
   await toggleShopCategoryCore({
     id: String(formData.get("id") ?? ""),
     visible: String(formData.get("visible") ?? ""),
+  });
+}
+
+const setShopCategoryRequestKindCore = panelAction({
+  roles: ROLES,
+  schema: shopCategoryKindSchema,
+  entity: "category",
+  action: "shop.category.requestKind",
+  paths: PATHS,
+  run: async (input, tx) => {
+    // Меняем только у 1-го уровня; у подкатегории значение всё равно наследуется.
+    const cat = await tx.category.findUnique({ where: { id: input.id } });
+    if (!cat || cat.kind !== "shop") throw new ActionError("Категория не найдена");
+    if (cat.parentId) throw new ActionError("Тип заявки задаётся у категории верхнего уровня");
+    await tx.category.update({ where: { id: input.id }, data: { requestKind: input.requestKind } });
+    return { id: input.id };
+  },
+  entityId: (input) => input.id,
+});
+
+export async function setShopCategoryRequestKind(formData: FormData): Promise<void> {
+  await setShopCategoryRequestKindCore({
+    id: String(formData.get("id") ?? ""),
+    requestKind: String(formData.get("requestKind") ?? "purchase"),
   });
 }
 

@@ -13,6 +13,17 @@ export type CategoryKind = (typeof CATEGORY_KINDS)[number];
 export const CATEGORY_DISPLAYS = ["showcase", "cards"] as const;
 export type CategoryDisplay = (typeof CATEGORY_DISPLAYS)[number];
 
+// Тип обращения у категории 1-го уровня раздела «Купить» (kind=shop). Определяет
+// воронку amoCRM для товара категории: "purchase" — готовые работы и сертификаты
+// (воронка «Покупки»); "booking" — курсы и абонементы (заявка на запись, воронка
+// «Заявки с сайта»). Стоит у kind=shop, parentId=null; подкатегория наследует.
+export const CATEGORY_REQUEST_KINDS = ["purchase", "booking"] as const;
+export type CategoryRequestKind = (typeof CATEGORY_REQUEST_KINDS)[number];
+export const CATEGORY_REQUEST_KIND_LABELS: Record<CategoryRequestKind, string> = {
+  purchase: "Покупка (готовая работа или сертификат)",
+  booking: "Заявка на запись (курс или абонемент)",
+};
+
 /**
  * Адрес формата «Курсы» в справочнике категорий. Курс это занятие с этим
  * форматом, отдельной сущности нет: SPEC.md раздел 9a.

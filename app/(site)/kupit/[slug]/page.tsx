@@ -101,11 +101,15 @@ export default async function ItemPage({ params }: PageProps<"/kupit/[slug]">) {
             ) : null}
 
             <div className={styles.form}>
-              <h2 className={styles.formTitle}>Оставить заявку на покупку</h2>
+              <h2 className={styles.formTitle}>
+                {item.requestKind === "booking" ? "Оставить заявку на запись" : "Оставить заявку на покупку"}
+              </h2>
               <p className={styles.formNote}>
-                Это заявка, а не оплата. Мы свяжемся, чтобы согласовать оплату и получение.
+                {item.requestKind === "booking"
+                  ? "Это заявка, а не оплата. Мы свяжемся, чтобы согласовать запись и оплату."
+                  : "Это заявка, а не оплата. Мы свяжемся, чтобы согласовать оплату и получение."}
               </p>
-              <PurchaseForm itemTitle={item.title} itemPrice={item.price} />
+              <PurchaseForm itemTitle={item.title} itemPrice={item.price} requestKind={item.requestKind} />
             </div>
           </div>
         </div>

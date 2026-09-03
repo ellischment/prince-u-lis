@@ -200,6 +200,14 @@ export function filterWorks(
   });
 }
 
+/**
+ * Как заявка из карточки уходит в amoCRM: "purchase" — воронка «Покупки»
+ * (готовые работы, сертификаты), "booking" — воронка «Заявки с сайта» (курсы,
+ * абонементы — это заявка на запись, а не покупка готового). Определяется у
+ * категории 1-го уровня в панели, для Work всегда "purchase".
+ */
+export type PurchaseRequestKind = "purchase" | "booking";
+
 export type Purchasable =
   | {
       kind: "work";
@@ -208,6 +216,7 @@ export type Purchasable =
       price: string;
       description: string;
       terms: null;
+      requestKind: PurchaseRequestKind;
       media: {
         kind: string;
         path: string | null;
@@ -224,6 +233,7 @@ export type Purchasable =
       price: string;
       description: string;
       terms: string | null;
+      requestKind: PurchaseRequestKind;
       media: {
         kind: string;
         path: string | null;
@@ -255,15 +265,24 @@ export const getPurchasableBySlug = cachedRead(
         price: work.price,
         description: work.description,
         terms: null,
+        requestKind: "purchase",
         media: work.media,
       };
     }
 
     const item = await prisma.shopItem.findFirst({
       where: { slug, visible: true },
-      include: { media: { orderBy: { sort: "asc" } } },
+      include: {
+        media: { orderBy: { sort: "asc" } },
+        // Тянем и родителя категории: requestKind живёт на 1-м уровне; если товар
+        // лежит в подкатегории (например «Курсы и абонементы → Керамика 8 недель»),
+        // тип заявки читаем у родителя, иначе у самой категории.
+        category: { include: { parent: true } },
+      },
     });
     if (item) {
+      const root = item.category.parent ?? item.category;
+      const requestKind: PurchaseRequestKind = root.requestKind === "booking" ? "booking" : "purchase";
       return {
         kind: "shop",
         title: item.title,
@@ -271,6 +290,7 @@ export const getPurchasableBySlug = cachedRead(
         price: item.price,
         description: item.description,
         terms: item.terms,
+        requestKind,
         media: item.media,
       };
     }

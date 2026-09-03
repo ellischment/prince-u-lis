@@ -21,6 +21,11 @@ model Category {
   slug      String
   kind      String // lesson_direction | lesson_format | work_author | work_material | shop
   display   String? // showcase | cards, только у первого уровня
+  // Только для kind=shop, первый уровень. Определяет, как товар из этой категории
+  // уходит в amoCRM: "purchase" (готовые работы, сертификаты) → воронка «Покупки»;
+  // "booking" (курсы, абонементы — заявка на запись) → воронка «Заявки с сайта».
+  // По умолчанию purchase, чтобы старые категории не сменили поведение.
+  requestKind String @default("purchase")
   parentId  String?
   parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children  Category[] @relation("CategoryTree")

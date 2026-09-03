@@ -5,18 +5,30 @@ import { useRef, useState } from "react";
 import { Button } from "./Button";
 import { CHANNEL_LABELS, type RequestInput } from "@/lib/validation/request";
 import { REQUEST_CHANNELS, type RequestChannel } from "@/lib/constants";
+import type { PurchaseRequestKind } from "@/lib/shop";
 import styles from "./BookingForm.module.css";
 
 type FieldErrors = Partial<Record<keyof RequestInput | "form", string>>;
 
 /**
- * Заявка на покупку работы или товара-услуги (FEATURES.md 1.8, тип заявки
- * `purchase`). Форма проще записи: занятия не выбираются, ссылок на занятия нет.
- * Товар кладётся в комментарий заявки — в модели Request отдельного поля нет,
- * как и поток курса уходит комментарием. Серверная валидация — основная,
- * версию согласия ставит сервер.
+ * Заявка на покупку работы или товара-услуги (FEATURES.md 1.8). Тип заявки
+ * зависит от категории 1-го уровня: "purchase" — готовая работа/сертификат
+ * (воронка «Покупки»), "booking" — курс/абонемент (воронка «Заявки с сайта»).
+ * Категорию редактирует владелец в панели, форма читает готовый requestKind.
+ * Форма проще записи: занятия не выбираются, ссылок на занятия нет. Товар
+ * кладётся в комментарий заявки — в модели Request отдельного поля нет.
+ * Серверная валидация — основная, версию согласия ставит сервер.
  */
-export function PurchaseForm({ itemTitle, itemPrice }: { itemTitle: string; itemPrice: string }) {
+export function PurchaseForm({
+  itemTitle,
+  itemPrice,
+  requestKind = "purchase",
+}: {
+  itemTitle: string;
+  itemPrice: string;
+  requestKind?: PurchaseRequestKind;
+}) {
+  const isBooking = requestKind === "booking";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [channel, setChannel] = useState<RequestChannel>("call");
@@ -46,8 +58,10 @@ export function PurchaseForm({ itemTitle, itemPrice }: { itemTitle: string; item
     }
 
     // Товар и цена уходят в комментарий: администратор видит, что покупают,
-    // без отдельного поля в заявке.
-    const note = `Покупка: ${itemTitle} (${itemPrice})`;
+    // без отдельного поля в заявке. Для курса/абонемента формулировка мягче —
+    // это заявка на запись, а не покупка готового.
+    const noteHead = isBooking ? "Запись" : "Покупка";
+    const note = `${noteHead}: ${itemTitle} (${itemPrice})`;
     const fullComment = comment.trim() ? `${note}. ${comment.trim()}` : note;
 
     setPending(true);
@@ -56,11 +70,12 @@ export function PurchaseForm({ itemTitle, itemPrice }: { itemTitle: string; item
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          type: "purchase",
+          // purchase → воронка «Покупки»; booking → воронка «Заявки с сайта».
+          type: isBooking ? "booking" : "purchase",
           name,
           phone,
           channel,
-          // Товар — в название сделки («Покупка: …»); цена и заметка гостя в комментарии.
+          // Товар/курс — в название сделки; цена и заметка гостя в комментарии.
           subject: itemTitle,
           comment: fullComment,
           consent,
@@ -97,8 +112,12 @@ export function PurchaseForm({ itemTitle, itemPrice }: { itemTitle: string; item
         <h2 className={styles.doneTitle}>Заявка отправлена</h2>
         <p className={styles.doneText}>
           {done.duplicate
-            ? "Такая заявка уже у нас — дубль не создали. Мы свяжемся, чтобы согласовать покупку."
-            : `Записали интерес к «${itemTitle}». Мы свяжемся, чтобы согласовать оплату и получение.`}
+            ? isBooking
+              ? "Такая заявка уже у нас — дубль не создали. Мы свяжемся, чтобы согласовать запись."
+              : "Такая заявка уже у нас — дубль не создали. Мы свяжемся, чтобы согласовать покупку."
+            : isBooking
+              ? `Записали интерес к «${itemTitle}». Мы свяжемся, чтобы согласовать запись и оплату.`
+              : `Записали интерес к «${itemTitle}». Мы свяжемся, чтобы согласовать оплату и получение.`}
         </p>
       </div>
     );
@@ -190,7 +209,7 @@ export function PurchaseForm({ itemTitle, itemPrice }: { itemTitle: string; item
       {errors.form ? <p className={styles.error}>{errors.form}</p> : null}
 
       <Button type="button" onClick={submit} disabled={pending}>
-        {pending ? "Отправляем..." : "Оставить заявку на покупку"}
+        {pending ? "Отправляем..." : isBooking ? "Оставить заявку на запись" : "Оставить заявку на покупку"}
       </Button>
     </div>
   );

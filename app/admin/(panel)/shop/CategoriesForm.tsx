@@ -7,6 +7,7 @@ import {
   deleteShopCategory,
   moveShopCategory,
   saveShopCategory,
+  setShopCategoryRequestKind,
   toggleShopCategory,
   type ShopState,
 } from "./actions";
@@ -17,9 +18,15 @@ export type CategoryNode = {
   id: string;
   title: string;
   display: string | null;
+  requestKind: "purchase" | "booking";
   visible: boolean;
   itemCount: number;
   children: CategoryNode[];
+};
+
+const REQUEST_KIND_LABEL: Record<string, string> = {
+  purchase: "покупка",
+  booking: "заявка на запись",
 };
 
 type Option = { id: string; title: string };
@@ -71,10 +78,22 @@ export function CategoriesForm({
         </select>
 
         {level === "root" ? (
-          <select name="display" className={styles.select} defaultValue="cards" aria-label="Тип показа">
-            <option value="cards">карточки</option>
-            <option value="showcase">витрина</option>
-          </select>
+          <>
+            <select name="display" className={styles.select} defaultValue="cards" aria-label="Тип показа">
+              <option value="cards">карточки</option>
+              <option value="showcase">витрина</option>
+            </select>
+            <select
+              name="requestKind"
+              className={styles.select}
+              defaultValue="purchase"
+              aria-label="Тип заявки"
+              title="Куда уйдёт заявка из карточки товара"
+            >
+              <option value="purchase">покупка (готовая работа, сертификат)</option>
+              <option value="booking">заявка на запись (курс, абонемент)</option>
+            </select>
+          </>
         ) : (
           <select name="parentId" className={styles.select} defaultValue="" aria-label="Родитель">
             <option value="" disabled>
@@ -126,10 +145,29 @@ function CategoryRow({ node, isRoot }: { node: CategoryNode; isRoot: boolean }) 
         {isRoot && node.display ? (
           <span className={styles.badge}> {DISPLAY_LABEL[node.display] ?? node.display}</span>
         ) : null}
+        {isRoot ? (
+          <span className={styles.badge}> {REQUEST_KIND_LABEL[node.requestKind] ?? node.requestKind}</span>
+        ) : null}
         {!node.visible ? <span className={styles.hiddenTag}> · скрыто</span> : null}
         {node.itemCount > 0 ? <span className={styles.count}> · товаров: {node.itemCount}</span> : null}
       </span>
       <span className={styles.rowActions}>
+        {isRoot ? (
+          <form action={setShopCategoryRequestKind}>
+            <input type="hidden" name="id" value={node.id} />
+            <select
+              name="requestKind"
+              defaultValue={node.requestKind}
+              className={styles.select}
+              aria-label="Тип заявки"
+              title="Куда уйдёт заявка из карточки товара этой категории"
+              onChange={(e) => e.currentTarget.form?.requestSubmit()}
+            >
+              <option value="purchase">покупка</option>
+              <option value="booking">заявка на запись</option>
+            </select>
+          </form>
+        ) : null}
         <form action={moveShopCategory}>
           <input type="hidden" name="id" value={node.id} />
           <input type="hidden" name="dir" value="up" />

@@ -67,6 +67,7 @@ export default async function ShopPanelPage() {
     id: root.id,
     title: root.title,
     display: root.display,
+    requestKind: root.requestKind === "booking" ? "booking" : "purchase",
     visible: root.visible,
     itemCount: root._count.shopItems,
     children: categories
@@ -75,6 +76,7 @@ export default async function ShopPanelPage() {
         id: child.id,
         title: child.title,
         display: null,
+        requestKind: "purchase", // подкатегория наследует у родителя, своё поле не показываем
         visible: child.visible,
         itemCount: child._count.shopItems,
         children: [],

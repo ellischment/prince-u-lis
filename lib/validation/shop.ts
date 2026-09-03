@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CATEGORY_DISPLAYS } from "../constants";
+import { CATEGORY_DISPLAYS, CATEGORY_REQUEST_KINDS } from "../constants";
 
 // Схемы управления каталогом «Купить» (PLAN 5.2, FEATURES 2.3). Серверная
 // валидация — основная. Slug администратор не вводит: он считается из названия
@@ -20,9 +20,18 @@ export const shopCategorySchema = z.object({
     .optional()
     .transform((v) => (v && v.length > 0 ? v : null)),
   display: z.enum(CATEGORY_DISPLAYS).default("cards"),
+  // Тип заявки только для 1-го уровня; для подкатегории игнорируется в действии.
+  requestKind: z.enum(CATEGORY_REQUEST_KINDS).default("purchase"),
 });
 
 export type ShopCategoryInput = z.infer<typeof shopCategorySchema>;
+
+// Смена типа заявки существующей категории 1-го уровня (селектор в панели).
+export const shopCategoryKindSchema = z.object({
+  id: z.string().min(1),
+  requestKind: z.enum(CATEGORY_REQUEST_KINDS),
+});
+export type ShopCategoryKindInput = z.infer<typeof shopCategoryKindSchema>;
 
 // ---------- Работы ----------
 
