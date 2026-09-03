@@ -16,12 +16,20 @@ import styles from "./TestBanner.module.css";
 export function TestBanner() {
   if (process.env.NEXT_PUBLIC_NOINDEX !== "1") return null;
 
+  // На телефоне полоса стоит над липкой шапкой, и каждая лишняя строка это
+  // лишний путь, который шапка проезжает вверх, прежде чем прилипнуть. В четыре
+  // строки это читалось как «шапка ездит», поэтому на узком экране остаётся
+  // только суть, а подробности показываются с 561px.
   return (
     <div className={styles.bar} role="status">
-      <b>Проверочная версия сайта.</b> Часть разделов студия ещё наполняет:
-      расписание, отзывы, события и каталог пока пустые.
-      <span className={styles.note}>
-        Это не поломка. Настоящий адрес сайта будет princulissart.ru.
+      <b>Проверочная версия сайта.</b>{" "}
+      <span className={styles.short}>Разделы ещё наполняются.</span>
+      <span className={styles.full}>
+        Часть разделов студия ещё наполняет: расписание, отзывы, события и
+        каталог пока пустые.
+        <span className={styles.note}>
+          Это не поломка. Настоящий адрес сайта будет princulissart.ru.
+        </span>
       </span>
     </div>
   );
