@@ -53,8 +53,20 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # Домен и пароль тестовой версии приходят из .env: Caddyfile.test читает их
+    # плейсхолдерами {$...}. На боевом домене эти переменные не нужны.
+    env_file: .env
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Какой конфиг взять, решает CADDYFILE в .env: Caddyfile (боевой) или
+      # Caddyfile.test. Раньше тестовый вариант был локальной правкой файла
+      # прямо на сервере, и любое изменение Caddyfile в репозитории ломало
+      # `git pull` при выкатке.
+      - ./${CADDYFILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
+      # Заглушка на время работ. Лежит в репозитории и монтируется в Caddy, а не
+      # в приложение: иначе она перестала бы работать ровно тогда, когда нужна —
+      # при остановленном приложении. Включается файлом-флагом ON внутри папки
+      # (scripts/maintenance-on.sh), поэтому монтируется на запись.
+      - ./deploy/maintenance:/srv/maintenance
       - caddy-data:/data
       - caddy-config:/config
     depends_on:

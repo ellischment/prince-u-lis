@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Студия «Принц и Лис» — скоро вернёмся</title>
+<style>
+  /* Страница самостоятельная: ни одного внешнего файла, ни шрифтов, ни скриптов.
+     Её отдаёт Caddy напрямую, когда приложение остановлено, поэтому всё, что
+     она умеет, должно лежать прямо здесь. Цвета — токены из app/globals.css. */
+  :root {
+    --deep: #0C1A2E;
+    --navy: #122540;
+    --card: #16294A;
+    --cream: #EAD9AC;
+    --paper: #F3ECDD;
+    --muted: #9FB0CC;
+    --fox: #D96E30;
+    --fox-soft: #E8935C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--deep);
+    background-image: radial-gradient(circle at 50% 0%, var(--navy) 0%, var(--deep) 70%);
+    color: var(--paper);
+    font-family: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--card);
+    border: 1px solid rgba(234, 217, 172, 0.18);
+    border-radius: 20px;
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .mark {
+    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cream);
+    font-size: 15px;
+    margin: 0 0 24px;
+  }
+  h1 {
+    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1.2;
+    margin: 0 0 16px;
+    color: var(--paper);
+  }
+  .lead { margin: 0 0 28px; color: var(--muted); }
+  .actions { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+  a.button {
+    display: block;
+    padding: 14px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    background: var(--fox);
+    color: #FFFFFF;
+    border: 1px solid var(--fox);
+  }
+  a.button:hover { background: var(--fox-soft); border-color: var(--fox-soft); }
+  a.button.secondary { background: transparent; color: var(--cream); border-color: rgba(234, 217, 172, 0.45); }
+  a.button.secondary:hover { background: rgba(234, 217, 172, 0.1); }
+  a:focus-visible, a.button:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
+  .meta { margin: 0; color: var(--muted); font-size: 15px; }
+  .meta strong { color: var(--paper); font-weight: 600; }
+  hr { border: 0; border-top: 1px solid rgba(159, 176, 204, 0.22); margin: 28px 0; }
+  @media (max-width: 360px) {
+    .card { padding: 28px 20px; }
+    h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <p class="mark">Принц · Лис</p>
+
+    <h1>Обновляем сайт</h1>
+    <p class="lead">
+      Скоро откроем обновлённую версию. Студия работает как обычно:
+      записаться и задать вопрос можно по телефону или во ВКонтакте.
+    </p>
+
+    <div class="actions">
+      <!-- Телефон студии. Совпадает с lib/studio.ts. -->
+      <a class="button" href="tel:+79199690585">Позвонить: +7 919 969-05-85</a>
+
+      <!-- ЗАМЕНИТЬ НА НАСТОЯЩИЙ АДРЕС СООБЩЕСТВА ВКОНТАКТЕ.
+           Больше этот адрес нигде в проекте не встречается. -->
+      <a class="button secondary" href="https://vk.com/princulissart">Написать во ВКонтакте</a>
+    </div>
+
+    <hr>
+
+    <p class="meta">
+      <strong>Москва, Сущевская 12с1</strong>, вход со двора<br>
+      Ежедневно 11–22
+    </p>
+  </main>
+</body>
+</html>

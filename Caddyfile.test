@@ -1,0 +1,41 @@
+# Тестовый домен. Отличается от боевого Caddyfile двумя вещами: адресом и
+# паролем на вход. Раньше это жило локальной правкой прямо на сервере, из-за
+# чего `git pull` при выкатке ломался, как только Caddyfile менялся в
+# репозитории. Теперь оба варианта лежат в репозитории, а какой взять —
+# решает переменная CADDYFILE в .env (docker-compose.yml).
+#
+# Нужные переменные в .env на сервере:
+#   CADDYFILE=Caddyfile.test
+#   TEST_DOMAIN=80-78-253-177.sslip.io
+#   TEST_AUTH_USER=studia
+#   TEST_AUTH_HASH=<bcrypt-хэш пароля, caddy hash-password>
+
+{$TEST_DOMAIN} {
+	encode gzip zstd
+
+	request_body {
+		max_size 12MB
+	}
+
+	basic_auth {
+		{$TEST_AUTH_USER} {$TEST_AUTH_HASH}
+	}
+
+	# Заглушка на время работ, как на боевом домене: страницу отдаёт сам Caddy,
+	# поэтому она видна и при остановленном приложении.
+	root * /srv/maintenance
+	@maintenance file /ON
+
+	handle @maintenance {
+		header Retry-After 3600
+		header Cache-Control "no-store"
+		rewrite * /index.html
+		file_server {
+			status 503
+		}
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+}

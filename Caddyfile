@@ -13,5 +13,25 @@ princulissart.ru, www.princulissart.ru {
 	# X-Frame-Options c разными значениями (SAMEORIGIN у Caddy против DENY у app)
 	# браузер может счесть конфликтом. Caddy отвечает за TLS, сжатие и лимит тела.
 
-	reverse_proxy app:3000
+	# Заглушка на время работ. Включается появлением файла-флага
+	# deploy/maintenance/ON (scripts/maintenance-on.sh), выключается его
+	# удалением. Страницу отдаёт сам Caddy из файла, поэтому она работает и
+	# когда контейнер приложения остановлен — ради этого всё и сделано.
+	root * /srv/maintenance
+	@maintenance file /ON
+
+	handle @maintenance {
+		# 503 с Retry-After, а не 200: поисковик поймёт, что это временно, и не
+		# запомнит заглушку вместо сайта. Отдаём её на ЛЮБОЙ адрес.
+		header Retry-After 3600
+		header Cache-Control "no-store"
+		rewrite * /index.html
+		file_server {
+			status 503
+		}
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
 }
