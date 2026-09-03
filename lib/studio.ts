@@ -14,8 +14,8 @@ export const STUDIO_NAME = "Принц и Лис";
 export const STUDIO_LEGAL_NAME = "ИП Батырева Е. В.";
 export const STUDIO_ADDRESS = "Сущевская 12с1, вход со двора";
 export const STUDIO_CITY = "Москва";
-export const STUDIO_PHONE = "+7 919 969-05-85";
-export const STUDIO_PHONE_HREF = "tel:+79199690585";
+export const STUDIO_PHONE = "+7 961 828-54-75";
+export const STUDIO_PHONE_HREF = "tel:+79618285475";
 
 function stripZeroMinutes(time: string): string {
   return time.endsWith(":00") ? time.slice(0, -3) : time;
