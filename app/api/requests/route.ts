@@ -11,6 +11,9 @@ import { processRequest, RATE_MAX, RATE_MINUTES } from "@/lib/request-pipeline";
 import { requestSchema } from "@/lib/validation/request";
 
 const TOO_MANY = "Слишком много заявок с этого устройства. Попробуйте через несколько минут.";
+// База не успела принять запись во всплеск. Заявка не потеряна и не записана:
+// гостю предлагаем повторить, а не показываем ошибку сервера.
+const BUSY = "Сейчас много заявок, не успели вас записать. Отправьте ещё раз через минуту или позвоните нам.";
 
 function clientIp(req: Request): string {
   const fwd = req.headers.get("x-forwarded-for");
@@ -53,6 +56,9 @@ export async function POST(req: Request): Promise<Response> {
   const result = await processRequest({ ...parsed.data, consentVersion: CONSENT_VERSION }, ip);
   if (result.limited) {
     return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+  }
+  if (result.busy) {
+    return NextResponse.json({ error: BUSY }, { status: 503 });
   }
   return NextResponse.json({ ok: true, id: result.id, duplicate: result.duplicate });
 }

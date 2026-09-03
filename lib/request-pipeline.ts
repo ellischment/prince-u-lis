@@ -19,8 +19,29 @@ export const RATE_MAX = 5;
 export const RATE_MINUTES = 10;
 
 export type ProcessResult =
-  | { limited: true }
-  | { limited?: false; id: string; duplicate: boolean };
+  | { limited: true; busy?: false }
+  | { busy: true; limited?: false }
+  | { limited?: false; busy?: false; id: string; duplicate: boolean };
+
+/**
+ * Сколько ждать своей очереди на запись. SQLite пускает одного писателя за раз,
+ * а соединений в пуле Prisma на двухъядерном сервере пять: при всплеске заявки
+ * выстраиваются в очередь. Значение по умолчанию (2 с) на всплеске в 30 заявок
+ * кончалось ошибкой P2028 и HTTP 500 в лицо гостю — проверено на тестовом
+ * домене. Сама транзакция короткая (три запроса), запас нужен на очередь.
+ */
+const TX_OPTIONS = { maxWait: 8_000, timeout: 10_000 } as const;
+
+/**
+ * База занята дольше отведённого. Заявку не потеряли и не записали — гостю
+ * честнее предложить повторить, чем показать ошибку сервера. P2028 не удалось
+ * начать транзакцию, P2024 кончились соединения в пуле, плюс отказ SQLite.
+ */
+function isBusyError(error: unknown): boolean {
+  const code = (error as { code?: unknown })?.code;
+  if (code === "P2028" || code === "P2024") return true;
+  return /SQLITE_BUSY|database is locked|Socket timeout/i.test(String(error));
+}
 
 export async function processRequest(input: RequestInput, ip?: string): Promise<ProcessResult> {
   const mask = maskPhone(input.phone);
@@ -38,7 +59,8 @@ export async function processRequest(input: RequestInput, ip?: string): Promise<
   // 30 заявок с одного адреса прошли все вместо пяти. Prisma открывает
   // транзакцию SQLite как BEGIN IMMEDIATE, поэтому писатели сериализуются и
   // каждая следующая заявка видит уже записанные соседние.
-  const outcome = await prisma.$transaction(async (tx) => {
+  const attempt = () =>
+    prisma.$transaction(async (tx) => {
     const rateSince = new Date(Date.now() - RATE_MINUTES * 60_000);
     if (ip) {
       const recent = await tx.request.count({ where: { ip, createdAt: { gte: rateSince } } });
@@ -72,7 +94,18 @@ export async function processRequest(input: RequestInput, ip?: string): Promise<
       include: { lesson: true },
     });
     return { duplicate: false as const, saved: row };
-  });
+    }, TX_OPTIONS);
+
+  let outcome: Awaited<ReturnType<typeof attempt>>;
+  try {
+    outcome = await attempt();
+  } catch (error) {
+    if (isBusyError(error)) {
+      console.warn("Заявка не записана: база занята, гостю предложен повтор.", error);
+      return { busy: true };
+    }
+    throw error;
+  }
 
   if ("limited" in outcome) return { limited: true };
   if (outcome.duplicate) return { id: outcome.id, duplicate: true };
