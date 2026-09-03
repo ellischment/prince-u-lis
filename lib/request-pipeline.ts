@@ -5,6 +5,7 @@
 // Основа — starter/lib-request-pipeline.ts; отправка в amo/telegram пропускается,
 // пока интеграции не настроены (этап 10), заявка остаётся pending.
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { encrypt } from "./crypto";
 import { maskPhone, type RequestInput } from "./validation/request";
@@ -43,8 +44,23 @@ function isBusyError(error: unknown): boolean {
   return /SQLITE_BUSY|database is locked|Socket timeout/i.test(String(error));
 }
 
+/** Заявка того же типа с того же телефона за последние DEDUP_MINUTES минут. */
+function findDuplicate(type: string, phoneMask: string, client: Prisma.TransactionClient | typeof prisma = prisma) {
+  const since = new Date(Date.now() - DEDUP_MINUTES * 60_000);
+  return client.request.findFirst({ where: { type, phoneMask, createdAt: { gte: since } } });
+}
+
 export async function processRequest(input: RequestInput, ip?: string): Promise<ProcessResult> {
   const mask = maskPhone(input.phone);
+
+  // 4а. Дубль ищем СНАЧАЛА обычным чтением, вне транзакции. Prisma открывает
+  // транзакцию как BEGIN IMMEDIATE, то есть забирает лок на запись даже когда
+  // внутри одни чтения: без этой отсечки десять одинаковых заявок впустую
+  // выстраивались в очередь за локом и половина отваливалась по таймауту.
+  // Решение принимает не эта проверка, а такая же внутри транзакции ниже:
+  // здесь только дешёвый быстрый путь для повторной отправки и двойного клика.
+  const dup = await findDuplicate(input.type, mask);
+  if (dup) return { id: dup.id, duplicate: true };
 
   // 5. Шифрование персональных данных. Считается до транзакции: под открытой
   // транзакцией SQLite держит write-lock, а шифрование к базе не относится.
@@ -67,12 +83,9 @@ export async function processRequest(input: RequestInput, ip?: string): Promise<
       if (recent >= RATE_MAX) return { limited: true as const };
     }
 
-    // 4. Дубли: тот же телефон и тип за короткое время не создают новую заявку
-    const dedupSince = new Date(Date.now() - DEDUP_MINUTES * 60_000);
-    const dup = await tx.request.findFirst({
-      where: { type: input.type, phoneMask: mask, createdAt: { gte: dedupSince } },
-    });
-    if (dup) return { duplicate: true as const, id: dup.id };
+    // 4б. Дубли ещё раз, теперь под локом: только здесь ответ окончательный.
+    const inTx = await findDuplicate(input.type, mask, tx);
+    if (inTx) return { duplicate: true as const, id: inTx.id };
 
     // 6. Запись в базу ДО обращения к внешним системам
     const row = await tx.request.create({
