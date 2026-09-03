@@ -67,11 +67,13 @@
     border-radius: 12px;
     text-decoration: none;
     font-weight: 600;
-    background: var(--fox);
-    color: #FFFFFF;
-    border: 1px solid var(--fox);
+    /* Кнопка цвета масла — токен --cream. Текст на ней тёмный: на светлой
+       заливке белый не читается. */
+    background: var(--cream);
+    color: var(--deep);
+    border: 1px solid var(--cream);
   }
-  a.button:hover { background: var(--fox-soft); border-color: var(--fox-soft); }
+  a.button:hover { background: #F2E4C2; border-color: #F2E4C2; }
   a.button.secondary { background: transparent; color: var(--cream); border-color: rgba(234, 217, 172, 0.45); }
   /* Номер не разрывается посередине: на 320px «Позвонить: +7 919 969-05-85»
      одной строкой не помещается, поэтому подпись сверху, номер отдельно. */
@@ -79,6 +81,30 @@
   .number { display: block; white-space: nowrap; font-size: 18px; }
   a.button.secondary:hover { background: rgba(234, 217, 172, 0.1); }
   a:focus-visible, a.button:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
+  /* Показ работы: три огонька перемигиваются, как гирлянда в студии.
+     Это украшение, поэтому для читалок оно скрыто (aria-hidden), а суть
+     сказана словами рядом. */
+  .working { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 0 26px; }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--fox);
+    opacity: 0.35;
+    animation: glow 1.4s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes glow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.35); }
+  }
+  /* Правило проекта: prefers-reduced-motion отключает анимацию полностью.
+     Огоньки остаются, просто перестают мигать. */
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; opacity: 0.8; }
+  }
+
   .meta { margin: 0; color: var(--muted); font-size: 15px; }
   .meta strong { color: var(--paper); font-weight: 600; }
   hr { border: 0; border-top: 1px solid rgba(159, 176, 204, 0.22); margin: 28px 0; }
@@ -93,9 +119,17 @@
     <p class="mark">Принц · Лис</p>
 
     <h1>Обновляем сайт</h1>
+
+    <div class="working" aria-hidden="true">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
     <p class="lead">
-      Скоро откроем обновлённую версию. Студия работает как обычно:
-      записаться и задать вопрос можно по телефону или во ВКонтакте.
+      Наши технические феи колдуют над сайтом. Скоро вернёмся с обновлённой
+      версией, а студия работает как обычно: записаться и задать вопрос можно
+      по телефону или во ВКонтакте.
     </p>
 
     <div class="actions">
