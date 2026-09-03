@@ -1,0 +1,31 @@
+/* Полоса «проверочная версия». Живёт только на тестовом домене: рендерится
+   при NEXT_PUBLIC_NOINDEX=1, а на боевом эта переменная пустая, и компонент
+   возвращает null. Поэтому оформление намеренно простое и не трогает макет
+   4-2-2: боевой сайт эту полосу никогда не увидит. */
+.bar {
+  position: relative;
+  z-index: 60;
+  background: var(--fox);
+  color: var(--paper);
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.bar b {
+  font-weight: 700;
+}
+
+.note {
+  display: block;
+  opacity: 0.92;
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .bar {
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+}
