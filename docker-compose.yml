@@ -10,6 +10,18 @@ services:
         NEXT_PUBLIC_NOINDEX: ${NEXT_PUBLIC_NOINDEX:-}
         NEXT_PUBLIC_METRIKA_ID: ${NEXT_PUBLIC_METRIKA_ID:-}
     restart: unless-stopped
+    # Потолок памяти. На сервере 1966 МБ и своп: без лимита пик приложения
+    # съедает всю память, и OOM-killer выбирает жертву сам — вместе с
+    # приложением может лечь Caddy, и тогда сайт не отвечает вовсе. С лимитом
+    # падает только контейнер приложения, а restart поднимает его обратно.
+    mem_limit: 1200m
+    memswap_limit: 1600m
+    # Логи Docker по умолчанию растут без предела и рано или поздно займут диск.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     env_file: .env
     environment:
       # Next standalone слушает адрес из HOSTNAME, а Docker кладёт туда
@@ -30,6 +42,14 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    # Caddy в покое ест ~35 МБ. Лимит нужен не ему, а чтобы он гарантированно
+    # пережил пик приложения и отдал гостю понятную страницу вместо тишины.
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "80:80"
       - "443:443"

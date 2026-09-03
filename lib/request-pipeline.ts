@@ -14,38 +14,70 @@ import { notifyTelegram } from "./telegram";
 
 const DEDUP_MINUTES = 10;
 
-export async function processRequest(input: RequestInput, ip?: string): Promise<{ id: string; duplicate: boolean }> {
-  // 4. Дубли: тот же телефон и тип за короткое время не создают новую заявку
-  const since = new Date(Date.now() - DEDUP_MINUTES * 60_000);
-  const mask = maskPhone(input.phone);
-  const dup = await prisma.request.findFirst({
-    where: { type: input.type, phoneMask: mask, createdAt: { gte: since } },
-  });
-  if (dup) return { id: dup.id, duplicate: true };
+/** Частота: не более RATE_MAX заявок с одного адреса за RATE_MINUTES минут. */
+export const RATE_MAX = 5;
+export const RATE_MINUTES = 10;
 
-  // 5. Шифрование персональных данных
+export type ProcessResult =
+  | { limited: true }
+  | { limited?: false; id: string; duplicate: boolean };
+
+export async function processRequest(input: RequestInput, ip?: string): Promise<ProcessResult> {
+  const mask = maskPhone(input.phone);
+
+  // 5. Шифрование персональных данных. Считается до транзакции: под открытой
+  // транзакцией SQLite держит write-lock, а шифрование к базе не относится.
   const nameEnc = encrypt(input.name);
   const phoneEnc = encrypt(input.phone);
 
-  // 6. Запись в базу ДО обращения к внешним системам
-  const saved = await prisma.request.create({
-    data: {
-      type: input.type,
-      lessonId: input.lessonId || null,
-      dateText: input.dateText ?? null,
-      timeText: input.timeText ?? null,
-      nameEnc,
-      phoneEnc,
-      phoneMask: mask,
-      channel: input.channel,
-      comment: input.comment ?? null,
-      consentVersion: input.consentVersion,
-      consentAt: new Date(),
-      ip: ip ?? null,
-      amoStatus: "pending",
-    },
-    include: { lesson: true },
+  // Шаги 2 (частота), 4 (дубли) и 6 (запись) выполняются одной транзакцией.
+  // Порознь это две гонки «прочитал-проверил-записал»: при одновременных
+  // заявках все проверки успевают прочитать состояние до первой записи, и ни
+  // лимит частоты, ни защита от дублей не срабатывают. Проверено вживую на
+  // тестовом домене: 10 одинаковых заявок дали 10 сделок в amoCRM вместо одной,
+  // 30 заявок с одного адреса прошли все вместо пяти. Prisma открывает
+  // транзакцию SQLite как BEGIN IMMEDIATE, поэтому писатели сериализуются и
+  // каждая следующая заявка видит уже записанные соседние.
+  const outcome = await prisma.$transaction(async (tx) => {
+    const rateSince = new Date(Date.now() - RATE_MINUTES * 60_000);
+    if (ip) {
+      const recent = await tx.request.count({ where: { ip, createdAt: { gte: rateSince } } });
+      if (recent >= RATE_MAX) return { limited: true as const };
+    }
+
+    // 4. Дубли: тот же телефон и тип за короткое время не создают новую заявку
+    const dedupSince = new Date(Date.now() - DEDUP_MINUTES * 60_000);
+    const dup = await tx.request.findFirst({
+      where: { type: input.type, phoneMask: mask, createdAt: { gte: dedupSince } },
+    });
+    if (dup) return { duplicate: true as const, id: dup.id };
+
+    // 6. Запись в базу ДО обращения к внешним системам
+    const row = await tx.request.create({
+      data: {
+        type: input.type,
+        lessonId: input.lessonId || null,
+        dateText: input.dateText ?? null,
+        timeText: input.timeText ?? null,
+        nameEnc,
+        phoneEnc,
+        phoneMask: mask,
+        channel: input.channel,
+        comment: input.comment ?? null,
+        consentVersion: input.consentVersion,
+        consentAt: new Date(),
+        ip: ip ?? null,
+        amoStatus: "pending",
+      },
+      include: { lesson: true },
+    });
+    return { duplicate: false as const, saved: row };
   });
+
+  if ("limited" in outcome) return { limited: true };
+  if (outcome.duplicate) return { id: outcome.id, duplicate: true };
+
+  const saved = outcome.saved;
 
   // 7. Текстовый журнал
   await writeJournal({

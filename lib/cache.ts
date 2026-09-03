@@ -108,10 +108,23 @@ export function revalidateEntityFromRoute(entity: Entity, paths: string[] = []):
  * Кто читает даты через cachedRead, восстанавливает их сразу после чтения.
  * Пример: reviveRuns в lib/courses.ts.
  */
+/**
+ * Верхняя граница жизни записи кэша. Сброс по тегам остаётся основным способом:
+ * правка в панели доезжает до гостя сразу, ждать час не нужно. Срок нужен от
+ * застревания — записи без него живут вечно, и одно неудачно закэшированное
+ * значение остаётся навсегда, пока кто-нибудь не тронет нужную сущность.
+ *
+ * Так уже ловилось: карта сайта отдавала 45 адресов вместо 73, потому что
+ * `shop-slugs` и `article-slugs` один раз закэшировались пустыми и сбросить их
+ * было нечем — товары и статьи с тех пор в панели не правили. Со сроком такое
+ * чинится само за час, без срока — не чинится никогда.
+ */
+const MAX_AGE_SECONDS = 3600;
+
 export function cachedRead<TArgs extends unknown[], TResult>(
   keyParts: string[],
   tags: Tag[],
   read: (...args: TArgs) => Promise<TResult>,
 ): (...args: TArgs) => Promise<TResult> {
-  return unstable_cache(read, keyParts, { tags });
+  return unstable_cache(read, keyParts, { tags, revalidate: MAX_AGE_SECONDS });
 }

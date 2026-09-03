@@ -24,20 +24,23 @@ export const phoneSchema = z
   .refine((v) => v.length === 11 && (v.startsWith("7") || v.startsWith("8")), "Введите телефон полностью")
   .transform((v) => "+7" + v.slice(1));
 
+// Сообщения задаются у каждого поля: без них zod отвечает по-английски
+// («Too big: expected string to have <=1000 characters»), а этот текст гость
+// видит прямо под полем формы. Все тексты интерфейса на русском (CLAUDE.md).
 export const requestSchema = z.object({
-  type: z.enum(REQUEST_TYPES),
+  type: z.enum(REQUEST_TYPES, "Неизвестный тип заявки"),
   lessonId: z.string().optional(),
-  dateText: z.string().max(60).optional(),
-  timeText: z.string().max(60).optional(),
-  name: z.string().trim().min(2, "Как к вам обращаться").max(80),
+  dateText: z.string().max(60, "Слишком длинная дата").optional(),
+  timeText: z.string().max(60, "Слишком длинное время").optional(),
+  name: z.string().trim().min(2, "Как к вам обращаться").max(80, "Слишком длинное имя: не больше 80 знаков"),
   phone: phoneSchema,
-  channel: z.enum(CHANNELS).default("call"),
-  comment: z.string().max(1000).optional(),
+  channel: z.enum(CHANNELS, "Выберите способ связи").default("call"),
+  comment: z.string().max(1000, "Комментарий не больше 1000 знаков").optional(),
   // Предмет заявки для названия сделки в amoCRM: товар у покупки, повод у
   // праздника, вид у сотрудничества. Транзиентное поле — в базу не пишется, идёт
   // только в CRM/уведомление. Занятие у записи берётся из lessonId на сервере.
-  subject: z.string().max(200).optional(),
-  consent: z.boolean().refine((v) => v === true, "Нужно согласие на обработку данных"),
+  subject: z.string().max(200, "Слишком длинное название").optional(),
+  consent: z.boolean("Нужно согласие на обработку данных").refine((v) => v === true, "Нужно согласие на обработку данных"),
   consentVersion: z.string(),
 });
 
