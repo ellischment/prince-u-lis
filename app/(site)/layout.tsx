@@ -4,7 +4,6 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Snow } from "@/components/Snow";
 import { Stars } from "@/components/Stars";
-import { TestBanner } from "@/components/TestBanner";
 import { getButtonColor } from "@/lib/appearance-read";
 import { getSeason } from "@/lib/site-texts";
 
@@ -41,9 +40,6 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       <a className="skip-link" href="#main">
         Перейти к содержанию
       </a>
-      {/* Только на тестовом домене: на боевом компонент возвращает null.
-          Стоит до шапки, чтобы читалась первой и не пряталась под меню. */}
-      <TestBanner />
       <Header />
       {children}
       {season === "winter" ? <Snow /> : null}

@@ -179,6 +179,13 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       );
 
   const isEmpty = !isCoworking && visible.length === 0;
+
+  // Кнопка анкеты, за которой нет ни одного занятия, ведёт гостя в пустоту и
+  // читается как поломка сайта. Так было с «Ищу подарок» и «Уже умею»: тег
+  // есть в коде, но при заливке содержимого его не поставили ни одному
+  // занятию. Показываем только те задачи, по которым реально есть что
+  // показать; как студия проставит теги в панели, кнопки вернутся сами.
+  const tagsWithLessons = new Set(lessons.flatMap((lesson) => lesson.taskTags.map((t) => t.tag)));
   const hint = task ? TASK_HINTS[task] : undefined;
   const hoursText = formatStudioHours(hours);
 
@@ -248,7 +255,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <div className={styles.quizBody}>
               <p className={styles.quizIntro}>Нажмите то, что про вас. Остальное подберём сами.</p>
               <div className={styles.qopts} role="group" aria-label="Повод визита">
-                {TASK_TAGS.filter((tag) => quizVisibleTags.includes(tag)).map((tag) => (
+                {TASK_TAGS.filter(
+                  (tag) => quizVisibleTags.includes(tag) && tagsWithLessons.has(tag),
+                ).map((tag) => (
                   <TaskOption
                     key={tag}
                     href={task === tag ? homeHref({ direction: directionSlug, format: formatSlug }) : homeHref({ task: tag, format: formatSlug })}

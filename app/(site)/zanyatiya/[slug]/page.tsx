@@ -80,7 +80,13 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
         ]}
       />
 
-      <LessonArticle lesson={lesson} similar={similar} bookHref={`/zapis?zanyatie=${lesson.slug}`} />
+      <LessonArticle
+        lesson={lesson}
+        similar={similar}
+        bookHref={`/zapis?zanyatie=${lesson.slug}`}
+        backHref="/zanyatiya"
+        backLabel="← Ко всем занятиям"
+      />
     </main>
   );
 }

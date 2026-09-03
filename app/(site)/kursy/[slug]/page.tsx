@@ -124,7 +124,14 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
         ]}
       />
 
-      <LessonArticle lesson={course} similar={similar} bookHref={`/zapis?zanyatie=${course.slug}`} afterHero={runsBlock} />
+      <LessonArticle
+        lesson={course}
+        similar={similar}
+        bookHref={`/zapis?zanyatie=${course.slug}`}
+        afterHero={runsBlock}
+        backHref="/kursy"
+        backLabel="← Ко всем курсам"
+      />
     </main>
   );
 }

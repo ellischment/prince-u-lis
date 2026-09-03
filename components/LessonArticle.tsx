@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BookLink } from "./BookLink";
+import { ButtonLink } from "./Button";
 import { Container } from "./Container";
 import { LessonCard } from "./LessonCard";
 import { Gallery, type GalleryItem } from "./Gallery";
@@ -54,11 +55,28 @@ type Props = {
   bookHref: string;
   /** Блок под первым экраном. У курса это «Ближайшие потоки». */
   afterHero?: ReactNode;
+  /**
+   * Куда вернуться из карточки. Есть у всех остальных внутренних страниц
+   * (команда, каталог, праздники, события, сотрудничество, статьи) и в макете
+   * 4-2-2 у занятия тоже, а здесь пропущено: гость заходил в занятие и мог
+   * выйти только кнопкой браузера. Адрес разный, потому что тело общее у
+   * занятия и курса.
+   */
+  backHref: string;
+  backLabel: string;
 };
 
-export function LessonArticle({ lesson, similar, bookHref, afterHero }: Props) {
+export function LessonArticle({ lesson, similar, bookHref, afterHero, backHref, backLabel }: Props) {
   return (
     <>
+      <Container>
+        <div className={styles.back}>
+          <ButtonLink href={backHref} variant="ghost">
+            {backLabel}
+          </ButtonLink>
+        </div>
+      </Container>
+
       <Section>
         <p className={styles.eyebrow}>{lesson.direction.title}</p>
         <h1>{lesson.title}</h1>
