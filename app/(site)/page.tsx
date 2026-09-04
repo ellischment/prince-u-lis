@@ -38,6 +38,7 @@ import { currentWeekdayIndex } from "@/lib/time";
 import { type HomeBlock } from "@/lib/home-blocks";
 import { getBlocksOrder } from "@/lib/home-blocks-read";
 import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
+import { BookingForm, type LessonGroup, type Prefill } from "@/components/BookingForm";
 import { getHeroTexts, getQuizLabels, getQuizVisible, getSeason, getTrustItems } from "@/lib/site-texts";
 import { getGarland } from "@/lib/appearance-read";
 import { STUDIO_ADDRESS, STUDIO_PHONE, STUDIO_PHONE_HREF, formatStudioHours } from "@/lib/studio";
@@ -192,6 +193,29 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const visibleBlocks = new Set(blocks.filter((b) => b.visible).map((b) => b.id));
   const order = blocks.map((b) => b.id);
   const showBlock = (id: HomeBlock) => visibleBlocks.has(id);
+
+  // Блок «Запись» на главной (SPEC §5, пункт 11): та же форма в три шага, что на
+  // /zapis. Список занятий сгруппирован по направлениям, как в /zapis; курсы тоже
+  // здесь. Префилл пустой — на главной гость выбирает занятие сам.
+  const bookingGroups: LessonGroup[] = [];
+  for (const lesson of lessons) {
+    const dir = lesson.direction.title;
+    let group = bookingGroups.find((g) => g.direction === dir);
+    if (!group) {
+      group = { direction: dir, lessons: [] };
+      bookingGroups.push(group);
+    }
+    group.lessons.push({
+      id: lesson.id,
+      title: lesson.title,
+      slug: lesson.slug,
+      href: lessonHref(lesson),
+      price: lesson.price,
+      duration: lesson.duration,
+      level: lesson.level,
+    });
+  }
+  const bookingPrefill: Prefill = { type: "booking" };
 
   const sections: Record<HomeBlock, ReactNode> = {
     hero: (
@@ -483,6 +507,16 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           <Reviews items={reviews} />
         </Section>
       ) : null,
+
+    booking: (
+      <Section key="booking" id="zapis" title="Запишитесь в три шага" tone="navy">
+        <p className={styles.bookingLead}>
+          Нужны только имя и телефон. Мы свяжемся и подтвердим удобное время. Это заявка, а не бронь:
+          место закрепляется после подтверждения.
+        </p>
+        <BookingForm groups={bookingGroups} prefill={bookingPrefill} />
+      </Section>
+    ),
 
     contacts: (
       <Section key="contacts" id="kontakty" title="Контакты" tone="navy">

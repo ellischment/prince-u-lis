@@ -22,6 +22,7 @@ export const HOME_BLOCKS = [
   "events",
   "blog",
   "reviews",
+  "booking",
   "contacts",
 ] as const;
 export type HomeBlock = (typeof HOME_BLOCKS)[number];
@@ -40,6 +41,7 @@ export const HOME_BLOCK_LABELS: Record<HomeBlock, string> = {
   events: "События",
   blog: "Блог",
   reviews: "Отзывы",
+  booking: "Запись",
   contacts: "Контакты",
 };
 

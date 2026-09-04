@@ -347,3 +347,11 @@
     grid-template-columns: 1.4fr 1fr 1fr;
   }
 }
+
+/* Подводка к форме записи на главной (блок «Запись», SPEC §5 п.11). */
+.bookingLead {
+  max-width: 620px;
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 16px;
+}
