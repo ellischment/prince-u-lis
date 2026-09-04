@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/otprazdnovat/[slu
   const description = item.intro.slice(0, 160);
   const cover = item.media.find((m) => m.kind === "image" && m.path);
   return pageMetadata({
-    title: `${item.title} в студии «Принц и Лис»`,
+    title: item.title,
     description,
     path: `/otprazdnovat/${item.slug}`,
     image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,

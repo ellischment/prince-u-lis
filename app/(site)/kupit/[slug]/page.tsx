@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps<"/kupit/[slug]">): 
   const description = item.description.slice(0, 160);
   const cover = item.media.find((m) => m.kind === "image" && m.path);
   return pageMetadata({
-    title: `${item.title} — купить в студии «Принц и Лис»`,
+    title: item.title,
     description,
     path: `/kupit/${item.slug}`,
     image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,

@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: PageProps<"/komanda/[slug]">)
   const { slug } = await params;
   const master = await getMasterBySlug(slug);
   if (!master) return { title: "Не найдено", robots: { index: false, follow: false } };
-  const description = `${master.name} — ${master.speciality}. ${master.experience ?? ""}`.trim().slice(0, 160);
+  const description = `${master.name}, ${master.speciality}. ${master.experience ?? ""}`.trim().slice(0, 160);
   const cover = master.media.find((m) => m.kind === "image" && m.path);
   return pageMetadata({
-    title: `${master.name} — команда студии «Принц и Лис»`,
+    title: master.name,
     description,
     path: `/komanda/${master.slug}`,
     image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,

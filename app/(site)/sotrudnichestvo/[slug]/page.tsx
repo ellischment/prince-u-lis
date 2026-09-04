@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/sotrudnichestvo/[
   if (!item) return { title: "Не найдено", robots: { index: false, follow: false } };
   const description = item.description.slice(0, 160);
   return pageMetadata({
-    title: `${item.title} — сотрудничество со студией «Принц и Лис»`,
+    title: item.title,
     description,
     path: `/sotrudnichestvo/${item.slug}`,
   });

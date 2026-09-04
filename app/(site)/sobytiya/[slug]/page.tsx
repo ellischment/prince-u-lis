@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/sobytiya/[slug]">
   const description = event.description.slice(0, 160);
   const cover = event.media.find((m) => m.kind === "image" && m.path);
   return pageMetadata({
-    title: `${event.title} — событие студии «Принц и Лис»`,
+    title: event.title,
     description,
     path: `/sobytiya/${event.slug}`,
     image: cover?.path ? { path: cover.path, width: cover.width, height: cover.height } : null,
