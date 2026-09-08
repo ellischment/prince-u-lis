@@ -434,9 +434,10 @@ Google DNS одновременно.
 
 1. `docker compose logs app --tail 100 | grep -i telegram`
 2. Обычные причины: неверный `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
-3. `TELEGRAM_API_BASE` в `.env` — если пусто, идёт напрямую к
-   api.telegram.org, что может блокироваться на РФ-хостинге. Если есть
-   Cloudflare Worker для теста — используй его же для боевого.
+3. Проверь `TELEGRAM_API_BASE` в `.env` — должен быть Cloudflare Worker
+   (URL уже перенесён с теста, вида
+   `https://princ-lis-tg.ellischment-work.workers.dev/<путь>`). Он обходит
+   блокировку api.telegram.org на РФ-хостинге. Если пусто — восстанови.
 
 ### Откат до открытия сайта
 
