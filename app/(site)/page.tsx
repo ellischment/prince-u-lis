@@ -76,8 +76,11 @@ function homeHref(params: { task?: string; direction?: string; format?: string }
   }
   if (params.format && params.format !== ANY_FORMAT) search.set("format", params.format);
 
+  // Якорь ведёт к СПИСКУ занятий, а не к самому квизу. Раньше стоял #catalog —
+  // это внешний блок, который начинается с кнопок, поэтому гость, уже стоящий у
+  // кнопок, никуда не переезжал и решал, что нажатие ничего не сделало.
   const query = search.toString();
-  return query ? `/?${query}#catalog` : "/#catalog";
+  return query ? `/?${query}#podborka` : "/#podborka";
 }
 
 export const metadata: Metadata = pageMetadata({
@@ -308,6 +311,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </Section>
 
         <Section
+          id="podborka"
           title={task ? "Вот что вам подойдёт" : "Занятия"}
           action={<ButtonLink href="/zanyatiya" variant="ghost">Все занятия</ButtonLink>}
         >
