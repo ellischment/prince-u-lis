@@ -231,6 +231,18 @@ def is_junk(title):
     return clean(title).strip('" 	').lower() in JUNK_TITLES
 
 
+def norm_title(title):
+    """Название для сопоставления между листами. Одно и то же занятие студия
+    пишет по-разному: «Мастер-класс "Букет"» в листе занятий и «Мастер_класс
+    «Букет»» в расписании. Сравниваем без кавычек, а дефис и подчёркивание
+    считаем пробелом. Это приведение формы, а не угадывание: несовпадающие по
+    сути названия так и останутся разными."""
+    t = clean(title).lower()
+    t = re.sub(r"[«»\"'„“”]", "", t)
+    t = re.sub(r"[-_–—]", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
 WEEKDAYS = {
     "понедельник": 1, "вторник": 2, "среда": 3, "четверг": 4,
     "пятница": 5, "суббота": 6, "воскресенье": 7,
@@ -455,16 +467,22 @@ def build(sheets):
             lesson = clean(r[2]) if len(r) > 2 else ""
             if not weekday or not lesson or is_junk(lesson):
                 continue
-            if lesson not in lesson_titles:
+            hits = [t for t in lesson_titles if norm_title(t) == norm_title(lesson)]
+            if len(hits) != 1:
                 out["notes"].append(
-                    "Расписание: занятие «%s» (%s) не найдено в листе «Занятия» — слот пропущен"
-                    % (lesson, day)
+                    "Расписание: занятие «%s» (%s) %s в листе «Занятия» — слот пропущен"
+                    % (lesson, day, "не найдено" if not hits else "совпало с несколькими")
                 )
                 continue
+            if hits[0] != lesson:
+                out["notes"].append(
+                    "Расписание: «%s» сопоставлено с занятием «%s» — в таблице стоит другое написание"
+                    % (lesson, hits[0])
+                )
             out["slots"].append({
                 "weekday": weekday,
                 "time": excel_time(r[1]) if len(r) > 1 else "",
-                "lessonTitle": lesson,
+                "lessonTitle": hits[0],
                 "visible": clean(r[3]).lower() != "нет" if len(r) > 3 else True,
                 "sort": to_int(r[4], i) if len(r) > 4 else i,
             })
