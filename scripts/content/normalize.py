@@ -3,15 +3,24 @@
 # Разбирает листы, которые студия РЕАЛЬНО заполнила: занятия, потоки курсов,
 # фото, мастера, часы работы, форматы праздников.
 #
-# Чего здесь намеренно нет. В листах «Работы», «Товары и услуги», «Отзывы»,
-# «События», «Статьи», «Бонусы», «Сотрудничество», «Расписание», «Открытые дни»,
-# «Вопросы и ответы» осталась ровно одна строка — та самая строка-пример из
-# шаблона («Первая строка под шапкой всегда выделена и это пример», лист
-# «Инструкция»). Это не данные студии, а наш собственный образец: заливать его
-# на сайт значило бы показать гостю выдуманные цены и выдуманный отзыв от
-# несуществующего человека (CLAUDE.md: выдуманные значения = санкции поиска;
-# SPEC §16: отзыв публикуется только при письменном согласии). Эти разделы
-# остаются пустыми, пока студия не пришлёт настоящие строки.
+# Что берём и что нет. Первая строка под шапкой в шаблоне это ПРИМЕР («Первая
+# строка под шапкой всегда выделена и это пример», лист «Инструкция»). Пока
+# студия её не заменила, строка остаётся нашим собственным образцом, и заливать
+# её значило бы показать гостю выдуманную цену или отзыв от несуществующего
+# человека (CLAUDE.md: выдуманные значения = санкции поиска; SPEC §16: отзыв
+# публикуется только при письменном согласии).
+#
+# Проверка простая и воспроизводимая: строка остаётся образцом, если она
+# дословно совпадает со строкой первой версии шаблона. Третьим аргументом можно
+# передать файл первой версии — тогда разбор допечатает список строк, которые
+# студия так и не заменила. Это отчёт, а не автоматический отсев: решение, что
+# из образца всё-таки правда (часы работы 11-22, формат «День рождения»), а что
+# выдумка (отзыв «Анны»), принимается глазами и видно в коде ниже.
+#
+# На версии таблицы (5) от 08.09.2026 студия заменила своими данными листы
+# «Расписание», «Бонусы», «Товары и услуги»; образцами остались «Отзывы»,
+# «Сотрудничество», «Вопросы и ответы», «Работы», «Открытые дни», а «События»,
+# «Статья» и «Тексты главной» пусты вовсе.
 #
 # Читает xlsx напрямую (zipfile + xml), без сторонних библиотек. Логика разбора и
 # чистки собрана здесь, в одном месте, чтобы результат можно было глазами свериться
@@ -180,6 +189,48 @@ def money(cell):
     return "{:,} ₽".format(int(value)).replace(",", " ")
 
 
+def price_text(cell):
+    """Цена так, как её увидит гость. Excel отдаёт голое число («5 500», «2 500»)
+    или слипшееся с валютой («от 11 000₽»): в шаблоне сказано писать «2 500 ₽»,
+    и все прежние занятия так и лежат. Дописываем знак рубля и пробел перед ним —
+    это формат, а не значение: сумму не меняем и не додумываем."""
+    t = clean(cell)
+    if not t:
+        return ""
+    t = re.sub(r"\s*₽", " ₽", t).strip()
+    if "₽" in t:
+        return t
+    if re.fullmatch(r"(от\s+)?[\d\s  ]+", t):
+        return t + " ₽"
+    return t
+
+
+def excel_time(cell):
+    """Время из Excel. Ячейка со временем приходит долей суток (0.7916666… =
+    19:00), а не строкой. Строку «19:00» пропускаем как есть."""
+    t = clean(cell)
+    if not t:
+        return ""
+    try:
+        frac = float(t)
+    except ValueError:
+        return t
+    if frac >= 1:
+        return t
+    minutes = int(round(frac * 24 * 60))
+    return "%02d:%02d" % (minutes // 60, minutes % 60)
+
+
+# Строка-маркер, которой студия отмечает конец заполненного куска листа. Данными
+# не является, но лежит в графе названия и без отсева стала бы мастером «Крайняя
+# загрузка» и занятием с тем же именем.
+JUNK_TITLES = {"крайняя загрузка"}
+
+
+def is_junk(title):
+    return clean(title).strip('" 	').lower() in JUNK_TITLES
+
+
 WEEKDAYS = {
     "понедельник": 1, "вторник": 2, "среда": 3, "четверг": 4,
     "пятница": 5, "суббота": 6, "воскресенье": 7,
@@ -230,7 +281,8 @@ def find_sheet(sheets, needle):
 def build(sheets):
     out = {
         "directions": [], "formats": [], "lessons": [], "runs": [], "media": [],
-        "masters": [], "hours": [], "celebrations": [], "notes": [],
+        "masters": [], "hours": [], "celebrations": [], "bonuses": [], "slots": [],
+        "shopItems": [], "notes": [],
     }
 
     # --- Категории из листа «Категории и списки» ---
@@ -251,7 +303,7 @@ def build(sheets):
     hi = header_index(ls)
     for r in ls[hi + 1:]:
         title = clean(r[1]) if len(r) > 1 else ""
-        if not title:
+        if not title or is_junk(title):
             continue
         col = lambda i: clean(r[i]) if len(r) > i else ""
         out["lessons"].append({
@@ -259,7 +311,7 @@ def build(sheets):
             "title": title,
             "directionTitle": col(2),
             "formatTitle": col(3),
-            "price": col(4),
+            "price": price_text(col(4)),
             "duration": col(5),
             "level": col(6),
             "formatText": col(7),
@@ -288,7 +340,7 @@ def build(sheets):
         rhi = header_index(runs)
         for r in runs[rhi + 1:]:
             name = clean(r[0]) if len(r) > 0 else ""
-            if not name:
+            if not name or is_junk(name):
                 continue
             resolved = RUN_ALIAS.get(name.lower(), name)
             out["runs"].append({
@@ -331,7 +383,7 @@ def build(sheets):
         mhi = header_index(ms)
         for i, r in enumerate(ms[mhi + 1:]):
             name = clean(r[1]) if len(r) > 1 else ""
-            if not name:
+            if not name or is_junk(name):
                 continue
             show = clean(r[0]) if len(r) > 0 else ""
             teaches, unknown = match_lessons(r[5] if len(r) > 5 else "", lesson_titles)
@@ -374,7 +426,7 @@ def build(sheets):
         chi = header_index(cs)
         for i, r in enumerate(cs[chi + 1:]):
             title = clean(r[1]) if len(r) > 1 else ""
-            if not title:
+            if not title or is_junk(title):
                 continue
             price = money(r[3]) if len(r) > 3 else ""
             if not price:
@@ -390,7 +442,100 @@ def build(sheets):
                 "sort": to_int(r[6], i) if len(r) > 6 else i,
             })
 
+    # --- Сетка расписания ---
+    # Лист «Расписание» это недельная сетка: день, время, занятие. Занятие
+    # сводим по названию с листом «Занятия»; несопоставленную строку не
+    # выдумываем, а выносим в отчёт — слот без занятия сайту не нужен.
+    sc = find_sheet(sheets, "Расписание")
+    if sc:
+        shi = header_index(sc)
+        for i, r in enumerate(sc[shi + 1:]):
+            day = clean(r[0]) if len(r) > 0 else ""
+            weekday = WEEKDAYS.get(day.lower())
+            lesson = clean(r[2]) if len(r) > 2 else ""
+            if not weekday or not lesson or is_junk(lesson):
+                continue
+            if lesson not in lesson_titles:
+                out["notes"].append(
+                    "Расписание: занятие «%s» (%s) не найдено в листе «Занятия» — слот пропущен"
+                    % (lesson, day)
+                )
+                continue
+            out["slots"].append({
+                "weekday": weekday,
+                "time": excel_time(r[1]) if len(r) > 1 else "",
+                "lessonTitle": lesson,
+                "visible": clean(r[3]).lower() != "нет" if len(r) > 3 else True,
+                "sort": to_int(r[4], i) if len(r) > 4 else i,
+            })
+
+    # --- Уровни бонусной программы ---
+    # «Что даёт» студия пишет одной фразой, а не списком по Alt+Enter. Разбивать
+    # фразу по запятым нельзя: внутри пунктов свои запятые («скидку 5% на курс,
+    # скидку 10% на мастер-класс»), и деление вышло бы наугад. Кладём как есть —
+    # одной привилегией, студия разложит по строкам в панели.
+    bs = find_sheet(sheets, "Бонусы")
+    if bs:
+        bhi = header_index(bs)
+        for i, r in enumerate(bs[bhi + 1:]):
+            title = clean(r[1]) if len(r) > 1 else ""
+            if not title or is_junk(title):
+                continue
+            perks = lines(r[5]) if len(r) > 5 else []
+            accent = clean(r[4]) if len(r) > 4 else ""
+            out["bonuses"].append({
+                "title": title,
+                "levelLabel": clean(r[2]) if len(r) > 2 else "",
+                "condition": clean(r[3]) if len(r) > 3 else "",
+                # Оттенок в схеме b1|b2|b3; студия колонку не заполняет, берём по порядку.
+                "accent": accent if accent in ("b1", "b2", "b3") else "b%d" % (min(i, 2) + 1),
+                "perks": perks,
+                "visible": clean(r[0]).lower() != "нет" if len(r) > 0 else True,
+                "sort": to_int(r[6], i) if len(r) > 6 else i,
+            })
+            if not perks:
+                out["notes"].append("Бонусы «%s»: пустая графа «Что даёт»" % title)
+
+    # --- Товары и услуги каталога «Купить» ---
+    si = find_sheet(sheets, "Товары")
+    if si:
+        thi = header_index(si)
+        for i, r in enumerate(si[thi + 1:]):
+            title = clean(r[1]) if len(r) > 1 else ""
+            if not title or is_junk(title):
+                continue
+            out["shopItems"].append({
+                "title": title,
+                "categoryTitle": clean(r[2]) if len(r) > 2 else "",
+                "price": price_text(r[3]) if len(r) > 3 else "",
+                "description": clean(r[4]) if len(r) > 4 else "",
+                "terms": clean(r[5]) if len(r) > 5 else "",
+                "visible": clean(r[0]).lower() != "нет" if len(r) > 0 else True,
+                "sort": to_int(r[6], i) if len(r) > 6 else i,
+            })
+
     return out
+
+
+def report_template_rows(sheets, template):
+    """Печатает строки, дословно совпавшие с первой версией шаблона. Такие строки
+    студия не заменила своими данными, и брать их на сайт нельзя без её слова."""
+    def key(row):
+        return " | ".join(c.strip() for c in row)
+
+    print("--- строки, оставшиеся образцом шаблона ---")
+    found = False
+    for name, rows in sheets.items():
+        if name.strip().lower() == "инструкция":
+            continue
+        known = set(key(r) for r in template.get(name, []))
+        for r in rows[2:]:
+            k = key(r)
+            if k in known and k.strip(" |"):
+                print("  [%s] %s" % (name, k[:100]))
+                found = True
+    if not found:
+        print("  нет")
 
 
 def main():
@@ -404,6 +549,8 @@ def main():
     dst = sys.argv[2]
     sheets = load_sheets(src)
     data = build(sheets)
+    if len(sys.argv) > 3:
+        report_template_rows(sheets, load_sheets(sys.argv[3]))
     with open(dst, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print("directions:", len(data["directions"]),
@@ -414,6 +561,9 @@ def main():
           "masters:", len(data["masters"]),
           "hours:", len(data["hours"]),
           "celebrations:", len(data["celebrations"]))
+    print("слоты расписания:", len(data["slots"]),
+          "бонусы:", len(data["bonuses"]),
+          "товары:", len(data["shopItems"]))
     unmatched = [r["rawTitle"] for r in data["runs"] if not r["matched"]]
     if unmatched:
         print("ПОТОКИ без сопоставления с занятием:", unmatched)
