@@ -172,6 +172,20 @@
   gap: 14px;
 }
 
+/* Ответ анкеты на нажатие. Тон и рамка как у .hint — это соседний блок в том
+   же месте, разнобоя быть не должно. */
+.quizResult {
+  margin-top: 16px;
+  font-size: 14.5px;
+  color: var(--paper);
+}
+
+.quizResult a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .hint {
   margin-top: 20px;
   padding: 16px 20px;

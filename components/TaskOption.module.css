@@ -15,9 +15,15 @@
   transform: translateY(-3px);
 }
 
-.active {
+/* Выбранная кнопка отличалась от наведённой только тем, что не приподнята:
+   гость нажимал и не понимал, сработало ли. Теперь заливка заметно плотнее и
+   добавлено второе кольцо внутрь — состояние читается без наведения. */
+.active,
+.active:hover {
   border-color: var(--gold);
-  background: rgba(201, 162, 75, 0.1);
+  background: rgba(201, 162, 75, 0.22);
+  box-shadow: inset 0 0 0 1px var(--gold);
+  transform: none;
 }
 
 .title {

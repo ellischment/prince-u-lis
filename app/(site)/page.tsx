@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ButtonLink } from "@/components/Button";
 import { Carousel } from "@/components/Carousel";
@@ -38,7 +39,7 @@ import { getWeekSchedule } from "@/lib/schedule";
 import { currentWeekdayIndex } from "@/lib/time";
 import { type HomeBlock } from "@/lib/home-blocks";
 import { getBlocksOrder } from "@/lib/home-blocks-read";
-import { getCatalogLessons, getLessonFilters } from "@/lib/lessons";
+import { getCatalogLessons, getLessonFilters, lessonsLabel } from "@/lib/lessons";
 import { BookingForm, type LessonGroup, type Prefill } from "@/components/BookingForm";
 import { getHeroTexts, getQuizLabels, getQuizVisible, getSeason, getTrustItems } from "@/lib/site-texts";
 import { getGarland } from "@/lib/appearance-read";
@@ -298,6 +299,20 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                   />
                 ))}
               </div>
+
+              {/* Ответ на нажатие прямо на месте: гость видит, что подборка
+                  сменилась, даже не прокручивая страницу. Без этого выбранная
+                  кнопка отличалась от наведённой почти незаметно. */}
+              {task ? (
+                <p className={styles.quizResult}>
+                  {visible.length > 0
+                    ? `Подобрали ${lessonsLabel(visible.length)}, показываем ниже.`
+                    : "По этому запросу ничего не нашлось."}{" "}
+                  <Link href={homeHref({ direction: directionSlug, format: formatSlug })}>
+                    Показать все
+                  </Link>
+                </p>
+              ) : null}
 
               {hint ? (
                 <div className={styles.hint}>
