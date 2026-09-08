@@ -515,6 +515,16 @@ apt upgrade -y
 - **`docker compose exec` в ssh-heredoc** съедает stdin. Всегда добавлять
   `</dev/null` в конце команды.
 - **Локальная сборка** — только `npm run build`, не `npx next build`.
+- **Сборка падает на `apk add openssl`** («TLS: unspecified error», дальше
+  `unable to select packages`). Это не блокировка провайдером: с хоста и из
+  обычного контейнера репозиторий Alpine открывается, ломается только сетевое
+  окружение BuildKit. Лечится классическим сборщиком:
+  ```
+  DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build app
+  docker compose up -d
+  ```
+  `scripts/deploy.sh` делает этот повтор сам. Проверить, что дело не в сети
+  машины: `curl -sI https://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz`.
 - **Прямые правки базы** не сбрасывают кэш чтения. После нужно:
   `docker compose exec -T app sh -c "rm -rf /app/.next/cache" && docker compose restart app`.
 - **Caddyfile.test vs Caddyfile** — на тесте `CADDYFILE=Caddyfile.test` в
