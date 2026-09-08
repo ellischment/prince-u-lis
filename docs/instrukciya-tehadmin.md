@@ -519,6 +519,19 @@ apt upgrade -y
   `docker compose exec -T app sh -c "rm -rf /app/.next/cache" && docker compose restart app`.
 - **Caddyfile.test vs Caddyfile** — на тесте `CADDYFILE=Caddyfile.test` в
   `.env`, на бое переменная пустая.
+- **После правки Caddyfile мало `caddy reload`.** Конфиг подключён к контейнеру
+  как ОТДЕЛЬНЫЙ ФАЙЛ (`- ./${CADDYFILE}:/etc/caddy/Caddyfile:ro`), а `git pull`
+  и `git checkout` не меняют файл на месте, а создают новый. Docker при этом
+  продолжает показывать контейнеру старый файл, и `caddy reload` честно
+  перечитывает старое содержимое, сообщая «Valid configuration». Правильно:
+  ```
+  docker compose up -d --force-recreate caddy
+  docker compose exec -T caddy grep -c header_up /etc/caddy/Caddyfile   # сверить
+  ```
+  Проверять результат не по файлу на хосте, а по живому конфигу:
+  `docker compose exec -T caddy wget -qO- http://127.0.0.1:2019/config/`.
+  Сразу после пересоздания Caddy пара запросов может дать 502, пока
+  поднимается `app` — это нормально, через несколько секунд 200.
 - **Bcrypt-хэш в .env** — символы `$` нужно экранировать как `$$` (docker
   compose иначе считает подстановкой).
 
