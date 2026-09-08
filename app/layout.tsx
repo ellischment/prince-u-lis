@@ -45,6 +45,15 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: [`${SITE_URL}/opengraph-image`],
   },
+  // Подтверждение прав в Google Search Console. Стоит в корневом макете, а не
+  // на главной: страницы переопределяют metadata через lib/seo-meta.ts, но
+  // verification там не задаётся, поэтому тег доживает до каждой страницы. Так
+  // права не отвалятся, если Google однажды проверит не главную.
+  // Значение не секрет, это публичный идентификатор ресурса.
+  // Файловый способ (public/google63b4dcd1e97f980b.html) оставлен как запасной.
+  verification: {
+    google: "MahHWqjwzo-lNqWhfNv79z9elu7Pjg22cQDc0GdkJS0",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
