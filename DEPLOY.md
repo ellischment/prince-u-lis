@@ -303,6 +303,11 @@ docker compose up -d --build
 
 # Уборка осиротевших файлов uploads — раз в неделю, воскресенье 04:30.
 30 4 * * 0 curl -fsS -H "x-cron-secret: ВАШ-КЛЮЧ" "https://princulissart.ru/api/cron?task=prune-media" >/dev/null
+
+# Уборка адресов гостей — раз в час. IP хранится только ради ограничения
+# частоты заявок и живёт час; попытки входа в панель живут месяц (152-ФЗ,
+# lib/privacy-prune.ts). Заявка при этом остаётся целой, исчезает только адрес.
+17 * * * * curl -fsS -H "x-cron-secret: ВАШ-КЛЮЧ" "https://princulissart.ru/api/cron?task=prune-personal" >/dev/null
 ```
 
 Про «архив событий» из `ARCHITECTURE.md` раздел 10 отдельной задачи нет и не

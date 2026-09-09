@@ -4,6 +4,7 @@
 // POST — планировщики зовут по-разному.
 //
 //   /api/cron?task=retry-requests   повторы заявок (cron каждые 5 минут)
+//   /api/cron?task=prune-personal   уборка адресов гостей (cron раз в час)
 //
 // Ключ передаётся заголовком x-cron-secret или Authorization: Bearer <ключ>.
 // Резервные копии и проверка восстановления делаются скриптами на сервере
@@ -14,6 +15,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { retryFailedRequests } from "@/lib/retry";
 import { pruneOrphanedMedia } from "@/lib/media-prune";
+import { prunePersonalData } from "@/lib/privacy-prune";
 
 export const dynamic = "force-dynamic";
 
@@ -48,9 +50,18 @@ async function handle(req: Request): Promise<Response> {
       const result = await pruneOrphanedMedia({ apply: true });
       return NextResponse.json({ task, ...result });
     }
+    // Адреса гостей живут ровно столько, сколько нужны ограничению частоты
+    // (152-ФЗ, lib/privacy-prune.ts). Раз в час.
+    case "prune-personal": {
+      const result = await prunePersonalData();
+      return NextResponse.json({ task, ...result });
+    }
     default:
       return NextResponse.json(
-        { error: "Неизвестная задача", supported: ["retry-requests", "prune-media"] },
+        {
+          error: "Неизвестная задача",
+          supported: ["retry-requests", "prune-media", "prune-personal"],
+        },
         { status: 400 },
       );
   }
