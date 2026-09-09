@@ -310,6 +310,12 @@ docker compose up -d --build
 17 * * * * curl -fsS -H "x-cron-secret: ВАШ-КЛЮЧ" "https://princulissart.ru/api/cron?task=prune-personal" >/dev/null
 ```
 
+На боевом сервере строки с `/api/cron` записаны в другом виде, чем показано
+выше: запрос идёт внутрь контейнера (`docker compose exec -T app sh -c 'wget ...
+--header="x-cron-secret: $CRON_SECRET" "http://127.0.0.1:3000/api/cron?task=..."'`).
+Так ключ остаётся в окружении контейнера и не попадает в crontab, а запрос не
+идёт через Caddy. Смотреть живой crontab: `crontab -l` на сервере.
+
 Про «архив событий» из `ARCHITECTURE.md` раздел 10 отдельной задачи нет и не
 нужно: прошедшие события уводятся из показа не флагом, а по дате (`lib/events.ts`
 считает это на лету при каждом запросе). Добавлять cron и поле-флаг значило бы
