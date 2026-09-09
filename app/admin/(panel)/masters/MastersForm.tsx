@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { ConfirmButton } from "../ConfirmButton";
 import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteMaster, moveMaster, saveMaster, toggleMaster, type SectionState } from "./actions";
 import content from "../content/content.module.css";
@@ -92,7 +93,7 @@ export function MastersForm({ masters, lessons }: { masters: MasterView[]; lesso
           entityId={edit.id}
           initialMedia={edit.media}
           title="Фото и видео мастера"
-          note="Первое фото — главное для карточки в карусели."
+          note="Первое фото главное для карточки в карусели."
         />
       ) : null}
 
@@ -130,7 +131,12 @@ export function MastersForm({ masters, lessons }: { masters: MasterView[]; lesso
               </form>
               <form action={deleteMaster}>
                 <input type="hidden" name="id" value={m.id} />
-                <button type="submit" className={styles.removeBtn}>удалить</button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить мастера «${m.name}»? Вернуть его будет нечем.`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

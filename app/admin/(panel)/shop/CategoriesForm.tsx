@@ -12,6 +12,7 @@ import {
   type ShopState,
 } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "./shop.module.css";
 
 export type CategoryNode = {
@@ -192,9 +193,12 @@ function CategoryRow({ node, isRoot }: { node: CategoryNode; isRoot: boolean }) 
         {node.itemCount === 0 && node.children.length === 0 ? (
           <form action={deleteShopCategory}>
             <input type="hidden" name="id" value={node.id} />
-            <button type="submit" className={styles.removeBtn}>
-              удалить
-            </button>
+            <ConfirmButton
+              submit
+              label="удалить"
+              question={`Удалить раздел «${node.title}»?`}
+              className={styles.removeBtn}
+            />
           </form>
         ) : (
           // Сервер всё равно откажет (в категории есть товары или подкатегории),

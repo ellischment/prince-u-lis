@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import Link from "next/link";
 import { Badge, Table } from "@/components/admin/Panel";
 import { currentUser } from "@/lib/auth";
@@ -40,17 +41,10 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
 
   // Раздел владельца. Проверка роли на сервере, а не только скрытием пункта меню:
   // прямой заход по адресу тоже упирается сюда (ARCHITECTURE §6).
-  if (user.role === "admin") {
-    return (
-      <>
-        <h1>Журнал действий</h1>
-        <p className={sectionStyles.denied}>
-          Раздел доступен только владельцу. Если доступ нужен по работе, попросите владельца
-          изменить вашу роль в разделе «Настройки и доступы».
-        </p>
-      </>
-    );
-  }
+  // Раздел владельца. Проверка роли на сервере, а не только скрытием пункта
+  // меню: прямой заход по адресу отвечает 403 (ARCHITECTURE раздел 6),
+  // разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (user.role === "admin") forbidden();
 
   const params = await searchParams;
   const tab = parseTab(typeof params.vid === "string" ? params.vid : undefined);

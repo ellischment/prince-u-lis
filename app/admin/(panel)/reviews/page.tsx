@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canAccessSection } from "@/lib/roles";
@@ -15,14 +16,9 @@ export const metadata: Metadata = {
 export default async function ReviewsPanelPage() {
   const user = await currentUser();
   if (!user) return null;
-  if (!canAccessSection(user.role, "reviews")) {
-    return (
-      <>
-        <h1>Отзывы</h1>
-        <p className={section.denied}>Недостаточно прав для этого раздела.</p>
-      </>
-    );
-  }
+  // Раздел закрыт по роли. Прямой заход по адресу отвечает 403, а не 200 со
+  // страницей отказа: разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (!canAccessSection(user.role, "reviews")) forbidden();
 
   const rows = await prisma.review.findMany({
     orderBy: { sort: "asc" },
@@ -50,7 +46,7 @@ export default async function ReviewsPanelPage() {
       <h1>Отзывы</h1>
       <p className={section.note}>
         На сайте показываются только опубликованные отзывы (три штуки на главной). Фото и видео
-        нельзя опубликовать без отметки о письменном согласии гостя — это проверяет сервер, а не
+        нельзя опубликовать без отметки о письменном согласии гостя: это проверяет сервер, а не
         только форма.
       </p>
       <ReviewsForm reviews={reviews} />

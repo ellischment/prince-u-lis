@@ -77,7 +77,7 @@ export function CookieConsent() {
   return (
     <div className={styles.bar} role="region" aria-label="Файлы cookie">
       <p className={styles.text}>
-        Мы используем файлы cookie для работы сайта, а с вашего согласия — и для статистики
+        Мы используем файлы cookie для работы сайта, а с вашего согласия ещё и для статистики
         посещений. Подробнее в{" "}
         <a className={styles.link} href="/politika">
           политике

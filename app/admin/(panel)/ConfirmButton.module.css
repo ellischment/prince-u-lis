@@ -1,0 +1,43 @@
+/* Подтверждение удаления на месте кнопки. Ряд, а не окно: попапов в панели
+   нет по тем же соображениям, что и на сайте (SPEC.md раздел 12). */
+
+.box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.question {
+  color: var(--cream);
+  font-size: 12.5px;
+}
+
+.yes,
+.no {
+  background: none;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.yes {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.no {
+  color: var(--muted);
+}
+
+.no:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.yes:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

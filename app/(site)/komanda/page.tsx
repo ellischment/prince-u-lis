@@ -37,7 +37,7 @@ export default async function KomandaPage() {
           <p className={styles.eyebrow}>Команда</p>
           <h1 className={styles.h1}>Кто ведёт занятия</h1>
           <p className={styles.lead}>
-            Мастера с художественным образованием и своим делом. У каждого — своё направление и
+            Мастера с художественным образованием и своим делом. У каждого своё направление и
             занятия, которые он ведёт.
           </p>
         </div>

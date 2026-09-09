@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { ConfirmButton } from "../ConfirmButton";
 import { addFreeDay, deleteFreeDay, type ScheduleState } from "./actions";
 import content from "../content/content.module.css";
 import styles from "./schedule.module.css";
@@ -71,9 +72,12 @@ export function FreeDaysForm({ days, todayKey }: { days: FreeDayView[]; todayKey
               <span className={styles.freeTimes}>{day.times.join(", ")}</span>
               <form action={deleteFreeDay}>
                 <input type="hidden" name="id" value={day.id} />
-                <button type="submit" className={styles.removeBtn}>
-                  удалить
-                </button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Закрыть день ${formatDate(day.date)}? Время из него пропадёт с сайта.`}
+                  className={styles.removeBtn}
+                />
               </form>
             </li>
           ))}

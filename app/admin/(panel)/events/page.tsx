@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canAccessSection } from "@/lib/roles";
@@ -23,14 +24,9 @@ const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
 export default async function EventsPanelPage() {
   const user = await currentUser();
   if (!user) return null;
-  if (!canAccessSection(user.role, "events")) {
-    return (
-      <>
-        <h1>События</h1>
-        <p className={section.denied}>Недостаточно прав для этого раздела.</p>
-      </>
-    );
-  }
+  // Раздел закрыт по роли. Прямой заход по адресу отвечает 403, а не 200 со
+  // страницей отказа: разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (!canAccessSection(user.role, "events")) forbidden();
 
   const rows = await prisma.event.findMany({
     orderBy: { date: "desc" },
@@ -56,7 +52,7 @@ export default async function EventsPanelPage() {
       <h1>События</h1>
       <p className={section.note}>
         Маркеты, обжиги и вечера для страницы «События» и блока на главной. После даты событие само
-        уходит в прошедшие — удалять не нужно, остаётся с фотоотчётом.
+        уходит в прошедшие, удалять не нужно: остаётся с фотоотчётом.
       </p>
       <EventsForm events={events} />
     </>

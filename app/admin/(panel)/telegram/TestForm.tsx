@@ -27,7 +27,7 @@ export function TestForm({ configured }: { configured: boolean }) {
       ) : null}
       {state.sent ? (
         <p className={styles.saved} role="status">
-          Отправлено. Проверьте командный чат — сообщение должно прийти.
+          Отправлено. Проверьте командный чат: сообщение должно прийти.
         </p>
       ) : null}
 

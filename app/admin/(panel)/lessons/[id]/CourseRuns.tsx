@@ -3,6 +3,7 @@
 import type { CourseRun } from "@prisma/client";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/Button";
+import { ConfirmButton } from "../../ConfirmButton";
 import { deleteCourseRun, saveCourseRun, toggleCourseRunVisible } from "../actions";
 import styles from "./editor.module.css";
 
@@ -93,9 +94,12 @@ export function CourseRuns({
                 <button type="button" className={styles.removeLast} onClick={() => handleToggle(run)}>
                   {run.visible ? "Скрыть" : "Показать"}
                 </button>
-                <button type="button" className={styles.removeLast} onClick={() => handleDelete(run.id)}>
-                  Удалить
-                </button>
+                <ConfirmButton
+                  label="Удалить"
+                  question={`Удалить поток от ${run.startDate.toLocaleDateString("ru-RU")}?`}
+                  className={styles.removeLast}
+                  onConfirm={() => handleDelete(run.id)}
+                />
               </div>
             </li>
           ))}

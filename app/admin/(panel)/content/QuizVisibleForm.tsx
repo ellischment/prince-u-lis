@@ -67,7 +67,7 @@ export function QuizVisibleForm({ current }: { current: TaskTag[] }) {
       </div>
 
       {noneLeft ? (
-        <p className={styles.error}>Оставьте включённой хотя бы одну задачу: пустая анкета — поломка.</p>
+        <p className={styles.error}>Оставьте включённой хотя бы одну задачу: пустая анкета это поломка.</p>
       ) : null}
 
       <p className={styles.note}>

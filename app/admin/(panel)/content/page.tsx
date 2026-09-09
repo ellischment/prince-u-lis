@@ -110,7 +110,7 @@ export default async function ContentPage() {
 
       <h2 className={styles.subhead}>Порядок блоков главной</h2>
       <p className={styles.note}>
-        Перетаскиванием (или кнопками) меняется порядок, галочкой — показ блока на сайте.
+        Перетаскиванием (или кнопками) меняется порядок, галочкой включается показ блока на сайте.
       </p>
       <BlocksForm current={blocks} />
 
@@ -128,13 +128,13 @@ export default async function ContentPage() {
 
       <h2 className={styles.subhead}>Какие задачи анкеты показывать</h2>
       <p className={styles.note}>
-        Галочка — показывать кнопку задачи на главной. Хотя бы одна должна остаться включённой.
+        Галочка включает кнопку задачи на главной. Хотя бы одна должна остаться включённой.
       </p>
       <QuizVisibleForm current={quizVisible} />
 
       <h2 className={styles.subhead}>Вопросы и ответы</h2>
       <p className={styles.note}>
-        Пары вопрос-ответ для страницы «Вопросы». Пустой список — страницы на сайте нет; первый
+        Пары вопрос-ответ для страницы «Вопросы». Пустой список значит, что страницы на сайте нет; первый
         вопрос её создаёт.
       </p>
       <FaqForm current={faqItems} />

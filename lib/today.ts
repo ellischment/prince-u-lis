@@ -94,7 +94,7 @@ export async function getChecklist(now: Date = new Date()): Promise<CheckItem[]>
     items.push({
       text:
         unsafeReviews === 1
-          ? "Отзыв с фото или видео ждёт отметки о согласии — без неё его не опубликовать"
+          ? "Отзыв с фото или видео ждёт отметки о согласии: без неё его не опубликовать"
           : `Отзывов с фото или видео без отметки согласия: ${unsafeReviews}`,
       href: "/admin/reviews",
     });
@@ -111,7 +111,7 @@ export async function getChecklist(now: Date = new Date()): Promise<CheckItem[]>
     items.push({
       text:
         failedRequests === 1
-          ? "Заявка не ушла в amoCRM — стоит проверить"
+          ? "Заявка не ушла в amoCRM, стоит проверить"
           : `Заявок, не ушедших в amoCRM: ${failedRequests}`,
       href: "/admin/requests?status=failed",
     });
@@ -127,7 +127,7 @@ export async function getChecklist(now: Date = new Date()): Promise<CheckItem[]>
       category._count.shopItems;
     if (total === 0) {
       items.push({
-        text: `Категория «${category.title}» пустая — на сайте она не показывается`,
+        text: `Категория «${category.title}» пустая, на сайте она не показывается`,
         href: "/admin/shop",
       });
     }

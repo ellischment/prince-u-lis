@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import styles from "../section.module.css";
@@ -17,17 +18,10 @@ export default async function SettingsPage() {
 
   // Раздел владельца. Проверка роли на сервере, а не только скрытием пункта меню:
   // прямой заход по адресу тоже упирается сюда.
-  if (user.role === "admin") {
-    return (
-      <>
-        <h1>Настройки и доступы</h1>
-        <p className={styles.denied}>
-          Раздел доступен только владельцу. Если доступ нужен по работе, попросите владельца
-          изменить вашу роль.
-        </p>
-      </>
-    );
-  }
+  // Раздел владельца. Проверка роли на сервере, а не только скрытием пункта
+  // меню: прямой заход по адресу отвечает 403 (ARCHITECTURE раздел 6),
+  // разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (user.role === "admin") forbidden();
 
   const users = await prisma.user.findMany({
     orderBy: [{ active: "desc" }, { createdAt: "asc" }],
@@ -39,7 +33,7 @@ export default async function SettingsPage() {
       <h1>Настройки и доступы</h1>
       <p className={styles.note}>
         Кто может входить в панель и что ему доступно. Роли: администратор ведёт содержимое,
-        владелец может всё, технический доступ — как владелец. Пароль не менее 10 символов.
+        владелец может всё, технический доступ такой же, как у владельца. Пароль не менее 10 символов.
       </p>
 
       <UsersForm users={users} currentUserId={user.id} />

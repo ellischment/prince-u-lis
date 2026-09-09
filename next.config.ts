@@ -80,6 +80,11 @@ const nextConfig: NextConfig = {
   // Next по умолчанию отдаёт X-Powered-By со своим именем: лишняя подсказка
   // о стеке для того, кто ищет известные дыры (замечание ZAP 10037, стадия B).
   poweredByHeader: false,
+  // Разделы панели, закрытые по роли, отдают 403 через forbidden(). Без этого
+  // флага Next не разрешает вызов и страница отвечает 200 с текстом отказа.
+  // Флаг включает только forbidden()/unauthorized() и файлы forbidden.tsx и
+  // unauthorized.tsx, на остальное поведение сборки не влияет.
+  experimental: { authInterrupts: true },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -60,7 +60,7 @@ export const updateUserRole = panelAction({
       (user.role === "owner" || user.role === "tech") &&
       !(input.role === "owner" || input.role === "tech");
     if (losesOwner && user.active && (await ownersLeftAfter(tx, user.id)) === 0) {
-      throw new ActionError("Это последний владелец — сначала назначьте другого");
+      throw new ActionError("Это последний владелец, сначала назначьте другого");
     }
 
     await tx.user.update({ where: { id: user.id }, data: { role: input.role } });
@@ -83,7 +83,7 @@ export const toggleUserActive = panelAction({
       (user.role === "owner" || user.role === "tech") &&
       (await ownersLeftAfter(tx, user.id)) === 0
     ) {
-      throw new ActionError("Это последний владелец — отключать его нельзя");
+      throw new ActionError("Это последний владелец, отключать его нельзя");
     }
 
     await tx.user.update({ where: { id: user.id }, data: { active: input.active } });

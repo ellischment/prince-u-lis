@@ -20,13 +20,15 @@ added_lines=$(git diff --cached -U0 -- . ':(exclude).githooks' | grep -E '^\+' |
 
 # Утечка — секрет, которого не должно быть в репозитории, а не само слово
 # token/secret/password (оно легально в именах переменных и в process.env.X).
-# Признак: сразу после = или : идёт 16+ символов base64/JWT-алфавита. Явные
+# Признак: сразу после = или : идёт 16+ символов base64/JWT-алфавита. Чтение
+# переменной окружения (после = или : идёт process.env.) секретом не считается:
+# так объявлен параметр по умолчанию в e2e, и коммит из-за этого отклонялся. Явные
 # тестовые плейсхолдеры отсеиваются вторым grep -v. Три grep в конвейере дают ту
 # же логику «И», что прежний построчный цикл, но без тысяч процессов.
 entropy_pattern="(token|secret|password)[^=:]{0,30}[=:][[:space:]]*[\"']?[A-Za-z0-9+/_.=-]{16,}"
 suspicious=$(printf '%s\n' "$added_lines" \
   | grep -iE 'token|secret|password' \
-  | grep -viE 'not-real|changeme|change-me|example|placeholder|ci-owner|ci-admin|=[[:space:]]*(null|"")[[:space:]]*$' \
+  | grep -viE 'not-real|changeme|change-me|example|placeholder|ci-owner|ci-admin|=[[:space:]]*(null|"")[[:space:]]*$|[=:][[:space:]]*process\.env\.' \
   | grep -iE "$entropy_pattern")
 
 if [ -n "$suspicious" ]; then

@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteShopItem, saveShopItem, toggleShopItem, type ShopState } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "./shop.module.css";
 
 type ItemView = {
@@ -108,7 +109,7 @@ export function ShopItemsForm({
           entityId={edit.id}
           initialMedia={edit.media}
           title="Фотографии товара"
-          note="Первое фото — обложка карточки. Порядок меняется перетаскиванием."
+          note="Первое фото становится обложкой карточки. Порядок меняется перетаскиванием."
         />
       ) : null}
 
@@ -138,9 +139,12 @@ export function ShopItemsForm({
               </form>
               <form action={deleteShopItem}>
                 <input type="hidden" name="id" value={i.id} />
-                <button type="submit" className={styles.removeBtn}>
-                  удалить
-                </button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить товар «${i.title}»?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

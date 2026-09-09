@@ -44,7 +44,7 @@ export default async function SobytiyaPage() {
         </div>
 
         {events.length === 0 ? (
-          <p className={styles.empty}>Пока событий нет. Заглядывайте — скоро что-нибудь придумаем.</p>
+          <p className={styles.empty}>Пока событий нет. Заглядывайте: скоро что-нибудь придумаем.</p>
         ) : null}
 
         {future.length > 0 ? (

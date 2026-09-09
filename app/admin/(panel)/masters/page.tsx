@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canAccessSection } from "@/lib/roles";
@@ -15,14 +16,9 @@ export const metadata: Metadata = {
 export default async function MastersPanelPage() {
   const user = await currentUser();
   if (!user) return null;
-  if (!canAccessSection(user.role, "masters")) {
-    return (
-      <>
-        <h1>Команда мастеров</h1>
-        <p className={section.denied}>Недостаточно прав для этого раздела.</p>
-      </>
-    );
-  }
+  // Раздел закрыт по роли. Прямой заход по адресу отвечает 403, а не 200 со
+  // страницей отказа: разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (!canAccessSection(user.role, "masters")) forbidden();
 
   const [rows, lessons] = await Promise.all([
     prisma.master.findMany({
@@ -50,7 +46,7 @@ export default async function MastersPanelPage() {
     <>
       <h1>Команда мастеров</h1>
       <p className={section.note}>
-        Мастера для страницы «Команда» и карусели на главной. Порядок — стрелками, скрытый мастер на
+        Мастера для страницы «Команда» и карусели на главной. Порядок задаётся стрелками, скрытый мастер на
         сайте не показывается. Связь с занятиями только для показа: на запись она не влияет, мастера
         ставит студия.
       </p>

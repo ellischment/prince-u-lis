@@ -90,7 +90,7 @@ export default async function ShopPanelPage() {
     { id: root.id, label: root.title },
     ...categories
       .filter((c) => c.parentId === root.id)
-      .map((child) => ({ id: child.id, label: `— ${child.title}` })),
+      .map((child) => ({ id: child.id, label: `· ${child.title}` })),
   ]);
 
   const workView = works.map((w) => ({

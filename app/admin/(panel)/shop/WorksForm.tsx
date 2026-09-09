@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteWork, saveWork, toggleWork, type ShopState } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "./shop.module.css";
 
 type WorkView = {
@@ -125,7 +126,7 @@ export function WorksForm({
           entityId={edit.id}
           initialMedia={edit.media}
           title="Фотографии работы"
-          note="Первое фото — обложка карточки. Порядок меняется перетаскиванием."
+          note="Первое фото становится обложкой карточки. Порядок меняется перетаскиванием."
         />
       ) : null}
 
@@ -155,9 +156,12 @@ export function WorksForm({
               </form>
               <form action={deleteWork}>
                 <input type="hidden" name="id" value={w.id} />
-                <button type="submit" className={styles.removeBtn}>
-                  удалить
-                </button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить работу «${w.title}»?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

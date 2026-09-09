@@ -6,6 +6,7 @@ import type { Media } from "@prisma/client";
 import { Button } from "@/components/Button";
 import { ReorderableList } from "@/components/ReorderableList";
 import { coverNotice, LESSON_COVER } from "@/lib/cover-notice";
+import { ConfirmButton } from "../../ConfirmButton";
 import { addVideoLink, deleteMedia, reorderMedia } from "../media-actions";
 import styles from "./editor.module.css";
 
@@ -130,9 +131,9 @@ export function MediaEditor({
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>Галерея</h2>
       <p className={styles.sectionNote}>
-        Первое изображение — обложка: оно идёт крупным на странице занятия и в карточке
+        Первое изображение становится обложкой: оно идёт крупным на странице занятия и в карточке
         каталога, где обрезается по центру до формата 4:3. Для обложки берите горизонтальное
-        фото шириной от 1200px. Порядок меняется перетаскиванием — перетащите нужный кадр на
+        фото шириной от 1200px. Порядок меняется перетаскиванием: перетащите нужный кадр на
         первое место. Подробнее в памятке docs/foto-pamyatka.md.
       </p>
 
@@ -157,13 +158,16 @@ export function MediaEditor({
               )}
               {item.id === coverId ? <span className={styles.coverBadge}>Обложка</span> : null}
               <span className={styles.mediaUrl}>{item.url ?? item.path}</span>
-              <button
-                type="button"
+              <ConfirmButton
+                label="Удалить"
+                question={
+                  item.id === coverId
+                    ? "Удалить обложку занятия? Её место займёт следующее фото."
+                    : "Удалить это фото занятия?"
+                }
                 className={styles.removeLast}
-                onClick={() => handleDelete(item.id)}
-              >
-                Удалить
-              </button>
+                onConfirm={() => handleDelete(item.id)}
+              />
             </div>
           )}
         />

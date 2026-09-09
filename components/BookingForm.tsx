@@ -175,7 +175,7 @@ export function BookingForm({ groups, prefill }: { groups: LessonGroup[]; prefil
         <h2 className={styles.doneTitle}>Заявка отправлена</h2>
         <p className={styles.doneText}>
           {done.duplicate
-            ? "Такая заявка уже у нас — не переживайте, дубль не создали. Мы свяжемся, чтобы подтвердить."
+            ? "Такая заявка уже у нас, не переживайте: дубль не создали. Мы свяжемся, чтобы подтвердить."
             : done.lessonTitle
               ? `Записали на «${done.lessonTitle}». Мы свяжемся, чтобы подтвердить удобное время.`
               : "Мы свяжемся с вами в ближайшее время, чтобы подобрать занятие и подтвердить запись."}

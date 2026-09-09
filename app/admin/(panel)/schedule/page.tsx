@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canAccessSection } from "@/lib/roles";
@@ -29,14 +30,9 @@ export default async function SchedulePanelPage() {
   const user = await currentUser();
   if (!user) return null;
 
-  if (!canAccessSection(user.role, "schedule")) {
-    return (
-      <>
-        <h1>Расписание</h1>
-        <p className={styles.denied}>Недостаточно прав для этого раздела.</p>
-      </>
-    );
-  }
+  // Раздел закрыт по роли. Прямой заход по адресу отвечает 403, а не 200 со
+  // страницей отказа: разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (!canAccessSection(user.role, "schedule")) forbidden();
 
   // Панель читает напрямую, без кэша: всегда актуальные данные.
   const [hoursRows, slots, freeDays, lessons] = await Promise.all([
@@ -91,7 +87,7 @@ export default async function SchedulePanelPage() {
       <h2 className={styles.subhead}>Сетка недели</h2>
       <p className={styles.note}>
         Занятия по дням. Если время выходит за часы работы, покажем предупреждение, но сохранить
-        разрешим — бывают особые дни.
+        разрешим: бывают особые дни.
       </p>
       <SlotsForm slots={slotView} lessons={lessons} hours={hours} weekdayNames={[...WEEKDAY_NAMES]} />
 

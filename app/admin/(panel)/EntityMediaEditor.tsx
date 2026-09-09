@@ -5,6 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/Button";
 import { ReorderableList } from "@/components/ReorderableList";
 import type { MediaEntityType } from "@/lib/media-entities";
+import { ConfirmButton } from "./ConfirmButton";
 import { addEntityVideoLink, deleteEntityMedia, reorderEntityMedia } from "./entity-media-actions";
 import styles from "./media.module.css";
 
@@ -129,9 +130,12 @@ export function EntityMediaEditor({
                 <span className={styles.mediaVideoTag}>видео</span>
               )}
               <span className={styles.mediaUrl}>{item.url ?? item.path}</span>
-              <button type="button" className={styles.removeLast} onClick={() => handleDelete(item.id)}>
-                Удалить
-              </button>
+              <ConfirmButton
+                label="Удалить"
+                question="Удалить это фото? Вернуть его можно только новой загрузкой."
+                className={styles.removeLast}
+                onConfirm={() => handleDelete(item.id)}
+              />
             </div>
           )}
         />

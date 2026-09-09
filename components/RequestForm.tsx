@@ -113,7 +113,7 @@ export function RequestForm({
         <h2 className={styles.doneTitle}>Заявка отправлена</h2>
         <p className={styles.doneText}>
           {done.duplicate
-            ? "Такая заявка уже у нас — дубль не создали. Мы скоро свяжемся."
+            ? "Такая заявка уже у нас: дубль не создали. Мы скоро свяжемся."
             : doneText}
         </p>
       </div>

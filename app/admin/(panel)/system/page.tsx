@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import Link from "next/link";
 import { Badge, Panel, Table } from "@/components/admin/Panel";
 import { currentUser } from "@/lib/auth";
@@ -35,17 +36,10 @@ export default async function SystemPage() {
   if (!user) return null;
 
   // Раздел владельца. Проверка роли на сервере (ARCHITECTURE §6).
-  if (user.role === "admin") {
-    return (
-      <>
-        <h1>Система и безопасность</h1>
-        <p className={sectionStyles.denied}>
-          Раздел доступен только владельцу. Если доступ нужен по работе, попросите владельца
-          изменить вашу роль в разделе «Настройки и доступы».
-        </p>
-      </>
-    );
-  }
+  // Раздел владельца. Проверка роли на сервере, а не только скрытием пункта
+  // меню: прямой заход по адресу отвечает 403 (ARCHITECTURE раздел 6),
+  // разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (user.role === "admin") forbidden();
 
   const now = new Date();
   const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
@@ -81,7 +75,7 @@ export default async function SystemPage() {
             <Badge tone="warn">Копий пока нет</Badge>{" "}
             <span className={styles.dim}>
               На сервере копии появятся после первой выкатки и ночного запуска. Локально папки
-              копий нет — это нормально.
+              копий нет, это нормально.
             </span>
           </p>
         )}

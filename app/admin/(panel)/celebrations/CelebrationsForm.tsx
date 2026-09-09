@@ -12,6 +12,7 @@ import {
   type SectionState,
 } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "../shop/shop.module.css";
 
 export type CelebrationView = {
@@ -58,11 +59,11 @@ export function CelebrationsForm({ items }: { items: CelebrationView[] }) {
           <textarea name="intro" className={styles.textarea} defaultValue={d?.intro ?? ""} rows={2} />
         </label>
         <label className={styles.field}>
-          <span className={styles.label}>Как проходит — по шагу на строку</span>
+          <span className={styles.label}>Как проходит, по шагу на строку</span>
           <textarea name="steps" className={styles.textarea} defaultValue={(d?.steps ?? []).join("\n")} rows={4} />
         </label>
         <label className={styles.field}>
-          <span className={styles.label}>Что входит — по пункту на строку</span>
+          <span className={styles.label}>Что входит, по пункту на строку</span>
           <textarea name="includes" className={styles.textarea} defaultValue={(d?.includes ?? []).join("\n")} rows={3} />
         </label>
 
@@ -127,7 +128,12 @@ export function CelebrationsForm({ items }: { items: CelebrationView[] }) {
               </form>
               <form action={deleteCelebration}>
                 <input type="hidden" name="id" value={it.id} />
-                <button type="submit" className={styles.removeBtn}>удалить</button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить формат «${it.title}»?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

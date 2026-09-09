@@ -119,7 +119,7 @@ test("формат праздника из панели появляется н�
   await form.getByLabel("Название формата").fill(title);
   await form.getByLabel("Ориентир цены").fill("от 12 345 ₽");
   await form.getByLabel("Описание").fill("Тестовое описание формата");
-  await form.getByLabel("Как проходит — по шагу на строку").fill("Первый шаг\nВторой шаг");
+  await form.getByLabel("Как проходит, по шагу на строку").fill("Первый шаг\nВторой шаг");
   await page.getByRole("button", { name: "Добавить формат" }).click();
   await expect(page.getByRole("listitem").filter({ hasText: title })).toBeVisible();
 
@@ -167,20 +167,54 @@ test("мастер из панели появляется на сайте", asyn
 
   await page.goto("/komanda");
   await expect(page.getByRole("heading", { name })).toBeVisible();
+
+  // Убираем за собой: без этого список мастеров растёт от прогона к прогону.
+  await page.goto("/admin/masters");
+  const created = page.getByRole("listitem").filter({ hasText: name });
+  await created.getByRole("button", { name: "удалить" }).click();
+  await created.getByRole("button", { name: "Да, удалить" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: name })).toHaveCount(0);
 });
 
-test("загруженное фото работы доезжает до карточки на сайте", async ({ page }) => {
-  const title = `Тест-работа ${String(Date.now()).slice(-6)}`;
+test("удаление в панели спрашивает подтверждение", async ({ page }) => {
+  // Раньше промах по «удалить» стирал запись сразу и молча: отмены нет,
+  // восстановить нечем. Проверяем на мастере, которого тест сам и заводит.
+  const name = `Тест-удаление ${String(Date.now()).slice(-6)}`;
 
-  await page.goto("/admin/login");
-  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
-  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
-  await page.getByRole("button", { name: "Войти" }).click();
-  await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
+  await loginPanel(page);
+  await page.goto("/admin/masters");
 
+  const form = page.locator("form", { has: page.getByRole("button", { name: "Добавить мастера" }) });
+  await form.getByLabel("Имя").fill(name);
+  await form.getByLabel("Специализация").fill("тестовое направление");
+  await page.getByRole("button", { name: "Добавить мастера" }).click();
+
+  const row = page.getByRole("listitem").filter({ hasText: name });
+  await expect(row).toBeVisible();
+
+  // Первое нажатие только спрашивает, запись на месте.
+  await row.getByRole("button", { name: "удалить" }).click();
+  await expect(row.getByRole("button", { name: "Да, удалить" })).toBeVisible();
+  await row.getByRole("button", { name: "Отмена" }).click();
+  await expect(row).toBeVisible();
+
+  // Подтверждение удаляет.
+  await row.getByRole("button", { name: "удалить" }).click();
+  await row.getByRole("button", { name: "Да, удалить" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: name })).toHaveCount(0);
+});
+
+type E2EPage = import("@playwright/test").Page;
+
+/**
+ * Работа с фотографией. Нужна двум проверкам: витрине «Работы» и разделу
+ * «Фото и видео». Своих фотографий в базе разработчика нет, поэтому тест,
+ * которому нужна хотя бы одна, заводит её сам и сам же убирает: иначе от
+ * прогона к прогону витрина копит тестовые плитки, а соседние проверки
+ * начинают зависеть от чужого мусора.
+ */
+async function createWorkWithPhoto(page: E2EPage, title: string) {
   await page.goto("/admin/shop");
-
-  // Создать работу.
   const workForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить работу" }) });
   await workForm.locator('input[name="title"]').fill(title);
   await workForm.locator('input[name="price"]').fill("1 000 ₽");
@@ -190,13 +224,26 @@ test("загруженное фото работы доезжает до кар�
   await page.getByRole("button", { name: "Добавить работу" }).click();
   await expect(page.getByRole("listitem").filter({ hasText: title })).toBeVisible();
 
-  // Открыть работу на правку — появляется загрузчик галереи.
+  // Открыть работу на правку: появляется загрузчик галереи.
   await page.getByRole("listitem").filter({ hasText: title }).getByRole("button", { name: "изменить" }).click();
   await expect(page.getByText("Фотографии работы")).toBeVisible();
-
-  // Загрузить фото и дождаться, что оно появилось в галерее панели.
   await page.locator('input[type="file"]').setInputFiles(TEST_PHOTO);
   await expect(page.locator('[class*="mediaRow"]').first()).toBeVisible({ timeout: 15000 });
+}
+
+async function deleteWorkByTitle(page: E2EPage, title: string) {
+  await page.goto("/admin/shop");
+  const row = page.getByRole("listitem").filter({ hasText: title });
+  await row.getByRole("button", { name: "удалить" }).click();
+  await row.getByRole("button", { name: "Да, удалить" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: title })).toHaveCount(0);
+}
+
+test("загруженное фото работы доезжает до карточки на сайте", async ({ page }) => {
+  const title = `Тест-работа ${String(Date.now()).slice(-6)}`;
+
+  await loginPanel(page);
+  await createWorkWithPhoto(page, title);
 
   // На сайте: сетка «Работы» без подписей (FEATURES 1.8), но у плитки есть
   // aria-label с названием — по нему находим именно нашу карточку.
@@ -208,6 +255,8 @@ test("загруженное фото работы доезжает до кар�
 
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
   await expect(page.locator("main img").first()).toBeVisible();
+
+  await deleteWorkByTitle(page, title);
 });
 
 // Приёмка шага 8.1. Проверка из FEATURES.md 1.9: «Отключить JavaScript в
@@ -268,10 +317,14 @@ test("старый адрес статьи отвечает постоянным
 
 // Приёмка шага 8.2. Статья создаётся, редактируется, публикуется и меняет
 // сайт из панели. Панель за логином, поэтому e2e логинится через SEED_OWNER_*.
-async function loginPanel(page: import("@playwright/test").Page) {
+async function loginPanel(
+  page: import("@playwright/test").Page,
+  email = process.env.SEED_OWNER_EMAIL!,
+  password = process.env.SEED_OWNER_PASSWORD!,
+) {
   await page.goto("/admin/login");
-  await page.getByLabel("Почта").fill(process.env.SEED_OWNER_EMAIL!);
-  await page.getByLabel("Пароль").fill(process.env.SEED_OWNER_PASSWORD!);
+  await page.getByLabel("Почта").fill(email);
+  await page.getByLabel("Пароль").fill(password);
   await page.getByRole("button", { name: "Войти" }).click();
   await page.waitForURL((url) => !url.pathname.includes("/admin/login"));
 }
@@ -325,18 +378,33 @@ test("статья из панели: создание, публикация, п
 
   const gone = await page.request.get(`/blog/${slug}`);
   expect(gone.status()).toBe(404);
+
+  // Убираем за собой: черновики копились в базе и однажды уехали в список
+  // блога, после чего проверка порции статей падала на ровном месте.
+  await page.getByRole("button", { name: "Удалить статью" }).click();
+  await page.getByRole("button", { name: "Да, удалить" }).click();
+  await page.waitForURL((url) => url.pathname === "/admin/blog");
+  await expect(page.getByRole("link", { name: title })).toHaveCount(0);
 });
 
 test("раздел «Фото и видео»: сводка и таблица использования", async ({ page }) => {
-  await loginPanel(page);
-  await page.goto("/admin/media");
+  const title = `Тест-медиа ${String(Date.now()).slice(-6)}`;
 
+  await loginPanel(page);
+  // Своя фотография, а не оставшаяся от соседнего теста: раздел должен
+  // показать таблицу использования, а показывать ему нечего, пока в базе
+  // разработчика нет ни одного файла.
+  await createWorkWithPhoto(page, title);
+
+  await page.goto("/admin/media");
   await expect(page.getByRole("heading", { level: 1, name: "Фото и видео" })).toBeVisible();
   // Счётчик занятого места (PLAN 8.2): подпись присутствует.
   await expect(page.getByText("занято на диске")).toBeVisible();
-  // Таблица использования: у демо-занятия есть фото, значит колонка «Где
-  // используется» ведёт на страницу занятия.
+  // Таблица использования: у загруженного файла колонка «Где используется»
+  // ведёт на страницу той записи, к которой он привязан.
   await expect(page.getByRole("region", { name: "Список медиа" })).toBeVisible();
+
+  await deleteWorkByTitle(page, title);
 });
 
 test("раздел «Сегодня»: поиск, «что стоит проверить», быстрые действия", async ({ page }) => {
@@ -447,6 +515,25 @@ test("несуществующий адрес раздела отвечает 40
   // Адрес без маршрута вообще ловит корневой not-found, он и раньше был верным.
   const noRoute = await request.get("/sovsem-net-takogo-razdela", { maxRedirects: 0 });
   expect(noRoute.status()).toBe(404);
+});
+
+// Разделы владельца из lib/roles.ts (ownerOnly).
+const OWNER_ONLY = ["/admin/settings", "/admin/audit", "/admin/system"];
+
+test("раздел владельца отвечает администратору 403, а не 200", async ({ page }) => {
+  // Проверка роли на сервере — ARCHITECTURE раздел 6. Раньше эти адреса
+  // отдавали 200 со страницей отказа: человек видел правильное, а машина
+  // неправильное. Теперь страница зовёт forbidden().
+  await loginPanel(page, process.env.SEED_ADMIN_EMAIL!, process.env.SEED_ADMIN_PASSWORD!);
+
+  for (const path of OWNER_ONLY) {
+    const res = await page.request.get(path);
+    expect(res.status(), path).toBe(403);
+  }
+
+  // Раздел без ограничения по роли администратору по-прежнему открыт.
+  const open = await page.request.get("/admin/lessons");
+  expect(open.status()).toBe(200);
 });
 
 test("«Журнал действий»: читаемое название, вкладки-фильтры, входы", async ({ page }) => {

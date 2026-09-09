@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { deleteReview, moveReview, saveReview, type SectionState } from "./actions";
 import content from "../content/content.module.css";
 import media from "../media.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "../shop/shop.module.css";
 
 export type ReviewView = {
@@ -221,7 +222,12 @@ export function ReviewsForm({ reviews }: { reviews: ReviewView[] }) {
               </button>
               <form action={deleteReview}>
                 <input type="hidden" name="id" value={r.id} />
-                <button type="submit" className={styles.removeBtn}>удалить</button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить отзыв гостя ${r.guestName}?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

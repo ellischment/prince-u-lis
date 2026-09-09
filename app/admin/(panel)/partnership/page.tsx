@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { REPLY_TIME_DEFAULT } from "@/lib/partnerships";
@@ -26,14 +27,9 @@ function replyTime(value: string | undefined): string {
 export default async function PartnershipPanelPage() {
   const user = await currentUser();
   if (!user) return null;
-  if (!canAccessSection(user.role, "partnership")) {
-    return (
-      <>
-        <h1>Сотрудничество</h1>
-        <p className={section.denied}>Недостаточно прав для этого раздела.</p>
-      </>
-    );
-  }
+  // Раздел закрыт по роли. Прямой заход по адресу отвечает 403, а не 200 со
+  // страницей отказа: разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (!canAccessSection(user.role, "partnership")) forbidden();
 
   const [rows, reply] = await Promise.all([
     prisma.partnership.findMany({
@@ -59,7 +55,7 @@ export default async function PartnershipPanelPage() {
     <>
       <h1>Сотрудничество</h1>
       <p className={section.note}>
-        Виды сотрудничества для страницы «Сотрудничество». Порядок — стрелками, скрытый вид на сайте
+        Виды сотрудничества для страницы «Сотрудничество». Порядок задаётся стрелками, скрытый вид на сайте
         не показывается.
       </p>
 

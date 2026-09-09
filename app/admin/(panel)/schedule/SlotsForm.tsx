@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
+import { ConfirmButton } from "../ConfirmButton";
 import { addSlot, deleteSlot, toggleSlot, type ScheduleState } from "./actions";
 import type { DayHoursInput } from "./HoursForm";
 import content from "../content/content.module.css";
@@ -120,9 +121,12 @@ export function SlotsForm({
                       </form>
                       <form action={deleteSlot}>
                         <input type="hidden" name="id" value={slot.id} />
-                        <button type="submit" className={styles.removeBtn}>
-                          удалить
-                        </button>
+                        <ConfirmButton
+                          submit
+                          label="удалить"
+                          question={`Удалить слот ${slot.time} «${slot.title}»?`}
+                          className={styles.removeBtn}
+                        />
                       </form>
                     </span>
                   </li>

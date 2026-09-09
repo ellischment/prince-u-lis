@@ -325,8 +325,7 @@ export function ScheduleCalendar({ openDays, todayKey }: { openDays: OpenDay[]; 
           Сейчас открытых дней для индивидуальной записи нет. Позвоните нам{" "}
           <a href={STUDIO_PHONE_HREF} className={styles.phone}>
             {STUDIO_PHONE}
-          </a>{" "}
-          — подберём время.
+          </a>, подберём время.
         </p>
       )}
     </section>

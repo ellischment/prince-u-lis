@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { forbidden } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canAccessSection } from "@/lib/roles";
@@ -15,14 +16,9 @@ export const metadata: Metadata = {
 export default async function BonusPanelPage() {
   const user = await currentUser();
   if (!user) return null;
-  if (!canAccessSection(user.role, "bonus")) {
-    return (
-      <>
-        <h1>Бонусы</h1>
-        <p className={section.denied}>Недостаточно прав для этого раздела.</p>
-      </>
-    );
-  }
+  // Раздел закрыт по роли. Прямой заход по адресу отвечает 403, а не 200 со
+  // страницей отказа: разметку ответа держит app/admin/(panel)/forbidden.tsx.
+  if (!canAccessSection(user.role, "bonus")) forbidden();
 
   const rows = await prisma.bonusLevel.findMany({
     orderBy: { sort: "asc" },
@@ -44,7 +40,7 @@ export default async function BonusPanelPage() {
       <h1>Бонусы</h1>
       <p className={section.note}>
         Уровни постоянного гостя для страницы «Бонусы». Число уровней любое: добавляйте и удаляйте.
-        Порядок — стрелками, скрытый уровень на сайте не показывается.
+        Порядок задаётся стрелками, скрытый уровень на сайте не показывается.
       </p>
       <BonusForm items={items} />
     </>

@@ -60,8 +60,8 @@ export function buildTelegramText(payload: TelegramPayload): string {
     payload.lessonTitle ? `Занятие или повод: ${payload.lessonTitle}` : null,
     when ? `Желаемое время: ${when}` : null,
     link
-      ? `Детали и контакты — в сделке amoCRM: ${link}`
-      : "Детали и контакты — в Журнале заявок панели (в amoCRM появится после доставки).",
+      ? `Детали и контакты в сделке amoCRM: ${link}`
+      : "Детали и контакты в Журнале заявок панели (в amoCRM появится после доставки).",
   ];
   return lines.filter(Boolean).join("\n");
 }

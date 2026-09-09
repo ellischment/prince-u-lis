@@ -61,7 +61,7 @@ export default async function SchedulePage() {
         <Section>
           <h1 className={styles.title}>Расписание</h1>
           <p className={styles.lead}>
-            Групповые занятия по дням недели. Не нашли своё время — оставьте заявку на
+            Групповые занятия по дням недели. Не нашли своё время, оставьте заявку на
             индивидуальное.
           </p>
 
@@ -106,8 +106,7 @@ export default async function SchedulePage() {
                       В этот день групповых занятий нет.{" "}
                       <a href="#individualno" className={styles.emptyLink}>
                         Приходите индивидуально
-                      </a>{" "}
-                      — выберите удобное время справа.
+                      </a>: выберите удобное время справа.
                     </p>
                   )}
                 </details>

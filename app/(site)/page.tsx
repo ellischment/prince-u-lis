@@ -252,7 +252,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 <div className={styles.medallion}>
                   <Image
                     src="/medallion.jpg"
-                    alt="Маленький принц и лис — иллюстрация студии"
+                    alt="Маленький принц и лис, иллюстрация студии"
                     fill
                     priority
                     sizes="(max-width: 860px) 280px, 430px"

@@ -138,7 +138,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/admin"
 
       <section className={styles.block} aria-label="Быстрые действия">
         <h2 className={styles.blockTitle}>Быстрые действия</h2>
-        <p className={styles.hint}>Частые задачи. Нажмите — откроется нужный раздел.</p>
+        <p className={styles.hint}>Частые задачи. Нажмите, и откроется нужный раздел.</p>
         <div className={styles.actions}>
           {QUICK_ACTIONS.map((action) => (
             <Link key={action.href} href={action.href} className={styles.action}>

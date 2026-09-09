@@ -161,13 +161,22 @@ export function ArticleEditor({
     };
   }
 
+  // Свежие поля для автосохранения держим в ref, а не в зависимостях эффекта.
+  // Раньше там стояли state и cover: каждый набранный символ пересоздавал
+  // таймер, и при непрерывном наборе тридцать секунд не набегали никогда —
+  // длинный текст не сохранялся вообще, ровно там, где автосохранение и нужно.
+  const payloadRef = useRef(payload);
+  useEffect(() => {
+    payloadRef.current = payload;
+  });
+
   // Автосохранение: только когда есть что сохранять и статья уже создана.
   // У новой статьи нет id, сохранять нечего до первого «Сохранить».
   useEffect(() => {
     if (!article || !dirty) return;
 
     const timer = setInterval(async () => {
-      const result = await autosaveArticle({ id: article.id, ...payload() });
+      const result = await autosaveArticle({ id: article.id, ...payloadRef.current() });
       if (result.ok) {
         setSavedAt(new Date());
         setDirty(false);
@@ -178,8 +187,7 @@ export function ArticleEditor({
     }, AUTOSAVE_MS);
 
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article, dirty, state, cover]);
+  }, [article, dirty]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

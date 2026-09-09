@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
 import { deleteBonus, moveBonus, saveBonus, toggleBonus, type SectionState } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "../shop/shop.module.css";
 
 export type BonusView = {
@@ -64,7 +65,7 @@ export function BonusForm({ items }: { items: BonusView[] }) {
           </label>
         </div>
         <label className={styles.field}>
-          <span className={styles.label}>Привилегии — по пункту на строку</span>
+          <span className={styles.label}>Привилегии, по пункту на строку</span>
           <textarea name="perks" className={styles.textarea} defaultValue={(d?.perks ?? []).join("\n")} rows={3} />
         </label>
 
@@ -120,7 +121,12 @@ export function BonusForm({ items }: { items: BonusView[] }) {
               </form>
               <form action={deleteBonus}>
                 <input type="hidden" name="id" value={it.id} />
-                <button type="submit" className={styles.removeBtn}>удалить</button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить уровень «${it.title}»?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

@@ -32,7 +32,7 @@ export function SessionsForm({ activeSessions }: { activeSessions: number }) {
       ) : null}
       {state.ok ? (
         <p className={styles.saved} role="status">
-          Все сессии завершены ({state.count}). Все входы, включая ваш, больше не действуют —
+          Все сессии завершены ({state.count}). Все входы, включая ваш, больше не действуют,
           войдите в панель заново.
         </p>
       ) : null}

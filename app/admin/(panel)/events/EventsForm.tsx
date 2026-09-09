@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { EntityMediaEditor, type MediaItem } from "../EntityMediaEditor";
 import { deleteEvent, saveEvent, toggleEvent, type SectionState } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "../shop/shop.module.css";
 
 export type EventView = {
@@ -74,7 +75,7 @@ export function EventsForm({ events }: { events: EventView[] }) {
           entityId={edit.id}
           initialMedia={edit.media}
           title="Фотоотчёт"
-          note="Первое фото — обложка карточки события."
+          note="Первое фото становится обложкой карточки события."
         />
       ) : null}
 
@@ -104,7 +105,12 @@ export function EventsForm({ events }: { events: EventView[] }) {
               </form>
               <form action={deleteEvent}>
                 <input type="hidden" name="id" value={e.id} />
-                <button type="submit" className={styles.removeBtn}>удалить</button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить событие «${e.title}»?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>

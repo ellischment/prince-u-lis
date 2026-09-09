@@ -81,7 +81,7 @@ export default async function MasterPage({ params }: PageProps<"/komanda/[slug]"
               ))}
             </ul>
             <p className={styles.leadNote}>
-              Мастера на занятие ставит студия: выбирайте время в расписании, а кто проведёт —
+              Мастера на занятие ставит студия: выбирайте время в расписании, а кто проведёт,
               подскажем при подтверждении.
             </p>
           </section>

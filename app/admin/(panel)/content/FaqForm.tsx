@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/Button";
 import type { FaqItem } from "@/lib/site-texts";
+import { ConfirmButton } from "../ConfirmButton";
 import { saveFaqItems, type ContentState } from "./actions";
 import styles from "./content.module.css";
 
@@ -69,7 +70,7 @@ export function FaqForm({ current }: { current: FaqItem[] }) {
 
       {rows.length === 0 ? (
         <p className={styles.note}>
-          Вопросов пока нет. Добавьте первый — страница «Вопросы» появится в карте сайта, когда
+          Вопросов пока нет. Добавьте первый, и страница «Вопросы» появится в карте сайта, когда
           будет хотя бы один вопрос.
         </p>
       ) : null}
@@ -95,9 +96,12 @@ export function FaqForm({ current }: { current: FaqItem[] }) {
               maxLength={800}
             />
           </label>
-          <button type="button" className={styles.removeRow} onClick={() => removeRow(row.key)}>
-            Удалить вопрос
-          </button>
+          <ConfirmButton
+            label="Удалить вопрос"
+            question="Убрать вопрос из списка? После «Сохранить» он исчезнет со страницы."
+            className={styles.removeRow}
+            onConfirm={() => removeRow(row.key)}
+          />
         </div>
       ))}
 

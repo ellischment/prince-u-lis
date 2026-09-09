@@ -12,6 +12,7 @@ import {
   type SectionState,
 } from "./actions";
 import content from "../content/content.module.css";
+import { ConfirmButton } from "../ConfirmButton";
 import styles from "../shop/shop.module.css";
 
 export type PartnershipView = {
@@ -62,11 +63,11 @@ export function PartnershipsForm({ items }: { items: PartnershipView[] }) {
           <textarea name="description" className={styles.textarea} defaultValue={d?.description ?? ""} rows={2} />
         </label>
         <label className={styles.field}>
-          <span className={styles.label}>Как проходит — по шагу на строку</span>
+          <span className={styles.label}>Как проходит, по шагу на строку</span>
           <textarea name="steps" className={styles.textarea} defaultValue={(d?.steps ?? []).join("\n")} rows={3} />
         </label>
         <label className={styles.field}>
-          <span className={styles.label}>Что написать в заявке — по пункту на строку</span>
+          <span className={styles.label}>Что написать в заявке, по пункту на строку</span>
           <textarea name="needs" className={styles.textarea} defaultValue={(d?.needs ?? []).join("\n")} rows={3} />
         </label>
 
@@ -120,7 +121,12 @@ export function PartnershipsForm({ items }: { items: PartnershipView[] }) {
               </form>
               <form action={deletePartnership}>
                 <input type="hidden" name="id" value={it.id} />
-                <button type="submit" className={styles.removeBtn}>удалить</button>
+                <ConfirmButton
+                  submit
+                  label="удалить"
+                  question={`Удалить вид сотрудничества «${it.title}»?`}
+                  className={styles.removeBtn}
+                />
               </form>
             </span>
           </li>
