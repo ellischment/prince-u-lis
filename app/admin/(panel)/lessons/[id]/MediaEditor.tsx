@@ -5,6 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import type { Media } from "@prisma/client";
 import { Button } from "@/components/Button";
 import { ReorderableList } from "@/components/ReorderableList";
+import { coverNotice, LESSON_COVER } from "@/lib/cover-notice";
 import { addVideoLink, deleteMedia, reorderMedia } from "../media-actions";
 import styles from "./editor.module.css";
 
@@ -27,23 +28,6 @@ export function MediaEditor({
   // Видео обложкой не бывает, поэтому ищем первый кадр kind=image.
   const coverId = items.find((item) => item.kind === "image")?.id ?? null;
 
-  // Некритичная проверка пригодности к обложке 4:3. Правила и пороги — в
-  // docs/foto-pamyatka.md. Не блокирует загрузку, только подсказывает.
-  function coverNotice(name: string, width?: number, height?: number): string | null {
-    if (!width || !height) return null;
-    if (width < 1200) {
-      return `${name}: ширина ${width}px — для обложки лучше от 1200px, иначе в карточке будет мыло`;
-    }
-    const ratio = width / height;
-    if (ratio < 1.15) {
-      return `${name}: кадр вертикальный (${width}×${height}px) — обложка 4:3 срежет верх и низ`;
-    }
-    if (ratio > 1.9) {
-      return `${name}: кадр очень широкий (${width}×${height}px) — обложка 4:3 срежет бока`;
-    }
-    return null;
-  }
-
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploadError(null);
@@ -64,7 +48,7 @@ export function MediaEditor({
           continue;
         }
 
-        const notice = coverNotice(file.name, data.width, data.height);
+        const notice = coverNotice(LESSON_COVER, file.name, data.width, data.height);
         if (notice) setNotices((current) => [...current, notice]);
 
         setItems((current) => [

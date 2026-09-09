@@ -5,6 +5,7 @@
 
 import path from "node:path";
 import { test, expect } from "@playwright/test";
+import { COWORKING_LESSON_SLUG } from "../lib/constants";
 
 const TEST_PHOTO = path.join(__dirname, "fixtures", "test-photo.jpg");
 
@@ -410,11 +411,42 @@ test("редактор гирлянды: выбираешь нить — вид�
 
 test("адрес /kupit/kovorking из SPEC отвечает редиректом на страницу коворкинга", async ({ request }) => {
   // SPEC §3 перечисляет /kupit/kovorking как адрес коворкинга. Коворкинг
-  // смоделирован занятием, его страница — /zanyatiya/kovorking-v-masterskoy;
-  // адрес из SPEC отвечает постоянным редиректом, а не 404 (в sitemap не идёт).
+  // смоделирован занятием: адрес его страницы берётся из COWORKING_LESSON_SLUG,
+  // а не пишется здесь строкой — иначе тест отстаёт от контента студии, как
+  // это уже случилось после правки константы 3 сентября.
+  // Адрес из SPEC отвечает постоянным редиректом, а не 404 (в sitemap не идёт).
   const res = await request.get("/kupit/kovorking", { maxRedirects: 0 });
   expect(res.status()).toBe(308);
-  expect(res.headers()["location"]).toContain("/zanyatiya/kovorking-v-masterskoy");
+  expect(res.headers()["location"]).toContain(`/zanyatiya/${COWORKING_LESSON_SLUG}`);
+});
+
+// Разделы с адресом-слагом. Список тот же, что в карте маршрутов SPEC раздел 3.
+const SLUG_SECTIONS = [
+  "/zanyatiya",
+  "/kursy",
+  "/blog",
+  "/otprazdnovat",
+  "/kupit",
+  "/komanda",
+  "/sotrudnichestvo",
+  "/sobytiya",
+];
+
+test("несуществующий адрес раздела отвечает 404, а не 200", async ({ request }) => {
+  // Мягкая 404: страница показывала «Такой страницы нет», но код ответа был
+  // 200, и этот 200 ещё и попадал в кэш. Причина — loading.tsx в корне app:
+  // Suspense-граница над всем сайтом отправляла оболочку в сокет раньше, чем
+  // страница успевала позвать notFound(). Заглушка загрузки теперь стоит
+  // только там, где notFound() ниже не зовут (components/LoadingBar.tsx).
+  // Тест держит это правило: без него ошибка снова станет незаметной.
+  for (const section of SLUG_SECTIONS) {
+    const res = await request.get(`${section}/net-takogo-adresa-i-ne-bylo`, { maxRedirects: 0 });
+    expect(res.status(), `${section}: несуществующий адрес`).toBe(404);
+  }
+
+  // Адрес без маршрута вообще ловит корневой not-found, он и раньше был верным.
+  const noRoute = await request.get("/sovsem-net-takogo-razdela", { maxRedirects: 0 });
+  expect(noRoute.status()).toBe(404);
 });
 
 test("«Журнал действий»: читаемое название, вкладки-фильтры, входы", async ({ page }) => {

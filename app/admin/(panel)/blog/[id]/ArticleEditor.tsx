@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/Button";
+import { ARTICLE_COVER, coverNotice } from "@/lib/cover-notice";
 import { renderMarkdown } from "@/lib/markdown";
 import { slugify } from "@/lib/slug";
 import {
@@ -92,6 +93,9 @@ export function ArticleEditor({
   const [autosaveNote, setAutosaveNote] = useState<string | null>(null);
   const [coverPending, startCoverUpload] = useTransition();
   const [coverError, setCoverError] = useState<string | null>(null);
+  // Подсказка про мелкий или неподходящий по пропорции кадр: docs/foto-pamyatka.md
+  // обещает её для любой обложки, а не только для занятия. Загрузку не блокирует.
+  const [coverHint, setCoverHint] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Предпросмотр обновляется на вводе с задержкой (FEATURES 2.5): отложенное
@@ -214,16 +218,19 @@ export function ArticleEditor({
   function handleCoverFile(file: File | null) {
     if (!file) return;
     setCoverError(null);
+    setCoverHint(null);
     startCoverUpload(async () => {
       const form = new FormData();
       form.set("file", file);
       form.set("entityType", "article");
       const response = await fetch("/api/media/upload", { method: "POST", body: form });
-      const data: { id?: string; path?: string; error?: string } = await response.json();
+      const data: { id?: string; path?: string; width?: number; height?: number; error?: string } =
+        await response.json();
       if (!response.ok || !data.id || !data.path) {
         setCoverError(data.error ?? "Не удалось загрузить обложку");
         return;
       }
+      setCoverHint(coverNotice(ARTICLE_COVER, file.name, data.width, data.height));
       setCover({ id: data.id, path: data.path });
       setDirty(true);
     });
@@ -329,6 +336,7 @@ export function ArticleEditor({
                   className={media.removeLast}
                   onClick={() => {
                     setCover(null);
+                    setCoverHint(null);
                     setDirty(true);
                   }}
                 >
@@ -348,6 +356,7 @@ export function ArticleEditor({
               </label>
             )}
             {coverError ? <span className={media.error}>{coverError}</span> : null}
+            {coverHint ? <span className={editor.hint}>{coverHint}</span> : null}
           </div>
         </section>
 

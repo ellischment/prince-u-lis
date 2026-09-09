@@ -6,6 +6,7 @@ import { TrackView } from "@/components/TrackView";
 import { COURSE_FORMAT_SLUG } from "@/lib/constants";
 import { isCourse } from "@/lib/courses";
 import { getLessonBySlug, getLessonSlugs, getSimilarLessons } from "@/lib/lessons";
+import { findLessonRedirect } from "@/lib/redirects";
 import { breadcrumbSchema, courseSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { pageMetadata } from "@/lib/seo-meta";
 
@@ -43,8 +44,18 @@ export default async function LessonPage({ params }: PageProps<"/zanyatiya/[slug
   const { slug } = await params;
   const lesson = await getLessonBySlug(slug);
 
-  // Скрытое или несуществующее занятие: 404, а не пустая страница.
-  if (!lesson) notFound();
+  if (!lesson) {
+    // Занятие переименовали в панели: старый адрес обязан отвечать переездом,
+    // а не пустотой (SPEC раздел 3, FEATURES 2.2). Запись делает
+    // recordSlugRedirect в той же транзакции, что и смену slug, а читается она
+    // здесь. permanentRedirect отдаёт 308, поисковики трактуют его как 301 —
+    // то же решение, что у статей в /blog/[slug].
+    const moved = await findLessonRedirect(slug);
+    if (moved) permanentRedirect(moved);
+
+    // Скрытое или несуществующее занятие: 404, а не пустая страница.
+    notFound();
+  }
 
   // Курс канонично живёт на /kursy/[slug]: ARCHITECTURE.md раздел 4.
   // Редирект считается по формату на момент запроса, а не хранится в таблице

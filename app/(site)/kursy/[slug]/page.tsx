@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { BookLink } from "@/components/BookLink";
 import { JsonLd } from "@/components/JsonLd";
 import { LessonArticle } from "@/components/LessonArticle";
@@ -14,6 +14,7 @@ import {
   upcomingRuns,
 } from "@/lib/courses";
 import { getSimilarLessons } from "@/lib/lessons";
+import { findLessonRedirect } from "@/lib/redirects";
 import { breadcrumbSchema, courseWithRunsSchema, organizationSchema, websiteSchema } from "@/lib/schema";
 import { pageMetadata } from "@/lib/seo-meta";
 import styles from "./runs.module.css";
@@ -49,7 +50,15 @@ export default async function CoursePage({ params }: PageProps<"/kursy/[slug]">)
   const { slug } = await params;
   const course = await getCourseBySlug(slug);
 
-  if (!course) notFound();
+  if (!course) {
+    // Курс переименовали: переезд записан одним ключом «/zanyatiya/<slug>»,
+    // findLessonRedirect приводит его к каноническому адресу нового формата,
+    // поэтому со старого /kursy идёт один прыжок, а не цепочка.
+    const moved = await findLessonRedirect(slug);
+    if (moved) permanentRedirect(moved);
+
+    notFound();
+  }
 
   // Не курс по этому адресу: 404, а не редирект на /zanyatiya.
   // Встречный редирект здесь запрещён намеренно: /zanyatiya/[slug] уже ведёт
