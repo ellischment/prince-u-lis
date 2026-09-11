@@ -28,6 +28,14 @@ export const toggleActiveSchema = z.object({
   active: z.boolean(),
 });
 
+// Смена собственного пароля. Требование пункта 2.1.5 Договора: пароль меняет
+// сам сотрудник, а не только владелец через раздел доступов. Текущий пароль
+// спрашивается, чтобы чужой человек за незакрытым ноутбуком не сменил его.
+export const changeOwnPasswordSchema = z.object({
+  current: z.string().min(1, "Введите текущий пароль"),
+  password: passwordField,
+});
+
 export const resetPasswordSchema = z.object({
   id: z.string().min(1),
   password: passwordField,

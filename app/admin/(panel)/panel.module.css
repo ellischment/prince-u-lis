@@ -105,6 +105,20 @@
   color: var(--cream);
 }
 
+/* Ссылка «Сменить пароль» рядом с выходом: она нужна любой роли, а разделы
+   меню у ролей разные. Вид как у пункта меню, но приглушённее. */
+.selfLink {
+  display: block;
+  padding: 8px 12px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.selfLink:hover {
+  color: var(--cream);
+}
+
 .logoutButton {
   width: 100%;
   min-height: 44px;

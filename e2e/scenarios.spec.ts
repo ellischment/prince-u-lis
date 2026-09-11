@@ -462,6 +462,57 @@ test("«Настройки и доступы»: владелец заводит 
   await expect(page.getByRole("cell", { name: email })).toBeVisible();
 });
 
+test("администратор меняет свой пароль сам", async ({ page }) => {
+  // Пункт 2.1.5 Договора: пароль меняет сам сотрудник, а не только владелец.
+  // Тест заводит свой доступ и отключает его в конце, чтобы не трогать
+  // сидовые учётки и не ломать соседние прогоны.
+  const email = `parol-${Date.now()}@princ-lis.test`;
+  const staryy = "staryy-parol-123";
+  const novyy = "novyy-parol-456";
+
+  await loginPanel(page);
+  await page.goto("/admin/settings");
+  const createForm = page.locator("form", { has: page.getByRole("button", { name: "Добавить доступ" }) });
+  await createForm.getByLabel("Почта").fill(email);
+  await createForm.getByLabel("Пароль").fill(staryy);
+  await createForm.locator("select").selectOption("admin");
+  await page.getByRole("button", { name: "Добавить доступ" }).click();
+  await expect(page.getByRole("cell", { name: email })).toBeVisible();
+
+  // Входим этим доступом и меняем пароль на себе.
+  await page.getByRole("button", { name: "Выйти" }).click();
+  await loginPanel(page, email, staryy);
+
+  await page.getByRole("link", { name: "Сменить пароль" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Смена пароля" })).toBeVisible();
+
+  await page.getByLabel("Текущий пароль").fill(staryy);
+  await page.getByLabel("Новый пароль").fill(novyy);
+  await page.getByLabel("Повторите новый").fill(novyy);
+  await page.getByRole("button", { name: "Сменить пароль" }).click();
+
+  // Смена закрывает все сессии: панель возвращает на вход с подсказкой.
+  await page.waitForURL((url) => url.pathname === "/admin/login");
+  await expect(page.getByText("Пароль изменён")).toBeVisible();
+
+  // Старый пароль больше не подходит, новый пускает.
+  await page.getByLabel("Почта").fill(email);
+  await page.getByLabel("Пароль").fill(staryy);
+  await page.getByRole("button", { name: "Войти" }).click();
+  await expect(page).toHaveURL((url) => url.pathname === "/admin/login");
+
+  await loginPanel(page, email, novyy);
+  await expect(page.getByRole("heading", { level: 1, name: "Сегодня" })).toBeVisible();
+
+  // Убираем за собой: доступ отключается владельцем.
+  await page.getByRole("button", { name: "Выйти" }).click();
+  await loginPanel(page);
+  await page.goto("/admin/settings");
+  const row = page.getByRole("row", { name: new RegExp(email) });
+  await row.getByRole("button", { name: "Отключить" }).click();
+  await expect(row.getByText("отключён")).toBeVisible();
+});
+
 test("редактор гирлянды: выбираешь нить — видишь её настройки", async ({ page }) => {
   await loginPanel(page);
   await page.goto("/admin/content");

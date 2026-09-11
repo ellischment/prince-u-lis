@@ -7,6 +7,7 @@ const EXACT: Record<string, string> = {
   "user.create": "Создан доступ в панель",
   "user.updateRole": "Изменена роль доступа",
   "user.resetPassword": "Сброшен пароль доступа",
+  "user.changeOwnPassword": "Сотрудник сменил свой пароль",
   "user.toggleActive": "Доступ включён или отключён",
   "requests.view": "Просмотр журнала заявок",
   "requests.export": "Выгрузка журнала заявок",

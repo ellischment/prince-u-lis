@@ -27,6 +27,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/admin/logi
       <div className={styles.box}>
         <h1 className={styles.title}>Панель управления</h1>
         <p className={styles.intro}>Студия «Принц и Лис»</p>
+        {params.smena === "1" ? (
+          <p className={styles.intro} role="status">
+            Пароль изменён. Войдите с новым.
+          </p>
+        ) : null}
         <LoginForm next={next} />
       </div>
     </main>

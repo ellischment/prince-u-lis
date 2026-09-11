@@ -68,6 +68,13 @@ export function PanelNav({
           </ul>
         </nav>
 
+        {/* Смена своего пароля доступна любой роли: пункт 2.1.5 Договора.
+            Поэтому ссылка живёт рядом с выходом, а не в разделах меню,
+            которые у администратора и владельца разные. */}
+        <Link href="/admin/parol" className={styles.selfLink} onClick={() => setOpen(false)}>
+          Сменить пароль
+        </Link>
+
         <form action={logout} className={styles.logout}>
           <button type="submit" className={styles.logoutButton}>
             Выйти
